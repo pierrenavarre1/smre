@@ -1,0 +1,1 @@
+export default function Placeholder(){return <section className="section container narrow"><p className="eyebrow">COMING LATER</p><h1>Resources are coming soon.</h1><p className="lead">We’re keeping the core experience focused for launch. Blog and guide content will be added here later.</p></section>}
