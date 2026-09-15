@@ -34,7 +34,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Link href="/" className="brand-logo footer-logo" aria-label="St. Mary’s Real Estate home">
             <BrandLogo className="logo-image" />
           </Link>
-          <p>St. Marys, Kansas<br />Local representation. Clear advice.</p>
+          <p>512 W Bertrand Ave<br />St Marys, KS 66536<br /><a href="tel:7855590551" style={{color:'#fff'}}>(785) 559-0551</a></p>
         </div>
         <div className="footer-links"><strong>Explore</strong><Link href="/listings">Listings</Link><Link href="/agents">Our Team</Link><Link href="/valuation">Home Value</Link><Link href="/contact">Contact</Link></div>
         <div className="footer-links"><strong>Information</strong><Link href="/about">About SMRE</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div>
