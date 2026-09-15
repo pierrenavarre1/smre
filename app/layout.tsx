@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import './brand.css';
 import Link from 'next/link';
-import { BrandLogo } from './components/BrandLogo';
+import { BrandLogo } from './components/BrandLogo2';
 import { ChatBubble } from './components/ChatBubble';
 
 export const metadata: Metadata = {
