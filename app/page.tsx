@@ -18,8 +18,9 @@ export default async function Home(){
         <p className="hero-copy">Good property advice starts with knowing the place. SMRE brings local knowledge, straightforward representation, and attention to the details that matter.</p>
         <form action="/listings" className="search-panel home-search">
           <input name="city" placeholder="City or area" aria-label="City or area" />
-          <select name="beds" aria-label="Bedrooms"><option value="">Beds</option><option value="3">3+</option><option value="4">4+</option></select>
-          <select name="max" aria-label="Maximum price"><option value="">Price</option><option value="300000">Up to $300k</option><option value="400000">Up to $400k</option><option value="500000">Up to $500k</option></select>
+          <select name="beds" aria-label="Bedrooms"><option value="">Beds</option><option value="1">1+ beds</option><option value="2">2+ beds</option><option value="3">3+ beds</option><option value="4">4+ beds</option><option value="5">5+ beds</option></select>
+          <select name="baths" aria-label="Bathrooms"><option value="">Baths</option><option value="1">1+ baths</option><option value="1.5">1.5+ baths</option><option value="2">2+ baths</option><option value="2.5">2.5+ baths</option><option value="3">3+ baths</option><option value="4">4+ baths</option></select>
+          <select name="max" aria-label="Maximum price"><option value="">Price</option><option value="200000">Up to $200k</option><option value="300000">Up to $300k</option><option value="400000">Up to $400k</option><option value="500000">Up to $500k</option><option value="750000">Up to $750k</option><option value="1000000">Up to $1M</option></select>
           <button className="button button-dark">Search homes</button>
         </form>
       </div>
