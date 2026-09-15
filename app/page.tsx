@@ -3,13 +3,14 @@ import Link from 'next/link';
 import { getListings } from './lib/listings';
 import { ListingCard } from './components/ListingCard';
 
-const heroImage = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=2200&q=88';
+const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
+const ruralHomeImage = 'https://images.unsplash.com/photo-1592351763700-b9b35a6465ea?auto=format&fit=crop&w=1200&q=88';
 
 export default async function Home(){
   const listings=(await getListings()).filter(p=>p.StandardStatus==='Active').slice(0,4);
   return <>
     <section className="home-hero">
-      <Image src={heroImage} alt="Beautiful Kansas home exterior" fill priority sizes="100vw" className="home-hero-image" />
+      <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
       <div className="home-hero-overlay" />
       <div className="container home-hero-inner">
         <p className="eyebrow">ST. MARYS · WAMEGO · TOPEKA–MANHATTAN</p>
@@ -29,10 +30,10 @@ export default async function Home(){
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div>
     </section>
 
-    <section className="local-intro">
-      <div className="container local-intro-grid">
-        <div><p className="eyebrow">LOCAL KNOWLEDGE</p><h2>Close to the property.<br />Close to the process.</h2></div>
-        <div className="local-intro-copy"><p>SMRE serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market. We keep the process direct, communicate clearly, and stay involved from the first conversation through closing.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
+    <section className="home-rural-strip">
+      <div className="container home-rural-grid">
+        <div className="home-rural-photo"><Image src={ruralHomeImage} alt="Country home surrounded by open space" fill sizes="(max-width: 900px) 100vw, 55vw" /></div>
+        <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>Small towns. Open country. Real local knowledge.</h2><p>From St. Marys and Wamego to the farms, acreage, and communities between Topeka and Manhattan, we understand that buying here is about more than an address.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
 
