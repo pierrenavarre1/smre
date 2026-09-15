@@ -1,29 +1,21 @@
 export type MLSSource = 'Sunflower MLS' | 'FHAR MLS';
 export type PropertyType = 'Residential' | 'Farm' | 'Land' | 'Commercial';
-export interface RESOMedia { MediaKey: string; MediaURL: string; MediaCategory: 'Photo'; ShortDescription?: string; }
+export interface RESOMedia { MediaKey:string; MediaURL:string; MediaCategory:'Photo'; ShortDescription?:string; }
 export interface RESOProperty { ListingId:string; StandardStatus:'Active'|'Pending'|'Closed'; ListPrice:number; BedroomsTotal:number; BathroomsTotalInteger:number; PropertyType:PropertyType; PropertySubType:string; StreetNumber:string; StreetName:string; City:string; StateOrProvince:string; PostalCode:string; LivingArea:number; LotSizeAcres:number; YearBuilt:number; PublicRemarks:string; Media:RESOMedia[]; ListingKey:string; ListAgentFullName:string; ListAgentMlsId:string; ListOfficeName:string; MlsSource:MLSSource; Latitude:number; Longitude:number; }
-const photos = [
+const photos=[
  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=85',
  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1400&q=85',
- 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1400&q=85',
- 'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1400&q=85',
- 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1400&q=85',
- 'https://images.unsplash.com/photo-1600585152915-d208bec867a1?auto=format&fit=crop&w=1400&q=85'
+ 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1400&q=85'
 ];
-const agents = [
- ['Joseph Kirby','J-1001'],['Thomas Kirby','T-1002'],['James Frazier','F-1003'],['Michael Kirby','M-1004']
-] as const;
-const cities = ['St. Marys','Wamego','Rossville','Silver Lake','Manhattan','Topeka'];
-const streets = ['Maple','Oak','Elm','Prairie View','Meadow','Cottonwood','Walnut','Pine','Cedar','Ridge'];
-export const mockProperties: RESOProperty[] = Array.from({length:28},(_,i)=>{
- const agent=agents[i%4], city=cities[i%cities.length], price=[289000,349900,425000,239900,515000,319500,675000][i%7];
- const type: PropertyType = i%9===0 ? 'Farm' : i%11===0 ? 'Land' : 'Residential';
- return { ListingId:`SMRE-${1001+i}`, ListingKey:`mock-${1001+i}`, StandardStatus:i%8===0?'Pending':'Active', ListPrice:price+(i%3)*5000, BedroomsTotal:type==='Land'?0:3+(i%3), BathroomsTotalInteger:type==='Land'?0:2+(i%2), PropertyType:type, PropertySubType:type==='Farm'?'Farm':type==='Land'?'Unimproved Land':'Single Family Residence', StreetNumber:String(100+i*7), StreetName:streets[i%streets.length], City:city, StateOrProvince:'KS', PostalCode:['66536','66547','66502','66514'][i%4], LivingArea:type==='Land'?0:1450+i*55, LotSizeAcres:type==='Land'?5+i%8:0.2+(i%5)*0.1, YearBuilt:type==='Land'?0:1975+(i%10)*5, PublicRemarks:`Well-maintained ${type.toLowerCase()} property in the ${city} area. The layout offers practical living space, strong natural light, and room to make it your own. Contact SMRE for current details, showing availability, and property-specific information.`, Media:photos.slice(0,3+(i%3)).map((url,j)=>({MediaKey:`${i}-${j}`,MediaURL:url,MediaCategory:'Photo'})), ListAgentFullName:agent[0], ListAgentMlsId:agent[1], ListOfficeName:'St. Mary’s Real Estate', MlsSource:i%2===0?'Sunflower MLS':'FHAR MLS', Latitude:39.1+i*0.01, Longitude:-96.4-i*0.01 };
-});
-export function getMockProperty(id:string){ return mockProperties.find(p=>p.ListingId===id || p.ListingKey===id); }
-
+export const mockProperties:RESOProperty[]=[
+ {ListingId:'245430',ListingKey:'245430',StandardStatus:'Active',ListPrice:475000,BedroomsTotal:6,BathroomsTotalInteger:4,PropertyType:'Residential',PropertySubType:'Single Family Residence',StreetNumber:'17320',StreetName:'C Rd',City:'Delia',StateOrProvince:'KS',PostalCode:'66418',LivingArea:2372,LotSizeAcres:8.95,YearBuilt:2012,PublicRemarks:'Expansive walk-out ranch on approximately 9 scenic acres with 6 bedrooms, 3.5 bathrooms, a finished basement, wrap-around deck and a detached outbuilding. Listed by Joseph Kirby.',Media:photos.map((url,j)=>({MediaKey:`245430-${j}`,MediaURL:url,MediaCategory:'Photo'})),ListAgentFullName:'Joseph Kirby',ListAgentMlsId:'J-1001',ListOfficeName:'St. Mary’s Real Estate',MlsSource:'FHAR MLS',Latitude:39.35,Longitude:-95.91},
+ {ListingId:'244039',ListingKey:'244039',StandardStatus:'Active',ListPrice:290000,BedroomsTotal:3,BathroomsTotalInteger:3,PropertyType:'Residential',PropertySubType:'Single Family Residence',StreetNumber:'802',StreetName:'W Bertrand',City:'St. Marys',StateOrProvince:'KS',PostalCode:'66536',LivingArea:2382,LotSizeAcres:.30,YearBuilt:1920,PublicRemarks:'Versatile 3-bedroom home with a detached studio ADU, updated kitchen, hardwood floors, basement storm shelter and a layout that can work for extended family, a home office or rental income. Listed by Thomas Kirby.',Media:photos.map((url,j)=>({MediaKey:`244039-${j}`,MediaURL:url,MediaCategory:'Photo'})),ListAgentFullName:'Thomas Kirby',ListAgentMlsId:'T-1002',ListOfficeName:'St. Mary’s Real Estate',MlsSource:'Sunflower MLS',Latitude:39.1917,Longitude:-96.0660},
+ {ListingId:'246333',ListingKey:'246333',StandardStatus:'Active',ListPrice:299000,BedroomsTotal:3,BathroomsTotalInteger:3,PropertyType:'Residential',PropertySubType:'Single Family Residence',StreetNumber:'701',StreetName:'Durink',City:'St. Marys',StateOrProvince:'KS',PostalCode:'66536',LivingArea:1456,LotSizeAcres:.16,YearBuilt:2022,PublicRemarks:'2022-built 3-bedroom, 2.5-bath home with modern construction and a convenient St. Marys location. MLS listing reported August 29, 2026.',Media:photos.map((url,j)=>({MediaKey:`246333-${j}`,MediaURL:url,MediaCategory:'Photo'})),ListAgentFullName:'Thomas Kirby',ListAgentMlsId:'T-1002',ListOfficeName:'St. Mary’s Real Estate',MlsSource:'Sunflower MLS',Latitude:39.194,Longitude:-96.063}
+];
+export function getMockProperty(id:string){return mockProperties.find(p=>p.ListingId===id||p.ListingKey===id);}
 // LIVE RESO GO-LIVE NOTES:
-// 1) Obtain IDX approval + RESO Web API credentials from BOTH Sunflower MLS and FHAR MLS. Existing Easy Agent Pro credentials do not automatically transfer.
+// These three records are current public listing snapshots used until the authorized Sunflower/FHAR RESO feeds are connected.
+// 1) Obtain IDX approval + RESO Web API credentials from BOTH Sunflower MLS and FHAR MLS.
 // 2) Store credentials only in Vercel server environment variables (never NEXT_PUBLIC_*).
-// 3) Implement two server-side RESO clients, normalize both Property feeds to RESOProperty, and merge/dedupe by ListingKey/ListingId.
-// 4) Keep the public data contract below unchanged. Replace getMockProperty/mockProperties consumption in lib/listings.ts with the normalized backend response. Frontend code should not change.
+// 3) Implement two server-side RESO clients, normalize both feeds to RESOProperty, and merge/dedupe by ListingKey/ListingId.
+// 4) Replace this file's mock data source with the normalized backend response; frontend contracts do not need to change.
