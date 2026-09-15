@@ -1,12 +1,24 @@
 export const metadata={title:'About'};
 
+const areasOne=['Manhattan','Rossville','Silver Lake','Topeka','St. George'];
+const areasTwo=['Alma','Emmett','Maple Hill','Wamego','St. Marys'];
+
 export default function About(){return <>
   <section className="section container narrow about-page">
-    <div className="page-intro"><p className="eyebrow">ABOUT SMRE</p><h1>Local real estate. Kept straightforward.</h1><p>St. Mary’s Real Estate is a locally focused brokerage serving St. Marys, Wamego, and communities across the Topeka–Manhattan market.</p></div>
+    <div className="page-intro"><p className="eyebrow">ABOUT ST. MARY’S REAL ESTATE</p><h1>Local real estate, with people you can reach.</h1><p>St. Mary’s Real Estate is based in St. Marys, Kansas, and serves buyers and sellers throughout the surrounding market.</p></div>
     <div className="about-copy">
-      <p>Good representation starts with knowing the market and communicating clearly. We believe clients deserve honest guidance, practical advice, and someone who stays engaged when the details matter.</p>
-      <p>Whether you are buying a home, preparing to sell, considering an investment, or simply trying to understand your options, the first step is usually a conversation.</p>
+      <p>We help clients search current listings, understand their options, and move through the buying or selling process with direct communication and local representation.</p>
+      <p>The market we serve stretches from St. Marys and Wamego through Topeka, Manhattan, and the smaller communities in between. That includes homes, land, acreage, and other property.</p>
+    </div>
+    <div className="about-areas">
+      <div className="about-area-card"><h3>Areas we serve</h3><p>{areasOne.join(' · ')}</p></div>
+      <div className="about-area-card"><h3>More of the area</h3><p>{areasTwo.join(' · ')}</p></div>
+    </div>
+    <div className="about-contact-card">
+      <p className="eyebrow" style={{color:'#fff'}}>ST. MARYS OFFICE</p>
+      <h2>St. Mary’s Real Estate</h2>
+      <p>512 W Bertrand Ave<br />St Marys, KS 66536</p>
+      <p><a href="tel:7855590551">(785) 559-0551</a><br /><a href="mailto:joseph@smre.info">joseph@smre.info</a></p>
     </div>
   </section>
-  <section className="split-callout about-callout"><div className="container split"><div><p className="eyebrow">OUR APPROACH</p><h2>Less noise.<br />More attention.</h2></div><div><p>We keep the process personal and the communication direct. The goal is not to make real estate feel complicated. It is to help you make a good decision with the information in front of you.</p></div></div></section>
 </>}
