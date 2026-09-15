@@ -19,6 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <BrandLogo className="logo-image" />
         </Link>
         <nav className="nav-links" aria-label="Main navigation">
+          <a className="header-phone" href="tel:7855590551" aria-label="Call St. Mary’s Real Estate">(785) 559-0551</a>
           <Link href="/listings">Listings</Link>
           <Link href="/agents">Our Team</Link>
           <Link href="/valuation">Home Value</Link>
