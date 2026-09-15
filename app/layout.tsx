@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './brand.css';
 import Link from 'next/link';
 import { BrandLogo } from './components/BrandLogo';
 import { ChatBubble } from './components/ChatBubble';
