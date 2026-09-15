@@ -1,24 +1,10 @@
-export const metadata={title:'About'};
-
-const areasOne=['Manhattan','Rossville','Silver Lake','Topeka','St. George'];
-const areasTwo=['Alma','Emmett','Maple Hill','Wamego','St. Marys'];
-
+export const metadata={title:'About SMRE'};
+const areasOne=['St. Marys','Wamego','Manhattan','Topeka','Rossville'];
+const areasTwo=['Silver Lake','St. George','Alma','Emmett','Maple Hill'];
 export default function About(){return <>
-  <section className="section container narrow about-page">
-    <div className="page-intro"><p className="eyebrow">ABOUT ST. MARY’S REAL ESTATE</p><h1>Local real estate, with people you can reach.</h1><p>St. Mary’s Real Estate is based in St. Marys, Kansas, and serves buyers and sellers throughout the surrounding market.</p></div>
-    <div className="about-copy">
-      <p>We help clients search current listings, understand their options, and move through the buying or selling process with direct communication and local representation.</p>
-      <p>The market we serve stretches from St. Marys and Wamego through Topeka, Manhattan, and the smaller communities in between. That includes homes, land, acreage, and other property.</p>
-    </div>
-    <div className="about-areas">
-      <div className="about-area-card"><h3>Areas we serve</h3><p>{areasOne.join(' · ')}</p></div>
-      <div className="about-area-card"><h3>More of the area</h3><p>{areasTwo.join(' · ')}</p></div>
-    </div>
-    <div className="about-contact-card">
-      <p className="eyebrow" style={{color:'#fff'}}>ST. MARYS OFFICE</p>
-      <h2>St. Mary’s Real Estate</h2>
-      <p>512 W Bertrand Ave<br />St Marys, KS 66536</p>
-      <p><a href="tel:7855590551">(785) 559-0551</a><br /><a href="mailto:joseph@smre.info">joseph@smre.info</a></p>
-    </div>
-  </section>
+<section className="section container narrow about-page"><div className="page-intro"><p className="eyebrow">ABOUT ST. MARY’S REAL ESTATE</p><h1>A local brokerage for the places we know.</h1><p>St. Mary’s Real Estate is based in St. Marys, Kansas, with a team working throughout the Topeka–Manhattan corridor and the smaller communities in between.</p></div>
+<div className="about-copy"><p>Real estate here is different from a big-city market. Towns are smaller, properties vary widely, and local knowledge matters. SMRE works with buyers and sellers on homes, land, acreage, investments, commercial property and new construction.</p><p>The brokerage’s public transaction history shows work across St. Marys, Wamego, Topeka, Manhattan, Rossville, Emmett, Maple Hill, St. George and other northeast Kansas communities. The team also works with clients who are buying or selling from out of state.</p><p>Our approach is straightforward: understand the property, understand the client’s goals, communicate clearly and stay involved from the first conversation through closing.</p></div>
+<div className="about-areas"><div className="about-area-card"><h3>Areas we know</h3><p>{areasOne.join(' · ')}</p></div><div className="about-area-card"><h3>And the communities around them</h3><p>{areasTwo.join(' · ')}</p></div></div>
+<div className="about-contact-card"><p className="eyebrow" style={{color:'#fff'}}>ST. MARYS OFFICE</p><h2>St. Mary’s Real Estate</h2><p>512 W Bertrand Ave<br />St Marys, KS 66536</p><p><a href="tel:7854652543">(785) 465-2543</a><br /><a href="mailto:joseph@smre.info">joseph@smre.info</a></p></div></section>
+<section className="section container narrow"><div className="page-intro"><p className="eyebrow">CLIENT FEEDBACK</p><h2>What people say about SMRE.</h2><p>The brokerage’s published testimonials consistently mention communication, patience, local guidance and hands-on help for buyers and sellers.</p></div><div className="about-review-grid"><blockquote>“Never missed a call from me throughout the entire two-month process.”<cite>— Patrick, published SMRE client review</cite></blockquote><blockquote>“They walked us through the process” and helped us with our first home purchase.<cite>— Jim, published SMRE client review</cite></blockquote><blockquote>“Michael Kirby made my purchase experience very easy” for an out-of-state buyer moving to St. Marys.<cite>— Anne, published SMRE client review</cite></blockquote></div><p className="google-rating"><strong>Google:</strong> 5.0 stars from 26 reviews at the time this site was researched.</p></section>
 </>}
