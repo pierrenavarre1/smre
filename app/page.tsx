@@ -33,7 +33,7 @@ export default async function Home(){
 
     <section className="home-rural-strip">
       <div className="container home-rural-grid">
-        <div className="home-rural-photo"><Image src={areaImage} alt="Residential street in a Kansas community" fill sizes="(max-width: 900px) 100vw, 55vw" /></div>
+        <div className="home-rural-photo"><Image src={areaImage} alt="Residential street in Kansas" fill sizes="(max-width: 900px) 100vw, 55vw" /></div>
         <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>Small towns. Open country. Real local knowledge.</h2><p>From St. Marys and Wamego to the farms, acreage, and communities between Topeka and Manhattan, we understand that buying here is about more than an address.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
