@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import './brand.css';
+import './brand-overrides.css';
 import Link from 'next/link';
-import { BrandLogo } from './components/BrandLogo2';
+import { BrandLogo } from './components/BrandLogoFixed';
 import { ChatBubble } from './components/ChatBubble';
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <header className="site-header">
       <div className="container nav">
         <Link href="/" className="brand-logo" aria-label="St. Mary’s Real Estate home">
-          <BrandLogo className="logo-image logo-dark" />
+          <BrandLogo className="logo-image" />
         </Link>
         <nav className="nav-links" aria-label="Main navigation">
           <Link href="/listings">Listings</Link>
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <div className="container footer-grid">
         <div className="footer-brand-block">
           <Link href="/" className="brand-logo footer-logo" aria-label="St. Mary’s Real Estate home">
-            <BrandLogo className="logo-image logo-light" />
+            <BrandLogo className="logo-image" />
           </Link>
           <p>St. Marys, Kansas<br />Local representation. Clear advice.</p>
         </div>
