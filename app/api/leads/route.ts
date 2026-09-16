@@ -37,12 +37,12 @@ export async function POST(request:Request){
 
       const response=await fetch('https://api.followupboss.com/v1/events',{
         method:'POST',
-        headers:{
+        headers:new Headers({
           'Content-Type':'application/json',
           'X-System':'SMRE Website',
           'X-System-Key':systemKey,
           'Authorization':`Basic ${Buffer.from(`${apiKey}:`).toString('base64')}`,
-        },
+        }),
         body:JSON.stringify(event),
       });
       if(!response.ok){
