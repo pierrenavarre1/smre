@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getListings } from './lib/listings';
 import { ListingCard } from './components/ListingCard';
+import { ReviewsCarousel } from './components/ReviewsCarousel';
 
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
 const areaImage = 'https://images.unsplash.com/photo-1782852648468-cd243dd4944b?auto=format&fit=crop&w=1800&q=88';
@@ -31,9 +32,11 @@ export default async function Home(){
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div>
     </section>
 
+    <ReviewsCarousel />
+
     <section className="home-rural-strip">
       <div className="container home-rural-grid">
-        <div className="home-rural-photo"><img src={areaImage} alt="Farmhouse, field and open countryside" /></div>
+        <div className="home-rural-photo"><img src={areaImage} alt="Farmhouse, barn, field and open countryside" /></div>
         <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>Small towns. Open country. Real local knowledge.</h2><p>From St. Marys and Wamego to the farms, acreage, and communities between Topeka and Manhattan, we understand that buying here is about more than an address.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
