@@ -10,7 +10,7 @@ const areaImage = '/images/area-reference.jpg';
 export default async function Home(){
   const listings=(await getListings()).filter(p=>p.StandardStatus==='Active').slice(0,6);
   return <>
-    <style>{`\n      .home-rural-grid.home-rural-balanced{grid-template-columns:1fr 1fr;min-height:480px}\n      .home-rural-balanced .home-rural-photo{min-height:480px;position:relative}\n      .home-rural-balanced .home-rural-photo img{object-fit:cover;object-position:center}\n      .home-rural-balanced .home-rural-copy{padding:64px 68px}\n      .home-rural-balanced .home-rural-copy h2{font-size:44px}\n      @media(max-width:800px){\n        .home-rural-grid.home-rural-balanced{grid-template-columns:1fr}\n        .home-rural-balanced .home-rural-photo{min-height:300px}\n        .home-rural-balanced .home-rural-copy{padding:48px 28px}\n      }\n    `}</style>
+    <style>{`\n      .home-rural-strip{padding:0;background:var(--navy);color:#fff}\n      .home-rural-grid.home-rural-balanced{width:100%;max-width:none;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);min-height:500px}\n      .home-rural-balanced .home-rural-photo{min-height:500px;overflow:hidden;position:relative}\n      .home-rural-balanced .home-rural-photo img{object-fit:cover;object-position:center;width:100%;height:100%}\n      .home-rural-balanced .home-rural-copy{padding:78px clamp(44px,6vw,96px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}\n      .home-rural-balanced .home-rural-copy .eyebrow{color:#fff;opacity:.72;margin:0 0 16px}\n      .home-rural-balanced .home-rural-copy h2{font-family:var(--serif);font-size:clamp(40px,4vw,56px);line-height:1.04;font-weight:400;letter-spacing:-.04em;margin:0 0 24px;max-width:600px}\n      .home-rural-balanced .home-rural-copy p:not(.eyebrow){color:#fff;opacity:.82;font-size:16px;line-height:1.7;max-width:570px;margin:0 0 32px}\n      .home-rural-balanced .home-rural-copy .button{align-self:flex-start}\n      @media(max-width:800px){\n        .home-rural-grid.home-rural-balanced{grid-template-columns:1fr}\n        .home-rural-balanced .home-rural-photo{min-height:320px;max-height:420px}\n        .home-rural-balanced .home-rural-copy{padding:52px 28px 60px}\n      }\n    `}</style>
     <section className="home-hero">
       <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
       <div className="home-hero-overlay" />
@@ -34,8 +34,8 @@ export default async function Home(){
     </section>
 
     <section className="home-rural-strip">
-      <div className="container home-rural-grid home-rural-balanced">
-        <div className="home-rural-photo"><Image src={areaImage} alt="Aerial view of a Midwestern farm with a farmhouse, pond, pasture, barn and country road" fill sizes="(max-width: 800px) 100vw, 50vw" quality={95} /></div>
+      <div className="home-rural-grid home-rural-balanced">
+        <div className="home-rural-photo"><Image src={areaImage} alt="Aerial view of a Midwestern farm with a farmhouse, pond, pasture, barn and country road" fill sizes="(max-width: 800px) 100vw, 54vw" quality={100} /></div>
         <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>Small towns. Open country. Real local knowledge.</h2><p>From St. Marys and Wamego to the farms, acreage, and communities between Topeka and Manhattan, we understand that buying here is about more than an address.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
