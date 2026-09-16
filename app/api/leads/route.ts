@@ -12,9 +12,8 @@ export async function POST(request:Request){
 
     const apiKey=process.env.FUB_API_KEY;
     const systemKey=process.env.FUB_SYSTEM_KEY;
-    const forwarded=Boolean(apiKey && systemKey);
 
-    if(forwarded){
+    if(apiKey && systemKey){
       const {firstName,lastName}=splitName(String(lead.name));
       const contact=String(lead.contact || '');
       const email=String(lead.email || (contact.includes('@')?contact:''));
@@ -37,12 +36,12 @@ export async function POST(request:Request){
 
       const response=await fetch('https://api.followupboss.com/v1/events',{
         method:'POST',
-        headers:new Headers({
+        headers:{
           'Content-Type':'application/json',
           'X-System':'SMRE Website',
           'X-System-Key':systemKey,
           'Authorization':`Basic ${Buffer.from(`${apiKey}:`).toString('base64')}`,
-        }),
+        },
         body:JSON.stringify(event),
       });
       if(!response.ok){
@@ -51,7 +50,7 @@ export async function POST(request:Request){
       }
     }
 
-    return NextResponse.json({ok:true,forwarded});
+    return NextResponse.json({ok:true,forwarded:Boolean(apiKey && systemKey)});
   }catch(error){
     console.error('Lead submission error',error);
     return NextResponse.json({error:'Unable to submit request.'},{status:400});
