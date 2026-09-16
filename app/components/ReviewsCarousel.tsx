@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 
 type Review = { author:string; rating:number; text:string; relativeTime?:string };
-
 type ReviewResponse = { rating?:number; userRatingCount?:number; reviews?:Review[] };
 
 export function ReviewsCarousel(){
@@ -13,9 +12,10 @@ export function ReviewsCarousel(){
   const ref=useRef<HTMLElement|null>(null);
 
   useEffect(()=>{
-    fetch('/api/reviews').then(r=>r.ok?r.json():null).then((result:ReviewResponse|null)=>{
-      if(result) setData(result);
-    }).catch(()=>{});
+    const load=()=>fetch('/api/reviews').then(r=>r.ok?r.json():null).then((result:ReviewResponse|null)=>{ if(result) setData(result); }).catch(()=>{});
+    load();
+    const refresh=window.setInterval(load,5*60*1000);
+    return()=>window.clearInterval(refresh);
   },[]);
 
   useEffect(()=>{
@@ -45,7 +45,7 @@ export function ReviewsCarousel(){
     {review ? <>
       <div className="review-stage">
         <button className="review-arrow" aria-label="Previous review" onClick={()=>setIndex(i=>(i-1+reviews.length)%reviews.length)}>←</button>
-        <blockquote key={index} className="review-quote"><div className="stars" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(Math.max(0,Math.round(review.rating)))}</div><p>“{review.text}”</p><footer>{review.author}{review.relativeTime?` · ${review.relativeTime}`:''}</footer></blockquote>
+        <blockquote key={`${review.author}-${index}`} className="review-quote"><div className="stars" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(Math.max(0,Math.round(review.rating)))}</div><p>{review.text ? `“${review.text}”` : '5-star Google review'}</p><footer>{review.author}{review.relativeTime?` · ${review.relativeTime}`:''}</footer></blockquote>
         <button className="review-arrow" aria-label="Next review" onClick={()=>setIndex(i=>(i+1)%reviews.length)}>→</button>
       </div>
       <div className="review-dots" aria-hidden="true">{reviews.map((_,i)=><span key={i} className={i===index?'active':''}/>)}</div>
