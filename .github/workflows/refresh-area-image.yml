@@ -1,0 +1,50 @@
+name: Refresh area image
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and optimize area image
+        run: |
+          mkdir -p public/images
+          curl -L --fail --retry 3 'https://images.stockcake.com/public/d/a/6/da63eee3-b227-4786-be17-412654f82f76_large/idyllic-farm-aerial-stockcake.jpg' -o /tmp/area-source.jpg
+          python -m pip install --quiet pillow
+          python - <<'PY'
+          from PIL import Image, ImageFilter
+          src = Image.open('/tmp/area-source.jpg').convert('RGB')
+          src = src.resize((2912, 1632), Image.Resampling.LANCZOS)
+          src = src.filter(ImageFilter.UnsharpMask(radius=1.15, percent=115, threshold=2))
+          src.save('public/images/area-reference-hd.jpg', 'JPEG', quality=95, optimize=True, progressive=True)
+          PY
+
+      - name: Point site to optimized image
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('app/page.tsx')
+          s = p.read_text()
+          start = "const areaImage = "
+          a = s.index(start)
+          b = s.index(";", a)
+          s = s[:a] + "const areaImage = '/images/area-reference-hd.jpg'" + s[b:]
+          p.write_text(s)
+          PY
+
+      - name: Commit image update
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/images/area-reference-hd.jpg app/page.tsx
+          git diff --cached --quiet && exit 0
+          git commit -m 'Add high-resolution area image [skip ci]'
+          git push
