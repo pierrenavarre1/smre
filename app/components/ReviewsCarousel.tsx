@@ -3,19 +3,33 @@
 import { useEffect, useRef, useState } from 'react';
 
 type Review = { author:string; rating:number; text:string; relativeTime?:string };
-type ReviewResponse = { rating?:number; userRatingCount?:number; reviews?:Review[] };
+type ReviewResponse = { rating?:number; userRatingCount?:number; reviews?:Review[]; live?:boolean };
 
 export function ReviewsCarousel(){
   const [data,setData]=useState<ReviewResponse>({});
+  const [loaded,setLoaded]=useState(false);
   const [index,setIndex]=useState(0);
   const [visible,setVisible]=useState(false);
   const ref=useRef<HTMLElement|null>(null);
 
   useEffect(()=>{
-    const load=()=>fetch('/api/reviews').then(r=>r.ok?r.json():null).then((result:ReviewResponse|null)=>{ if(result) setData(result); }).catch(()=>{});
+    let active=true;
+    const load=()=>fetch('/api/reviews',{cache:'no-store'})
+      .then(r=>r.ok?r.json():null)
+      .then((result:ReviewResponse|null)=>{
+        if(!active) return;
+        setData(result || {reviews:[]});
+        setLoaded(true);
+      })
+      .catch(()=>{
+        if(active){
+          setData({reviews:[]});
+          setLoaded(true);
+        }
+      });
     load();
     const refresh=window.setInterval(load,5*60*1000);
-    return()=>window.clearInterval(refresh);
+    return()=>{ active=false; window.clearInterval(refresh); };
   },[]);
 
   useEffect(()=>{
@@ -50,6 +64,6 @@ export function ReviewsCarousel(){
       </div>
       <div className="review-dots" aria-hidden="true">{reviews.map((_,i)=><span key={i} className={i===index?'active':''}/>)}</div>
       <div className="reviews-source"><a href="https://www.google.com/maps/place/?q=place_id:ChIJ4Uo61nlgvocR5W-xo_H_xJk" target="_blank" rel="noreferrer">Read all reviews on Google</a></div>
-    </> : <div className="review-loading">Loading Google reviews…</div>}
+    </> : loaded ? <div className="review-loading">Google reviews are temporarily unavailable. <a href="https://www.google.com/maps/place/?q=place_id:ChIJ4Uo61nlgvocR5W-xo_H_xJk" target="_blank" rel="noreferrer">Read them on Google.</a></div> : <div className="review-loading">Loading Google reviews…</div>}
   </section>;
 }
