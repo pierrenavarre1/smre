@@ -8,7 +8,7 @@ const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?
 const areaImage = 'https://images.unsplash.com/photo-1782852648468-cd243dd4944b?auto=format&fit=crop&w=1800&q=88';
 
 export default async function Home(){
-  const listings=(await getListings()).filter(p=>p.StandardStatus==='Active').slice(0,3);
+  const listings=(await getListings()).filter(p=>p.StandardStatus==='Active').slice(0,6);
   return <>
     <section className="home-hero">
       <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
@@ -28,11 +28,9 @@ export default async function Home(){
     </section>
 
     <section className="section container">
-      <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">View all listings →</Link></div>
+      <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div>
     </section>
-
-    <ReviewsCarousel />
 
     <section className="home-rural-strip">
       <div className="container home-rural-grid">
@@ -45,5 +43,7 @@ export default async function Home(){
       <Link href="/valuation" className="cta-card"><span className="eyebrow">SELLING</span><h3>What is your home worth in today’s market?</h3><span className="text-link">Request a home value →</span></Link>
       <Link href="/contact" className="cta-card"><span className="eyebrow">BUYING OR SELLING</span><h3>Have a property, a question, or a plan?</h3><span className="text-link">Talk with SMRE →</span></Link>
     </section>
+
+    <ReviewsCarousel />
   </>;
 }
