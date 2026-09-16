@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getListings } from './lib/listings';
 import { ListingCard } from './components/ListingCard';
 import { ReviewsCarousel } from './components/ReviewsCarousel';
+import { HomeLeadButtons } from './components/HomeLeadButtons';
 
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
 const areaImage = '/images/area-reference-hd.jpg';
@@ -18,10 +19,7 @@ export default async function Home(){
         <p className="eyebrow">ST. MARYS · WAMEGO · TOPEKA–MANHATTAN</p>
         <h1>BUYING OR SELLING?<br />START HERE.</h1>
         <p className="hero-copy">St. Mary’s Real Estate helps buyers and sellers throughout the area with local knowledge, strong connections, and straightforward advice.</p>
-        <div className="home-hero-actions" aria-label="Buying or selling">
-          <Link href="/listings" className="button button-light">I’M BUYING</Link>
-          <Link href="/valuation" className="button button-light">I’M SELLING</Link>
-        </div>
+        <HomeLeadButtons />
         <form action="/listings" className="search-panel home-search">
           <input name="city" placeholder="City or area" aria-label="City or area" />
           <select name="beds" aria-label="Bedrooms"><option value="">Beds</option><option value="1">1+ beds</option><option value="2">2+ beds</option><option value="3">3+ beds</option><option value="4">4+ beds</option><option value="5">5+ beds</option></select>
