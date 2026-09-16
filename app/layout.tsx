@@ -4,6 +4,7 @@ import './brand.css';
 import './brand-overrides.css';
 import './site-additions.css';
 import './contact-reviews.css';
+import './polish.css';
 import Link from 'next/link';
 import { BrandLogo } from './components/BrandLogoFixed';
 import { ChatBubble } from './components/ChatBubble';
