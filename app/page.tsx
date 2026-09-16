@@ -5,7 +5,7 @@ import { ListingCard } from './components/ListingCard';
 import { ReviewsCarousel } from './components/ReviewsCarousel';
 
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
-const areaImage = 'https://images.stockcake.com/public/d/a/6/da63eee3-b227-4786-be17-412654f82f76_large/idyllic-farm-aerial-stockcake.jpg';
+const areaImage = '/images/area-reference-hd.jpg';
 
 export default async function Home(){
   const listings=(await getListings()).filter(p=>p.StandardStatus==='Active').slice(0,6);
