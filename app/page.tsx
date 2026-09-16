@@ -5,7 +5,7 @@ import { ListingCard } from './components/ListingCard';
 import { ReviewsCarousel } from './components/ReviewsCarousel';
 
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
-const areaImage = 'https://images.unsplash.com/photo-1782852648468-cd243dd4944b?auto=format&fit=crop&w=1800&q=88';
+const areaImage = 'https://res.publicdomainfiles.com/pdf_view/2/13493101216360.jpg';
 
 export default async function Home(){
   const listings=(await getListings()).filter(p=>p.StandardStatus==='Active').slice(0,6);
@@ -34,7 +34,7 @@ export default async function Home(){
 
     <section className="home-rural-strip">
       <div className="container home-rural-grid">
-        <div className="home-rural-photo"><img src={areaImage} alt="Farmhouse, barn, field and open countryside" /></div>
+        <div className="home-rural-photo"><img src={areaImage} alt="Aerial view of a rural Kansas farmstead and surrounding land" /></div>
         <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>Small towns. Open country. Real local knowledge.</h2><p>From St. Marys and Wamego to the farms, acreage, and communities between Topeka and Manhattan, we understand that buying here is about more than an address.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
