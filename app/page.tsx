@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getListings } from './lib/listings';
 import { ListingCard } from './components/ListingCard';
+import { ListingMap } from './components/ListingMap';
 import { ReviewsCarousel } from './components/ReviewsCarousel';
 import { HomeLeadButtons } from './components/HomeLeadButtons';
 
@@ -9,7 +10,8 @@ const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?
 const areaImage = '/images/area-reference-hd.jpg';
 
 export default async function Home(){
-  const listings=(await getListings()).filter(p=>p.StandardStatus==='Active').slice(0,6);
+  const activeListings=(await getListings()).filter(p=>p.StandardStatus==='Active');
+  const listings=activeListings.slice(0,6);
   return <>
     <style>{`\n      .home-hero-actions{display:flex;gap:10px;margin:-10px 0 30px;flex-wrap:wrap}\n      .home-hero-actions .button{min-width:145px}\n      @media(max-width:600px){.home-hero-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:430px}.home-hero-actions .button{min-width:0;width:100%}}\n      .home-rural-strip{padding:0;background:var(--navy);color:#fff}\n      .home-rural-grid.home-rural-balanced{width:100%;max-width:none;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);min-height:500px}\n      .home-rural-balanced .home-rural-photo{min-height:500px;overflow:hidden;position:relative}\n      .home-rural-balanced .home-rural-photo img{object-fit:cover;object-position:center;width:100%;height:100%;display:block;image-rendering:auto}\n      .home-rural-balanced .home-rural-copy{padding:78px clamp(44px,6vw,96px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}\n      .home-rural-balanced .home-rural-copy .eyebrow{color:#fff;opacity:.72;margin:0 0 16px}\n      .home-rural-balanced .home-rural-copy h2{font-family:var(--serif);font-size:clamp(40px,4vw,56px);line-height:1.04;font-weight:400;letter-spacing:-.04em;margin:0 0 24px;max-width:600px}\n      .home-rural-balanced .home-rural-copy p:not(.eyebrow){color:#fff;opacity:.82;font-size:16px;line-height:1.7;max-width:570px;margin:0 0 32px}\n      .home-rural-balanced .home-rural-copy .button{align-self:flex-start}\n      @media(max-width:800px){\n        .home-rural-grid.home-rural-balanced{grid-template-columns:1fr}\n        .home-rural-balanced .home-rural-photo{min-height:320px;max-height:420px}\n        .home-rural-balanced .home-rural-copy{padding:52px 28px 60px}\n      }\n    `}</style>
     <section className="home-hero">
@@ -33,6 +35,7 @@ export default async function Home(){
     <section className="section container">
       <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div>
+      {activeListings.length>0&&<div style={{marginTop:'48px'}}><ListingMap listings={activeListings}/></div>}
     </section>
 
     <section className="home-rural-strip">
