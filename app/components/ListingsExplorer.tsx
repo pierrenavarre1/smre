@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { ListingCard } from './ListingCard';
 import type { RESOProperty } from '../lib/mock-properties';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 24;
 
 type Filters = {
   type: string;
