@@ -18,7 +18,7 @@ export async function POST(request:Request){
       const contact=String(lead.contact || '');
       const email=String(lead.email || (contact.includes('@')?contact:''));
       const phone=String(lead.phone || (!contact.includes('@')?contact:''));
-      const eventType=lead.type==='valuation'?'Home Valuation':lead.type==='chat'?'Chat Inquiry':'General Inquiry';
+      const eventType=lead.type==='seller'?'Seller Inquiry':lead.type==='valuation'?'Seller Inquiry':lead.type==='chat'?'General Inquiry':'General Inquiry';
       const event={
         source:'smre.info',
         system:'SMRE Website',
