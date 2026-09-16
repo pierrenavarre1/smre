@@ -9,8 +9,9 @@ export default function About(){return <>
   </div>
 
   <div className="about-copy">
-    <p>Knowing a property is only part of the job. The location matters too: the town, the surrounding land, the market nearby, and the details that can make one property a very different proposition from another.</p>
-    <p>SMRE works with homes, land and acreage, investments, commercial property and new construction. We work across small communities and larger markets, giving clients a local perspective without limiting the conversation to one town or one type of property.</p>
+    <p>St. Mary’s Real Estate is a family-owned brokerage based in St. Marys, Kansas. We work with buyers and sellers throughout the area, whether they’re buying their first home, moving here from out of state, selling a longtime property, or looking for land, acreage, or an investment.</p>
+    <p>Our clients work with St. Mary’s Real Estate because we know the area and have local connections that can make a real difference when buying or selling. We take the time to understand what our clients need, give them an honest perspective, and help them see the things that are worth knowing about a property. We stay involved throughout the process and make sure our clients have the information and support they need to make good decisions.</p>
+    <p>That’s what we try to bring to every transaction: local knowledge, straightforward advice, and someone who stays involved when questions come up.</p>
   </div>
 
   <div className="about-local-points" aria-label="Local knowledge at SMRE">
