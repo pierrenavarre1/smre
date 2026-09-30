@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getListing } from '../../lib/listings';
 import { MLSDisclosure, SourceBadge } from '../../components/MLSDisclosure';
+import { ListingGallery } from '../../components/ListingGallery';
 
 const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const number = new Intl.NumberFormat('en-US');
@@ -17,10 +18,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
   const baths=p.BathroomsTotalInteger+(p.BathroomsHalf?0.5:0);
   return <section className="section container detail">
     <Link href="/listings" className="back">← All listings</Link>
-    <div className="gallery">
-      <div className="gallery-main"><Image src={photos[0]?.MediaURL} alt={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} fill sizes="(max-width:900px) 100vw, 66vw" priority /></div>
-      <div className="gallery-side">{photos.slice(1,5).map(media=><div key={media.MediaKey}><Image src={media.MediaURL} alt={`${p.StreetNumber} ${p.StreetName} property photo`} fill sizes="(max-width:900px) 50vw, 33vw" /></div>)}</div>
-    </div>
+    <ListingGallery photos={photos} address={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} />
     <div className="detail-grid">
       <div>
         <div className="card-top"><p className="eyebrow">{p.StandardStatus}</p><SourceBadge source={p.MlsSource}/></div>
