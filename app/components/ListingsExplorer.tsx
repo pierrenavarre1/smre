@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { ListingCard } from './ListingCard';
+import { ListingMap } from './ListingMap';
 import type { RESOProperty } from '../lib/mock-properties';
 
 const PAGE_SIZE = 24;
@@ -56,6 +57,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
         <select aria-label="Sort listings" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option></select>
       </div>
       <p className="result-count">{shown.length} {shown.length === 1 ? 'property' : 'properties'}{pageCount > 1 ? ` · Page ${currentPage} of ${pageCount}` : ''}</p>
+      {shown.length > 0 && <div className="listings-results-map"><ListingMap listings={shown} /></div>}
       <div className="listing-grid">{paged.map((p) => <ListingCard key={p.ListingId} p={p} />)}</div>
       {pageCount > 1 && (
         <nav className="pagination" aria-label="Listings pagination">
