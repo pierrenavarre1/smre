@@ -7,7 +7,7 @@ import { ReviewsCarousel } from './components/ReviewsCarousel';
 import { HomeLeadButtons } from './components/HomeLeadButtons';
 
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
-const areaImage = 'https://github.com/pierrenavarre1/smre/raw/8fd61c85ebd200cdb5557e0c5681eb5d8ac577a0/public/images/area-reference-hd.jpg';
+const areaImage = '/images/area-reference-hd.jpg';
 
 export default async function Home(){
   const activeListings=(await getListings()).filter(p=>p.StandardStatus==='Active');
