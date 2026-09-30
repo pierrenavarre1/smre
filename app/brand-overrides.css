@@ -502,9 +502,10 @@
   }
 }
 
-/* Homepage area image: show the complete uploaded image at its native proportions. */
+/* Homepage area image: use the uploaded sunset farm photo as a clean full-bleed panel. */
 .home-rural-grid.home-rural-balanced{
-  min-height:0;
+  display:grid;
+  grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
   align-items:stretch;
 }
 .home-rural-balanced .home-rural-photo{
@@ -513,17 +514,28 @@
   overflow:hidden;
 }
 .home-rural-balanced .home-rural-photo img{
-  object-fit:contain;
+  width:100%;
+  height:100%;
+  object-fit:cover;
   object-position:center;
-  background:#fff;
+  display:block;
 }
 .home-rural-balanced .home-rural-copy{
-  min-height:0;
+  min-height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 @media(max-width:800px){
+  .home-rural-grid.home-rural-balanced{
+    grid-template-columns:1fr;
+  }
   .home-rural-balanced .home-rural-photo{
     aspect-ratio:1676 / 939;
     min-height:0;
-    max-height:none;
+  }
+  .home-rural-balanced .home-rural-copy{
+    min-height:0;
+    padding:52px 28px 60px;
   }
 }
