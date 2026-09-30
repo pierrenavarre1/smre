@@ -30,7 +30,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
         (!filters.beds || p.BedroomsTotal >= Number(filters.beds)) &&
         (!filters.baths || p.BathroomsTotalInteger >= Number(filters.baths)) &&
         (!filters.max || p.ListPrice <= Number(filters.max)) &&
-        (!filters.city || p.City.toLowerCase().includes(filters.city.toLowerCase().trim()))
+        (!filters.city || p.City.toLowerCase().includes(filters.city.toLowerCase().trim()) || p.PostalCode.includes(filters.city.trim()))
       )
       .sort((a, b) => sort === 'price-desc' ? b.ListPrice - a.ListPrice : a.ListPrice - b.ListPrice);
   }, [items, filters, sort]);
@@ -46,7 +46,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
   return (
     <>
       <div className="filters">
-        <input aria-label="City" value={filters.city} onChange={(e) => update('city', e.target.value)} placeholder="City" />
+        <input aria-label="City or ZIP code" value={filters.city} onChange={(e) => update('city', e.target.value)} placeholder="City or ZIP" />
         <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}><option value="Active">Active</option><option value="">All statuses</option><option value="Pending">Pending</option></select>
         <select aria-label="Property type" value={filters.type} onChange={(e) => update('type', e.target.value)}><option value="">All property types</option><option>Residential</option><option>Farm</option><option>Land</option><option>Commercial</option></select>
         <select aria-label="MLS source" value={filters.source} onChange={(e) => update('source', e.target.value)}><option value="">Both MLSs</option><option>Sunflower MLS</option><option>FHAR MLS</option></select>
