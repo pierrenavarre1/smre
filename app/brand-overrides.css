@@ -14,3 +14,46 @@
 .filters input::placeholder{color:var(--muted);opacity:1}
 .filters input:focus{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
 .listings-results-map{margin:26px 0 42px}
+
+/* Listings search: map stays on the left while results live on the right. */
+.listings-search-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1.12fr) minmax(360px,.88fr);
+  gap:28px;
+  align-items:start;
+  margin-top:26px;
+}
+.listings-map-column{
+  position:sticky;
+  top:20px;
+  min-width:0;
+}
+.listings-map-column .listing-map-wrap{margin:0}
+.listings-results-column{min-width:0}
+.listings-results-column .listing-grid{
+  grid-template-columns:1fr;
+  gap:16px;
+}
+.listings-results-column .pagination{
+  margin-top:24px;
+}
+.listing-search-empty{
+  border-top:1px solid var(--line);
+  padding:34px 0;
+}
+.listing-search-empty h3{
+  font-family:var(--serif);
+  font-size:30px;
+  font-weight:400;
+  margin:0 0 8px;
+}
+.listing-search-empty p{color:var(--muted);margin:0}
+@media(max-width:1000px){
+  .listings-search-layout{grid-template-columns:1fr;gap:34px}
+  .listings-map-column{position:relative;top:auto}
+  .listings-results-column .listing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .listings-search-layout{gap:28px}
+  .listings-results-column .listing-grid{grid-template-columns:1fr}
+}
