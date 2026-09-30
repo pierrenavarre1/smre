@@ -57,14 +57,22 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
         <select aria-label="Sort listings" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option></select>
       </div>
       <p className="result-count">{shown.length} {shown.length === 1 ? 'property' : 'properties'}{pageCount > 1 ? ` · Page ${currentPage} of ${pageCount}` : ''}</p>
-      {shown.length > 0 && <div className="listings-results-map"><ListingMap listings={shown} /></div>}
-      <div className="listing-grid">{paged.map((p) => <ListingCard key={p.ListingId} p={p} />)}</div>
-      {pageCount > 1 && (
-        <nav className="pagination" aria-label="Listings pagination">
-          <button className="button button-light" disabled={currentPage === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</button>
-          <span>Page {currentPage} of {pageCount}</span>
-          <button className="button button-light" disabled={currentPage === pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button>
-        </nav>
+      {shown.length > 0 ? (
+        <div className="listings-search-layout">
+          <div className="listings-map-column"><ListingMap listings={shown} /></div>
+          <div className="listings-results-column">
+            <div className="listing-grid">{paged.map((p) => <ListingCard key={p.ListingId} p={p} />)}</div>
+            {pageCount > 1 && (
+              <nav className="pagination" aria-label="Listings pagination">
+                <button className="button button-light" disabled={currentPage === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Previous</button>
+                <span>Page {currentPage} of {pageCount}</span>
+                <button className="button button-light" disabled={currentPage === pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>Next</button>
+              </nav>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="listing-search-empty"><h3>No properties match those filters.</h3><p>Try widening the city, price, bedroom, or property type search.</p></div>
       )}
     </>
   );
