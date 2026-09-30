@@ -9,7 +9,6 @@ const PAGE_SIZE = 24;
 
 type Filters = {
   type: string;
-  source: string;
   status: string;
   beds: string;
   baths: string;
@@ -21,7 +20,6 @@ type Filters = {
 export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOProperty[]; initialFilters?: Partial<Filters> }) {
   const [filters, setFilters] = useState<Filters>({
     type: '',
-    source: '',
     status: 'Active',
     beds: '',
     baths: '',
@@ -39,7 +37,6 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
         const baths = p.BathroomsTotalInteger + (p.BathroomsHalf ? 0.5 : 0);
         return (
           (!filters.type || p.PropertyType === filters.type) &&
-          (!filters.source || p.MlsSource === filters.source) &&
           (!filters.status || p.StandardStatus === filters.status) &&
           (!filters.beds || p.BedroomsTotal >= Number(filters.beds)) &&
           (!filters.baths || baths >= Number(filters.baths)) &&
@@ -65,7 +62,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
   };
 
   const clearFilters = () => {
-    setFilters({ type: '', source: '', status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '' });
+    setFilters({ type: '', status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '' });
     setPage(1);
   };
 
