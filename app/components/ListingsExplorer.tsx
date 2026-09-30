@@ -56,11 +56,14 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
         <select aria-label="Maximum price" value={filters.max} onChange={(e) => update('max', e.target.value)}><option value="">Any price</option><option value="200000">Under $200k</option><option value="300000">Under $300k</option><option value="400000">Under $400k</option><option value="500000">Under $500k</option><option value="750000">Under $750k</option><option value="1000000">Under $1M</option></select>
         <select aria-label="Sort listings" value={sort} onChange={(e) => { setSort(e.target.value); setPage(1); }}><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option></select>
       </div>
-      <p className="result-count">{shown.length} {shown.length === 1 ? 'property' : 'properties'}{pageCount > 1 ? ` · Page ${currentPage} of ${pageCount}` : ''}</p>
       {shown.length > 0 ? (
         <div className="listings-search-layout">
           <div className="listings-map-column"><ListingMap listings={shown} /></div>
           <div className="listings-results-column">
+            <div className="listings-results-header">
+              <div><p className="eyebrow">ACTIVE LISTINGS</p><h2>{shown.length} {shown.length === 1 ? 'property' : 'properties'}</h2></div>
+              {pageCount > 1 && <span>Page {currentPage} of {pageCount}</span>}
+            </div>
             <div className="listing-grid">{paged.map((p) => <ListingCard key={p.ListingId} p={p} />)}</div>
             {pageCount > 1 && (
               <nav className="pagination" aria-label="Listings pagination">
