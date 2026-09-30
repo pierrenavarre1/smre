@@ -1,12 +1,13 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 type Photo = { MediaKey: string; MediaURL: string };
 
 export function ListingGallery({ photos, address }: { photos: Photo[]; address: string }) {
   const [open, setOpen] = useState<number | null>(null);
+  const touchStart = useRef<number | null>(null);
 
   const close = () => setOpen(null);
   const previous = () => setOpen((current) => current === null ? null : (current - 1 + photos.length) % photos.length);
@@ -56,7 +57,17 @@ export function ListingGallery({ photos, address }: { photos: Photo[]; address: 
         <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`Photo ${open + 1} of ${photos.length}`} onClick={close}>
           <button type="button" className="photo-lightbox-close" onClick={close} aria-label="Close photo viewer">×</button>
           <button type="button" className="photo-lightbox-arrow photo-lightbox-prev" onClick={(event) => { event.stopPropagation(); previous(); }} aria-label="Previous photo">‹</button>
-          <div className="photo-lightbox-stage" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="photo-lightbox-stage"
+            onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
+            onTouchEnd={(event) => {
+              if (touchStart.current === null) return;
+              const delta = (event.changedTouches[0]?.clientX ?? touchStart.current) - touchStart.current;
+              touchStart.current = null;
+              if (Math.abs(delta) > 50) delta < 0 ? next() : previous();
+            }}
+          >
             <img src={photos[open].MediaURL} alt={`${address} property photo ${open + 1}`} />
           </div>
           <button type="button" className="photo-lightbox-arrow photo-lightbox-next" onClick={(event) => { event.stopPropagation(); next(); }} aria-label="Next photo">›</button>
