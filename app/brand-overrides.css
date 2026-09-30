@@ -464,3 +464,40 @@
   .photo-lightbox-count{bottom:25px}
   .photo-lightbox-close{top:10px;right:10px}
 }
+
+
+/* Fix listing gallery sizing so the main photo fills the large gallery panel. */
+.gallery{
+  min-height:520px;
+}
+.gallery-main{
+  height:520px;
+  min-height:520px;
+}
+.gallery-side{
+  height:520px;
+}
+.gallery-side .gallery-photo-button{
+  height:100%;
+}
+.gallery-main.gallery-photo-button{
+  height:520px;
+}
+@media(max-width:600px){
+  .gallery{
+    min-height:0;
+  }
+  .gallery-main{
+    height:360px;
+    min-height:360px;
+  }
+  .gallery-main.gallery-photo-button{
+    height:360px;
+  }
+  .gallery-side{
+    height:440px;
+  }
+  .gallery-side .gallery-photo-button{
+    height:100%;
+  }
+}
