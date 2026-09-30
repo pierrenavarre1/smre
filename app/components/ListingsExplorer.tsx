@@ -14,6 +14,7 @@ type Filters = {
   beds: string;
   baths: string;
   max: string;
+  acreage: string;
   city: string;
 };
 
@@ -25,6 +26,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
     beds: '',
     baths: '',
     max: '',
+    acreage: '',
     city: '',
     ...initialFilters,
   });
@@ -42,6 +44,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
           (!filters.beds || p.BedroomsTotal >= Number(filters.beds)) &&
           (!filters.baths || baths >= Number(filters.baths)) &&
           (!filters.max || p.ListPrice <= Number(filters.max)) &&
+          (!filters.acreage || (p.LotSizeAcres || 0) >= Number(filters.acreage)) &&
           (!filters.city ||
             p.City.toLowerCase().includes(filters.city.toLowerCase().trim()) ||
             p.PostalCode.includes(filters.city.trim()))
@@ -62,7 +65,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
   };
 
   const clearFilters = () => {
-    setFilters({ type: '', source: '', status: 'Active', beds: '', baths: '', max: '', city: '' });
+    setFilters({ type: '', source: '', status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '' });
     setPage(1);
   };
 
@@ -122,10 +125,16 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
             <option value="1000000">Under $1M</option>
           </select>
 
-          <select aria-label="MLS source" value={filters.source} onChange={(e) => update('source', e.target.value)}>
-            <option value="">MLS: All</option>
-            <option>Sunflower MLS</option>
-            <option>FHAR MLS</option>
+          <select aria-label="Acreage" value={filters.acreage} onChange={(e) => update('acreage', e.target.value)}>
+            <option value="">Acreage</option>
+            <option value="0.25">¼+ acre</option>
+            <option value="0.5">½+ acre</option>
+            <option value="1">1+ acre</option>
+            <option value="2">2+ acres</option>
+            <option value="5">5+ acres</option>
+            <option value="10">10+ acres</option>
+            <option value="20">20+ acres</option>
+            <option value="40">40+ acres</option>
           </select>
 
           <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}>
