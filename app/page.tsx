@@ -7,7 +7,7 @@ import { ReviewsCarousel } from './components/ReviewsCarousel';
 import { HomeLeadButtons } from './components/HomeLeadButtons';
 
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
-const areaImage = '/images/area-reference-hd.jpg';
+const areaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 
 export default async function Home(){
   const activeListings=(await getListings()).filter(p=>p.StandardStatus==='Active');
