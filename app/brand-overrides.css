@@ -539,3 +539,47 @@
     padding:52px 28px 60px;
   }
 }
+
+
+/* Homepage sunset farm image: preserve the complete uploaded photo without cropping. */
+.home-rural-grid.home-rural-balanced{
+  grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
+  align-items:stretch;
+}
+.home-rural-balanced .home-rural-photo{
+  min-height:0;
+  aspect-ratio:auto;
+  overflow:hidden;
+  display:flex;
+  align-items:stretch;
+}
+.home-rural-balanced .home-rural-photo img{
+  width:100%;
+  height:auto;
+  min-height:100%;
+  object-fit:contain;
+  object-position:center;
+  display:block;
+}
+.home-rural-balanced .home-rural-copy{
+  min-height:100%;
+}
+@media(max-width:800px){
+  .home-rural-grid.home-rural-balanced{
+    grid-template-columns:1fr;
+  }
+  .home-rural-balanced .home-rural-photo{
+    aspect-ratio:auto;
+    min-height:0;
+    display:block;
+  }
+  .home-rural-balanced .home-rural-photo img{
+    width:100%;
+    height:auto;
+    min-height:0;
+    object-fit:contain;
+  }
+  .home-rural-balanced .home-rural-copy{
+    min-height:0;
+  }
+}
