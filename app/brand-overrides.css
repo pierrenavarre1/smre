@@ -13,3 +13,4 @@
 }
 .filters input::placeholder{color:var(--muted);opacity:1}
 .filters input:focus{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+.listings-results-map{margin:26px 0 42px}
