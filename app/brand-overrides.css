@@ -317,3 +317,9 @@
   color:var(--muted);
   font-size:14px;
 }
+
+/* Keep native filter arrows comfortably inset from the right edge. */
+.listings-filter-selects select{
+  background-position:right 18px center;
+  padding-right:42px;
+}
