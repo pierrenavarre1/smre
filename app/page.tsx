@@ -72,10 +72,4 @@ export default async function Home(){
 
     <ReviewsCarousel />
   </>;
-}      /* Final homepage rural section treatment */
-      .home-rural-grid.home-rural-balanced{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);min-height:0;align-items:stretch}
-      .home-rural-balanced .home-rural-photo{min-height:0;aspect-ratio:1676 / 939;overflow:hidden;position:relative}
-      .home-rural-balanced .home-rural-photo img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
-      .home-rural-balanced .home-rural-copy{min-height:100%;padding:clamp(48px,5vw,78px) clamp(36px,5vw,84px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
-      @media(max-width:800px){.home-rural-grid.home-rural-balanced{grid-template-columns:1fr}.home-rural-balanced .home-rural-photo{aspect-ratio:1676 / 939;min-height:0}.home-rural-balanced .home-rural-copy{min-height:0;padding:52px 28px 60px}}
-
+}
