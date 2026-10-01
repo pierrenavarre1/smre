@@ -583,3 +583,43 @@
     min-height:0;
   }
 }
+
+/* Mobile header: spacious logo + compact hamburger menu. */
+.mobile-menu{display:none;position:relative;flex:0 0 auto}
+.mobile-menu-toggle{
+  width:46px;height:46px;padding:0;border:1px solid rgba(255,255,255,.45);
+  background:transparent;color:#fff;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:5px;cursor:pointer;
+}
+.mobile-menu-toggle span{display:block;width:19px;height:1.5px;background:#fff;transition:transform .2s,opacity .2s}
+.mobile-menu-toggle.is-open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+.mobile-menu-toggle.is-open span:nth-child(2){opacity:0}
+.mobile-menu-toggle.is-open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+.mobile-menu-panel{
+  position:absolute;top:calc(100% + 14px);right:0;width:min(320px,calc(100vw - 32px));
+  background:#0f1447;color:#fff;padding:10px 0 0;
+  box-shadow:0 16px 40px rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.12);
+}
+.mobile-menu-panel nav{display:flex;flex-direction:column}
+.mobile-menu-panel nav a{
+  color:#fff;text-decoration:none;padding:17px 24px;border-bottom:1px solid rgba(255,255,255,.12);
+  font-size:15px;font-weight:600;letter-spacing:.01em;
+}
+.mobile-menu-panel nav a:hover{background:rgba(255,255,255,.07)}
+.mobile-menu-call{padding:18px 24px 21px;display:flex;flex-direction:column;gap:3px}
+.mobile-menu-call span{font-size:10px;letter-spacing:.15em;text-transform:uppercase;opacity:.62}
+.mobile-menu-call a{color:#fff;text-decoration:none;font-size:14px;font-weight:700}
+@media(max-width:900px){
+  .nav{min-height:78px;gap:18px;position:relative}
+  .nav-links{display:none}
+  .mobile-menu{display:block}
+  .brand-logo{flex:1 1 auto;width:auto;max-width:260px;min-width:0}
+  .site-header .logo-image{max-height:52px}
+}
+@media(max-width:560px){
+  .nav{min-height:72px;gap:14px}
+  .brand-logo{max-width:210px}
+  .site-header .logo-image{max-height:43px}
+  .mobile-menu-toggle{width:44px;height:44px}
+  .mobile-menu-panel{top:calc(100% + 10px)}
+}
