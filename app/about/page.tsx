@@ -31,13 +31,13 @@ export default function About(){return <>
   <div className="page-intro">
     <p className="eyebrow">CLIENT FEEDBACK</p>
     <h2>What people say about working with SMRE.</h2>
-    <p>Published client reviews frequently mention communication, patience, local guidance and hands-on help through the buying and selling process.</p>
+    <p>We focus on clear communication, local knowledge, and hands-on help throughout the buying and selling process. Here’s what some of our clients have said.</p>
   </div>
 
   <div className="about-review-grid">
-    <blockquote>“Never missed a call from me throughout the entire two-month process.”<cite>— Patrick, published SMRE client review</cite></blockquote>
-    <blockquote>“They walked us through the process and helped us with our first home purchase.”<cite>— Jim, published SMRE client review</cite></blockquote>
-    <blockquote>“Michael Kirby made my purchase experience very easy for an out-of-state buyer moving to St. Marys.”<cite>— Anne, published SMRE client review</cite></blockquote>
+    <blockquote><span className="review-quote-text">“Never missed a call from me throughout the entire two-month process.”</span><cite>— Patrick, published SMRE client review</cite></blockquote>
+    <blockquote><span className="review-quote-text">“They walked us through the process and helped us with our first home purchase.”</span><cite>— Jim, published SMRE client review</cite></blockquote>
+    <blockquote><span className="review-quote-text">“Michael Kirby made my purchase experience very easy for an out-of-state buyer moving to St. Marys.”</span><cite>— Anne, published SMRE client review</cite></blockquote>
   </div>
 
   <div className="about-google-review">
