@@ -755,3 +755,9 @@
     margin-top:28px;
   }
 }
+
+
+/* About page: match the main content width used throughout the site. */
+.about-page .about-copy{
+  max-width:none;
+}
