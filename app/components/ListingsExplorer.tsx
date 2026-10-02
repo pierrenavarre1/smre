@@ -7,6 +7,9 @@ import type { RESOProperty } from '../lib/mock-properties';
 
 const PAGE_SIZE = 24;
 
+const normalizeSearch = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9]/g, '');
+
 type Filters = {
   type: string[];
   status: string;
@@ -51,9 +54,9 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
             p.City.toLowerCase().includes(filters.city.toLowerCase().trim()) ||
             p.PostalCode.includes(filters.city.trim())) &&
           (!filters.address ||
-            `${p.StreetNumber} ${p.StreetName} ${p.City} ${p.StateOrProvince} ${p.PostalCode}`
-              .toLowerCase()
-              .includes(filters.address.toLowerCase().trim()))
+            normalizeSearch(
+              `${p.StreetNumber} ${p.StreetName} ${p.City} ${p.StateOrProvince} ${p.PostalCode}`
+            ).includes(normalizeSearch(filters.address)))
         );
       })
       .sort((a, b) =>
@@ -62,11 +65,13 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
   }, [items, filters, sort]);
 
   const addressSuggestions = useMemo(() => {
-    const query = filters.address.trim().toLowerCase();
+    const query = normalizeSearch(filters.address);
     if (!query) return [];
     return items
       .filter((p) => {
-        const full = `${p.StreetNumber} ${p.StreetName} ${p.City} ${p.StateOrProvince} ${p.PostalCode}`.toLowerCase();
+        const full = normalizeSearch(
+          `${p.StreetNumber} ${p.StreetName} ${p.City} ${p.StateOrProvince} ${p.PostalCode}`
+        );
         return full.includes(query);
       })
       .slice(0, 6);
