@@ -677,3 +677,111 @@
     min-height:460px;
   }
 }
+
+
+/* About page feedback: give the testimonials room to breathe and make the Google summary feel intentional. */
+.about-feedback-section{
+  padding-top:96px;
+}
+.about-feedback-section .page-intro{
+  margin-bottom:38px;
+}
+.about-feedback-section .page-intro h2{
+  font-family:var(--serif);
+  font-size:clamp(40px,5vw,58px);
+  line-height:1.03;
+  letter-spacing:-.04em;
+  font-weight:400;
+  margin:0 0 16px;
+}
+.about-review-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:20px;
+  align-items:stretch;
+}
+.about-review-grid blockquote{
+  margin:0;
+  padding:32px 30px 28px;
+  border:1px solid rgba(15,20,71,.16);
+  border-top:3px solid var(--navy);
+  background:#fff;
+  font-family:var(--serif);
+  font-size:20px;
+  line-height:1.45;
+  display:flex;
+  flex-direction:column;
+  min-height:235px;
+}
+.about-review-grid cite{
+  margin-top:auto;
+  padding-top:28px;
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:11px;
+  line-height:1.5;
+  color:var(--muted);
+  font-style:normal;
+}
+.about-google-review{
+  margin-top:28px;
+  padding:26px 30px;
+  border:1px solid rgba(15,20,71,.16);
+  background:rgba(15,20,71,.025);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:28px;
+}
+.about-google-copy .eyebrow{
+  margin-bottom:9px;
+}
+.about-google-copy>p:last-child{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:12px;
+}
+.about-google-score{
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+.about-google-score strong{
+  font-family:var(--serif);
+  font-size:32px;
+  line-height:1;
+  font-weight:400;
+}
+.about-google-stars{
+  color:var(--navy);
+  font-size:15px;
+  letter-spacing:.16em;
+}
+@media(max-width:800px){
+  .about-feedback-section{
+    padding-top:72px;
+  }
+  .about-review-grid{
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  .about-review-grid blockquote{
+    min-height:0;
+  }
+  .about-google-review{
+    align-items:flex-start;
+    flex-direction:column;
+    padding:24px;
+  }
+}
+@media(max-width:560px){
+  .about-feedback-section{
+    padding-top:62px;
+  }
+  .about-review-grid blockquote{
+    padding:27px 24px 24px;
+    font-size:19px;
+  }
+  .about-google-review{
+    margin-top:20px;
+  }
+}
