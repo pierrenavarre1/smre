@@ -3,13 +3,14 @@ import { ListingsExplorer } from '../components/ListingsExplorer';
 
 export const metadata = { title: 'Listings' };
 
-type SearchParams = Promise<{ city?: string; beds?: string; baths?: string; max?: string }>;
+type SearchParams = Promise<{ city?: string; address?: string; beds?: string; baths?: string; max?: string }>;
 
 export default async function Listings({ searchParams }: { searchParams: SearchParams }) {
   const items = (await getListings()).filter((p) => p.StandardStatus === 'Active');
   const params = await searchParams;
   const initialFilters = {
     ...(params.city ? { city: params.city } : {}),
+    ...(params.address ? { address: params.address } : {}),
     ...(params.beds ? { beds: params.beds } : {}),
     ...(params.baths ? { baths: params.baths } : {}),
     ...(params.max ? { max: params.max } : {}),
