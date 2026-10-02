@@ -135,6 +135,17 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
           )}
         </div>
 
+        <button
+          type="button"
+          className="button button-dark listings-search-button"
+          onClick={() => {
+            setAddressOpen(false);
+            setPage(1);
+          }}
+        >
+          Search
+        </button>
+
         <div className="listings-filter-selects">
           <select aria-label="Property type" value={filters.type} onChange={(e) => update('type', e.target.value)}>
             <option value="">Property type</option>
