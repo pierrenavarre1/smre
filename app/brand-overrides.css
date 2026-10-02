@@ -695,18 +695,18 @@
 .about-review-grid{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:28px;
+  gap:32px;
   align-items:stretch;
 }
 .about-review-grid blockquote{
   margin:0;
-  padding:36px 44px 34px;
+  padding:40px 48px 38px;
   border:1px solid rgba(15,20,71,.16);
   border-top:3px solid var(--navy);
   background:#fff;
   font-family:var(--serif);
   font-size:20px;
-  line-height:1.5;
+  line-height:1.55;
   display:flex;
   flex-direction:column;
 }
