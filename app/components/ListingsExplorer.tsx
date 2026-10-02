@@ -34,6 +34,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
   const [page, setPage] = useState(1);
   const [addressOpen, setAddressOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const shown = useMemo(() => {
     return items
@@ -83,6 +84,8 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
   const clearFilters = () => {
     setFilters({ type: [], status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '', address: '' });
     setAddressOpen(false);
+    setTypeOpen(false);
+    setMobileFiltersOpen(false);
     setPage(1);
   };
 
@@ -148,6 +151,19 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
           }}
         >
           Search
+        </button>
+
+        <button
+          type="button"
+          className="listings-mobile-filter-button"
+          aria-label="Open filters"
+          aria-expanded={mobileFiltersOpen}
+          onClick={() => setMobileFiltersOpen(true)}
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+            <path d="M4 6h16M7 12h10M10 18h4" />
+          </svg>
+          <span>Filters</span>
         </button>
 
         <div className="listings-filter-selects">
@@ -251,6 +267,31 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
           Clear
         </button>
       </div>
+
+      {mobileFiltersOpen && (
+        <div className="listings-mobile-filter-overlay" role="dialog" aria-modal="true" aria-label="Listing filters">
+          <button type="button" className="listings-mobile-filter-backdrop" aria-label="Close filters" onClick={() => setMobileFiltersOpen(false)} />
+          <div className="listings-mobile-filter-panel">
+            <div className="listings-mobile-filter-header"><strong>Filters</strong><button type="button" onClick={() => setMobileFiltersOpen(false)} aria-label="Close filters">×</button></div>
+            <div className="listings-mobile-filter-fields">
+              <div className="listings-type-filter">
+                <button type="button" className="listings-type-filter-button" aria-haspopup="listbox" aria-expanded={typeOpen} onClick={() => setTypeOpen((open) => !open)}>
+                  <span>{filters.type.length === 0 ? 'Property type' : filters.type.length === 1 ? filters.type[0] : filters.type.length + ' types'}</span><span aria-hidden="true">⌄</span>
+                </button>
+                {typeOpen && (<div className="listings-type-options" role="listbox" aria-label="Property types" aria-multiselectable="true">
+                  {['Residential', 'Farm', 'Land', 'Commercial'].map((type) => (<label key={type}><input type="checkbox" checked={filters.type.includes(type)} onChange={() => { setFilters((current) => ({ ...current, type: current.type.includes(type) ? current.type.filter((value) => value !== type) : [...current.type, type] })); setPage(1); setTypeOpen(false); }} /><span>{type}</span></label>))}
+                </div>)}
+              </div>
+              <select aria-label="Bedrooms" value={filters.beds} onChange={(e) => update('beds', e.target.value)}><option value="">Beds</option><option value="1">1+ beds</option><option value="2">2+ beds</option><option value="3">3+ beds</option><option value="4">4+ beds</option><option value="5">5+ beds</option></select>
+              <select aria-label="Bathrooms" value={filters.baths} onChange={(e) => update('baths', e.target.value)}><option value="">Baths</option><option value="1">1+ baths</option><option value="1.5">1.5+ baths</option><option value="2">2+ baths</option><option value="2.5">2.5+ baths</option><option value="3">3+ baths</option><option value="4">4+ baths</option></select>
+              <select aria-label="Maximum price" value={filters.max} onChange={(e) => update('max', e.target.value)}><option value="">Price</option><option value="200000">Under $200k</option><option value="300000">Under $300k</option><option value="400000">Under $400k</option><option value="500000">Under $500k</option><option value="750000">Under $750k</option><option value="1000000">Under $1M</option></select>
+              <select aria-label="Acreage" value={filters.acreage} onChange={(e) => update('acreage', e.target.value)}><option value="">Acreage</option><option value="0.25">¼+ acre</option><option value="0.5">½+ acre</option><option value="1">1+ acre</option><option value="2">2+ acres</option><option value="5">5+ acres</option><option value="10">10+ acres</option><option value="20">20+ acres</option><option value="40">40+ acres</option></select>
+              <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}><option value="Active">Active</option><option value="">All statuses</option><option value="Pending">Pending</option></select>
+            </div>
+            <div className="listings-mobile-filter-actions"><button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button><button type="button" className="button button-dark" onClick={() => setMobileFiltersOpen(false)}>View {shown.length} {shown.length === 1 ? 'home' : 'homes'}</button></div>
+          </div>
+        </div>
+      )}
 
       {shown.length > 0 ? (
         <div className="listings-search-layout">
