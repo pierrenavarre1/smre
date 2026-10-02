@@ -41,12 +41,7 @@ export default function About(){return <>
   </div>
 
   <div className="about-google-review">
-    <div className="about-google-copy">
-      <p className="eyebrow">GOOGLE REVIEWS</p>
-      <div className="about-google-score"><strong>5.0</strong><span className="about-google-stars" aria-label="5 out of 5 stars">★★★★★</span></div>
-      <p>26 Google reviews at the time this site was researched.</p>
-    </div>
-    <a className="button button-dark" href="/testimonials">Read Reviews</a>
+    <a className="button button-dark" href="/testimonials">Read All Reviews</a>
   </div>
 </section>
 </>}
