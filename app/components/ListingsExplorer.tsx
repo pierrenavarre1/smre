@@ -101,16 +101,6 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
             }}
             onKeyDown={(e) => {
               if (e.key === 'Escape') setAddressOpen(false);
-              if (e.key === 'Enter' && addressSuggestions[0]) {
-                const p = addressSuggestions[0];
-                setFilters((current) => ({
-                  ...current,
-                  address: `${p.StreetNumber} ${p.StreetName}, ${p.City}, ${p.StateOrProvince} ${p.PostalCode}`,
-                  city: '',
-                }));
-                setAddressOpen(false);
-                setPage(1);
-              }
             }}
             placeholder="Address, city, ZIP code, or neighborhood"
           />
