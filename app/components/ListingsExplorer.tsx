@@ -15,6 +15,7 @@ type Filters = {
   max: string;
   acreage: string;
   city: string;
+  address: string;
 };
 
 export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOProperty[]; initialFilters?: Partial<Filters> }) {
@@ -26,10 +27,12 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
     max: '',
     acreage: '',
     city: '',
+    address: '',
     ...initialFilters,
   });
   const [sort, setSort] = useState('price-asc');
   const [page, setPage] = useState(1);
+  const [addressOpen, setAddressOpen] = useState(false);
 
   const shown = useMemo(() => {
     return items
@@ -44,13 +47,28 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
           (!filters.acreage || (p.LotSizeAcres || 0) >= Number(filters.acreage)) &&
           (!filters.city ||
             p.City.toLowerCase().includes(filters.city.toLowerCase().trim()) ||
-            p.PostalCode.includes(filters.city.trim()))
+            p.PostalCode.includes(filters.city.trim())) &&
+          (!filters.address ||
+            `${p.StreetNumber} ${p.StreetName} ${p.City} ${p.StateOrProvince} ${p.PostalCode}`
+              .toLowerCase()
+              .includes(filters.address.toLowerCase().trim()))
         );
       })
       .sort((a, b) =>
         sort === 'price-desc' ? b.ListPrice - a.ListPrice : a.ListPrice - b.ListPrice
       );
   }, [items, filters, sort]);
+
+  const addressSuggestions = useMemo(() => {
+    const query = filters.address.trim().toLowerCase();
+    if (!query) return [];
+    return items
+      .filter((p) => {
+        const full = `${p.StreetNumber} ${p.StreetName} ${p.City} ${p.StateOrProvince} ${p.PostalCode}`.toLowerCase();
+        return full.includes(query);
+      })
+      .slice(0, 6);
+  }, [items, filters.address]);
 
   const pageCount = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -62,7 +80,8 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
   };
 
   const clearFilters = () => {
-    setFilters({ type: '', status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '' });
+    setFilters({ type: '', status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '', address: '' });
+    setAddressOpen(false);
     setPage(1);
   };
 
@@ -72,15 +91,57 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
         <div className="listings-location-search">
           <span aria-hidden="true">⌕</span>
           <input
-            aria-label="City or ZIP code"
-            value={filters.city}
-            onChange={(e) => update('city', e.target.value)}
-            placeholder="City, ZIP code, or neighborhood"
+            aria-label="Address, city, ZIP code, or neighborhood"
+            value={filters.address || filters.city}
+            onFocus={() => setAddressOpen(true)}
+            onChange={(e) => {
+              setAddressOpen(true);
+              update('address', e.target.value);
+              if (filters.city) setFilters((current) => ({ ...current, city: '' }));
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setAddressOpen(false);
+              if (e.key === 'Enter' && addressSuggestions[0]) {
+                const p = addressSuggestions[0];
+                setFilters((current) => ({
+                  ...current,
+                  address: `${p.StreetNumber} ${p.StreetName}, ${p.City}, ${p.StateOrProvince} ${p.PostalCode}`,
+                  city: '',
+                }));
+                setAddressOpen(false);
+                setPage(1);
+              }
+            }}
+            placeholder="Address, city, ZIP code, or neighborhood"
           />
-          {filters.city && (
-            <button type="button" onClick={() => update('city', '')} aria-label="Clear location search">
+          {(filters.address || filters.city) && (
+            <button type="button" onClick={() => { update('address', ''); update('city', ''); setAddressOpen(false); }} aria-label="Clear location search">
               ×
             </button>
+          )}
+          {addressOpen && addressSuggestions.length > 0 && (
+            <div className="listings-address-suggestions" role="listbox" aria-label="Matching properties">
+              {addressSuggestions.map((p) => (
+                <button
+                  type="button"
+                  key={p.ListingId}
+                  role="option"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    setFilters((current) => ({
+                      ...current,
+                      address: `${p.StreetNumber} ${p.StreetName}, ${p.City}, ${p.StateOrProvince} ${p.PostalCode}`,
+                      city: '',
+                    }));
+                    setAddressOpen(false);
+                    setPage(1);
+                  }}
+                >
+                  <strong>{p.StreetNumber} {p.StreetName}</strong>
+                  <span>{p.City}, {p.StateOrProvince} {p.PostalCode}</span>
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
