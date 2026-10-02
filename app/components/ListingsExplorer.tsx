@@ -8,7 +8,7 @@ import type { RESOProperty } from '../lib/mock-properties';
 const PAGE_SIZE = 24;
 
 type Filters = {
-  type: string;
+  type: string[];
   status: string;
   beds: string;
   baths: string;
@@ -20,7 +20,7 @@ type Filters = {
 
 export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOProperty[]; initialFilters?: Partial<Filters> }) {
   const [filters, setFilters] = useState<Filters>({
-    type: '',
+    type: [],
     status: 'Active',
     beds: '',
     baths: '',
@@ -33,13 +33,14 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
   const [sort, setSort] = useState('price-asc');
   const [page, setPage] = useState(1);
   const [addressOpen, setAddressOpen] = useState(false);
+  const [typeOpen, setTypeOpen] = useState(false);
 
   const shown = useMemo(() => {
     return items
       .filter((p) => {
         const baths = p.BathroomsTotalInteger + (p.BathroomsHalf ? 0.5 : 0);
         return (
-          (!filters.type || p.PropertyType === filters.type) &&
+          (filters.type.length === 0 || filters.type.includes(p.PropertyType)) &&
           (!filters.status || p.StandardStatus === filters.status) &&
           (!filters.beds || p.BedroomsTotal >= Number(filters.beds)) &&
           (!filters.baths || baths >= Number(filters.baths)) &&
@@ -80,7 +81,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
   };
 
   const clearFilters = () => {
-    setFilters({ type: '', status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '', address: '' });
+    setFilters({ type: [], status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '', address: '' });
     setAddressOpen(false);
     setPage(1);
   };
@@ -147,13 +148,46 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
         </button>
 
         <div className="listings-filter-selects">
-          <select aria-label="Property type" value={filters.type} onChange={(e) => update('type', e.target.value)}>
-            <option value="">Property type</option>
-            <option>Residential</option>
-            <option>Farm</option>
-            <option>Land</option>
-            <option>Commercial</option>
-          </select>
+          <div className="listings-type-filter">
+            <button
+              type="button"
+              className="listings-type-filter-button"
+              aria-haspopup="listbox"
+              aria-expanded={typeOpen}
+              onClick={() => setTypeOpen((open) => !open)}
+            >
+              <span>
+                {filters.type.length === 0
+                  ? 'Property type'
+                  : filters.type.length === 1
+                    ? filters.type[0]
+                    : `${filters.type.length} types`}
+              </span>
+              <span aria-hidden="true">⌄</span>
+            </button>
+            {typeOpen && (
+              <div className="listings-type-options" role="listbox" aria-label="Property types" aria-multiselectable="true">
+                {['Residential', 'Farm', 'Land', 'Commercial'].map((type) => (
+                  <label key={type}>
+                    <input
+                      type="checkbox"
+                      checked={filters.type.includes(type)}
+                      onChange={() => {
+                        setFilters((current) => ({
+                          ...current,
+                          type: current.type.includes(type)
+                            ? current.type.filter((value) => value !== type)
+                            : [...current.type, type],
+                        }));
+                        setPage(1);
+                      }}
+                    />
+                    <span>{type}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
 
           <select aria-label="Bedrooms" value={filters.beds} onChange={(e) => update('beds', e.target.value)}>
             <option value="">Beds</option>
