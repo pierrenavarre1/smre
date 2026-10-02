@@ -761,3 +761,9 @@
 .about-page .about-copy{
   max-width:none;
 }
+
+.testimonials-page .page-intro{max-width:820px;margin-bottom:56px}
+.testimonials-summary{display:flex;align-items:baseline;gap:14px;margin-bottom:30px}.testimonials-summary strong{font-family:var(--serif);font-size:34px;font-weight:400}.testimonials-summary span{letter-spacing:2px}.testimonials-summary small{color:var(--muted)}
+.testimonials-page .about-review-grid{margin-top:0;gap:28px}.testimonials-page .about-review-grid blockquote{padding:40px 40px 36px !important;min-height:240px}.testimonials-page .review-quote-text{padding:0 !important}.testimonials-page .testimonials-google-link{margin-top:32px;text-align:center}.testimonials-page .testimonials-google-link a{text-decoration:underline;text-underline-offset:4px}
+.testimonials-page .testimonials-contact{margin-top:72px;padding:48px;background:var(--wash);border:1px solid var(--line)}.testimonials-page .testimonials-contact h2{font-family:var(--serif);font-size:clamp(32px,4vw,46px);font-weight:400;line-height:1.08;margin:8px 0 12px}.testimonials-page .testimonials-contact p{margin:0 0 22px}.testimonials-page .testimonials-contact .eyebrow{margin-bottom:0}
+@media(max-width:800px){.testimonials-page .about-review-grid{gap:20px}.testimonials-page .about-review-grid blockquote{padding:32px 30px 30px !important;min-height:0}.testimonials-page .testimonials-contact{margin-top:52px;padding:34px 28px}.testimonials-summary{flex-wrap:wrap}}
