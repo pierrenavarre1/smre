@@ -41,7 +41,7 @@ export default function About(){return <>
   </div>
 
   <div className="about-google-review">
-    <a className="button button-dark" href="#client-feedback">Read All Reviews</a>
+    <a className="button button-dark" href="/testimonials">Read All Reviews</a>
   </div>
 </section>
 </>}
