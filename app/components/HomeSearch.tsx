@@ -32,14 +32,7 @@ export function HomeSearch({ items }: { items: RESOProperty[] }) {
           value={address}
           onChange={(e) => { setAddress(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setOpen(false);
-            if (e.key === 'Enter' && suggestions[0]) {
-              e.preventDefault();
-              setAddress(selectedAddress(suggestions[0]));
-              setOpen(false);
-            }
-          }}
+          onKeyDown={(e) => {\n            if (e.key === 'Escape') setOpen(false);\n          }}
           placeholder="Address, city, ZIP code, or area"
           aria-label="Address, city, ZIP code, or area"
           autoComplete="off"
