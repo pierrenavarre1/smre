@@ -809,3 +809,14 @@
   color:var(--muted);
   font-size:12px;
 }
+
+.home-search-location{
+  position:relative;
+  min-width:0;
+}
+.home-search-location > input{
+  width:100%;
+}
+.home-search-suggestions{
+  top:calc(100% + 8px);
+}
