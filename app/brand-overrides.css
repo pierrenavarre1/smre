@@ -138,6 +138,52 @@
   line-height:1;
   cursor:pointer;
 }
+.listings-type-filter{
+  position:relative;
+  min-width:130px;
+}
+.listings-type-filter-button{
+  width:100%;
+  height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:0 12px;
+  border:1px solid rgba(15,20,71,.16);
+  border-radius:0;
+  background:#fff;
+  color:var(--navy);
+  font:inherit;
+  font-size:12px;
+  cursor:pointer;
+}
+.listings-type-options{
+  position:absolute;
+  z-index:40;
+  top:calc(100% + 6px);
+  left:0;
+  min-width:190px;
+  padding:7px 0;
+  background:#fff;
+  border:1px solid var(--line);
+  box-shadow:0 12px 30px rgba(15,20,71,.12);
+}
+.listings-type-options label{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:9px 12px;
+  color:var(--navy);
+  font-size:12px;
+  cursor:pointer;
+}
+.listings-type-options label:hover{
+  background:var(--wash);
+}
+.listings-type-options input{
+  margin:0;
+}
 .listings-filter-selects{
   display:flex;
   flex:0 1 auto;
