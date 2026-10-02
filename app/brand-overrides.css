@@ -698,6 +698,10 @@
   gap:24px;
   align-items:stretch;
 }
+.about-review-grid .review-quote-text{
+  display:block;
+  padding:0 18px;
+}
 .about-review-grid blockquote{
   margin:0;
   padding:36px 36px 34px !important;
