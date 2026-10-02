@@ -164,6 +164,10 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
             <path d="M4 6h16M7 12h10M10 18h4" />
           </svg>
           <span>Filters</span>
+          {(() => {
+            const count = [filters.beds, filters.baths, filters.max, filters.acreage, filters.status !== 'Active' ? filters.status : '', filters.type.length ? 'type' : ''].filter(Boolean).length;
+            return count > 0 ? <em>{count}</em> : null;
+          })()}
         </button>
 
         <div className="listings-filter-selects">
