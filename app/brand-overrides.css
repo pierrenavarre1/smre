@@ -145,10 +145,14 @@
 .listings-type-filter-button{
   width:100%;
   height:44px;
-  padding:0 34px 0 12px;
+  padding:0 42px 0 12px;
   border:1px solid rgba(15,20,71,.16);
   border-radius:0;
-  background:#fff;
+  background-color:#fff;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 5l4 4 4-4' fill='none' stroke='%230f1447' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 16px center;
+  background-size:14px 14px;
   color:var(--navy);
   font:inherit;
   font-size:12px;
@@ -156,13 +160,7 @@
   cursor:pointer;
   position:relative;
 }
-.listings-type-filter-button > span:last-child{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:11px;
-}
+.listings-type-filter-button > span:last-child{display:none;}
 .listings-type-options{
   position:absolute;
   z-index:40;
