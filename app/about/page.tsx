@@ -27,5 +27,26 @@ export default function About(){return <>
   <div className="about-contact-card"><p className="eyebrow" style={{color:'#fff'}}>ST. MARYS OFFICE</p><h2>St. Mary’s Real Estate</h2><p>512 W Bertrand Ave<br />St Marys, KS 66536</p><p><a href="tel:7854652543">(785) 465-2543</a><br /><a href="mailto:admin@smre.info">admin@smre.info</a></p></div>
 </section>
 
-<section className="section container narrow"><div className="page-intro"><p className="eyebrow">CLIENT FEEDBACK</p><h2>What people say about working with SMRE.</h2><p>Published client reviews frequently mention communication, patience, local guidance and hands-on help through the buying and selling process.</p></div><div className="about-review-grid"><blockquote>“Never missed a call from me throughout the entire two-month process.”<cite>— Patrick, published SMRE client review</cite></blockquote><blockquote>“They walked us through the process” and helped us with our first home purchase.<cite>— Jim, published SMRE client review</cite></blockquote><blockquote>“Michael Kirby made my purchase experience very easy” for an out-of-state buyer moving to St. Marys.<cite>— Anne, published SMRE client review</cite></blockquote></div><p className="google-rating"><strong>Google:</strong> 5.0 stars from 26 reviews at the time this site was researched.</p></section>
+<section className="section container narrow about-feedback-section">
+  <div className="page-intro">
+    <p className="eyebrow">CLIENT FEEDBACK</p>
+    <h2>What people say about working with SMRE.</h2>
+    <p>Published client reviews frequently mention communication, patience, local guidance and hands-on help through the buying and selling process.</p>
+  </div>
+
+  <div className="about-review-grid">
+    <blockquote>“Never missed a call from me throughout the entire two-month process.”<cite>— Patrick, published SMRE client review</cite></blockquote>
+    <blockquote>“They walked us through the process” and helped us with our first home purchase.<cite>— Jim, published SMRE client review</cite></blockquote>
+    <blockquote>“Michael Kirby made my purchase experience very easy” for an out-of-state buyer moving to St. Marys.<cite>— Anne, published SMRE client review</cite></blockquote>
+  </div>
+
+  <div className="about-google-review">
+    <div className="about-google-copy">
+      <p className="eyebrow">GOOGLE REVIEWS</p>
+      <div className="about-google-score"><strong>5.0</strong><span className="about-google-stars" aria-label="5 out of 5 stars">★★★★★</span></div>
+      <p>26 Google reviews at the time this site was researched.</p>
+    </div>
+    <a className="button button-dark" href="/testimonials">Read Reviews</a>
+  </div>
+</section>
 </>}
