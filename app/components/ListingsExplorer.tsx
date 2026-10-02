@@ -101,7 +101,10 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
               if (filters.city) setFilters((current) => ({ ...current, city: '' }));
             }}
             onKeyDown={(e) => {
-              if (e.key === 'Escape') setAddressOpen(false);
+              if (e.key === 'Escape' || e.key === 'Enter') {
+                setAddressOpen(false);
+                setPage(1);
+              }
             }}
             placeholder="Address, city, ZIP code, or neighborhood"
           />
@@ -155,6 +158,12 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
               aria-haspopup="listbox"
               aria-expanded={typeOpen}
               onClick={() => setTypeOpen((open) => !open)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === 'Escape') {
+                  e.preventDefault();
+                  setTypeOpen((open) => !open);
+                }
+              }}
             >
               <span>
                 {filters.type.length === 0
@@ -180,6 +189,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
                             : [...current.type, type],
                         }));
                         setPage(1);
+                        setTypeOpen(false);
                       }}
                     />
                     <span>{type}</span>
