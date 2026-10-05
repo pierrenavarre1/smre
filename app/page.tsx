@@ -40,7 +40,7 @@ export default async function Home(){
       <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
       <div className="home-hero-overlay" />
       <div className="container home-hero-inner">
-        <h1>BUYING OR SELLING?<br />START LOCAL.</h1>
+        <h1>REAL ESTATE, CLOSE TO HOME.</h1>
         <p className="hero-copy">Local knowledge, straightforward advice, and real estate experience across Northeast Kansas.</p>
         <HomeLeadButtons />
         <HomeSearch items={activeListings} />
