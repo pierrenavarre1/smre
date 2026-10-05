@@ -25,9 +25,7 @@ export default function About(){return <>
   </div>
 
   <div className="about-contact-card"><p className="eyebrow" style={{color:'#fff'}}>ST. MARYS OFFICE</p><h2>St. Mary’s Real Estate</h2><p>512 W Bertrand Ave<br />St Marys, KS 66536</p><p><a href="tel:7854652543">(785) 465-2543</a><br /><a href="mailto:admin@smre.info">admin@smre.info</a></p></div>
-</section>
-
-<section className="section container about-feedback-section">
+<div className="about-feedback-section">
   <div className="page-intro">
     <p className="eyebrow">CLIENT FEEDBACK</p>
     <h2>What people say about working with SMRE.</h2>
@@ -43,5 +41,6 @@ export default function About(){return <>
   <div className="about-google-review">
     <a className="button button-dark" href="/testimonials">See More Reviews</a>
   </div>
+</div>
 </section>
 </>}
