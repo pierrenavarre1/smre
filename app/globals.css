@@ -21,3 +21,41 @@
 @media(max-width:800px){.container{width:min(100% - 40px,1240px)}.nav{min-height:78px}.brand-logo{flex-basis:230px;width:230px}.nav-links a:not(.nav-cta){display:none}.home-hero{min-height:650px}.home-hero-inner{padding:76px 0}.home-hero h1{font-size:clamp(48px,10vw,68px)}.hero-copy{font-size:16px}.search-panel{grid-template-columns:1fr 1fr;gap:0}.search-panel input{grid-column:1/-1;border-right:0;border-bottom:1px solid var(--line)}.search-panel .button{grid-column:1/-1;margin:7px 0 0}.local-intro-grid,.contact-layout,.detail-grid{grid-template-columns:1fr}.local-intro h2{font-size:44px}.agent-hero{grid-template-columns:1fr}.about-areas{grid-template-columns:1fr}.about-review-grid{grid-template-columns:1fr}.footer-grid{grid-template-columns:1fr 1fr;gap:45px}.footer-brand-block{grid-column:1/-1}.footer-bottom{flex-direction:column}.home-rural-grid,.home-rural-grid.home-rural-balanced{grid-template-columns:1fr}.home-rural-balanced .home-rural-photo{min-height:320px;max-height:420px}.home-rural-balanced .home-rural-copy{padding:52px 28px 60px}}
 @media(max-width:600px){.featured-grid,.listing-grid,.team-grid,.cta-grid{grid-template-columns:1fr}.section{padding:70px 0}.section-head{align-items:start;flex-direction:column}.gallery{grid-template-columns:1fr}.gallery-main,.gallery-side>div{min-height:360px}.gallery-side{grid-template-rows:220px 220px}.detail h1{font-size:48px}.form-row{grid-template-columns:1fr}.contact-form-card{padding:30px 24px}.footer-grid{grid-template-columns:1fr}.footer-brand-block{grid-column:auto}.home-hero h1{font-size:clamp(44px,12vw,60px);max-width:100%}.home-hero-inner{padding:68px 0 72px}.search-panel{grid-template-columns:1fr}.search-panel select{border-right:0;border-bottom:1px solid var(--line)}.search-panel input{grid-column:auto}.home-hero-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:430px}.home-hero-actions .button{min-width:0;width:100%}}
 @media(max-width:800px){.guide-grid{grid-template-columns:1fr 1fr}.guide-detail-intro{padding-top:40px}}@media(max-width:600px){.guide-grid{grid-template-columns:1fr}.guide-card{min-height:250px}.guide-detail-intro h1{font-size:48px}.guide-content{padding:40px 0}.guide-cta{padding:28px}}
+/* Final mobile UX pass */
+.home-mobile-listings-link{display:none}
+@media(max-width:600px){
+  .home-featured-grid .listing-card:nth-child(n+4){display:none}
+  .home-mobile-listings-link{display:flex;justify-content:center;margin-top:24px}
+  .home-mobile-listings-link .button{width:100%;max-width:320px}
+  .home-listing-map{margin-top:34px}
+  .home-listing-map .listing-map{height:300px}
+  .home-listing-map .listing-map-heading{margin-bottom:14px}
+  .home-listing-map .listing-map-heading h3{font-size:28px}
+  .home-listing-map .listing-map-heading>p{font-size:12px}
+  .section{padding:60px 0}
+  .home-hero{min-height:0}
+  .home-hero-inner{padding:58px 0 62px}
+  .home-hero .eyebrow{margin-bottom:14px}
+  .hero-copy{margin-bottom:28px;line-height:1.55}
+  .local-intro{padding:70px 0}
+  .page-intro{margin-bottom:38px;padding-bottom:24px}
+  .page-intro h1,.narrow h1{margin-bottom:14px}
+  .section-head{margin-bottom:24px}
+  .detail{padding-top:26px}
+  .detail-grid{gap:42px;padding:42px 0}
+  .agent-hero{gap:30px;padding:40px 0 65px}
+  .guide-detail-intro{padding:36px 0 38px}
+  .guide-content{padding:34px 0}
+  .guide-content section{margin-bottom:34px}
+  .guide-cta{margin-top:4px}
+  .footer{padding-top:58px}
+  .footer-bottom{margin-top:42px}
+  .chat{right:14px;bottom:14px}
+  .chat-button{min-width:92px;height:46px;padding:0 14px;font-size:11px}
+}
+@media(max-width:400px){
+  .home-hero-inner{padding-top:52px;padding-bottom:56px}
+  .home-listing-map .listing-map{height:280px}
+  .section{padding:54px 0}
+  .chat{right:10px;bottom:10px}
+}
