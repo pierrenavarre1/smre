@@ -24,8 +24,8 @@ export default async function Listings({ searchParams }: { searchParams: SearchP
         <h1>Find a property.</h1>
         <p>Search active listings across St. Marys, Wamego and surrounding Northeast Kansas.</p>
       </div>
-      <MLSDisclosure />
       <ListingsExplorer items={items} initialFilters={initialFilters} />
+      <MLSDisclosure />
     </section>
   );
 }
