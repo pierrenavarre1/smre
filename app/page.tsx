@@ -40,9 +40,8 @@ export default async function Home(){
       <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
       <div className="home-hero-overlay" />
       <div className="container home-hero-inner">
-        <p className="eyebrow">ST. MARYS · WAMEGO · TOPEKA–MANHATTAN</p>
-        <h1>BUYING OR SELLING?<br />START HERE.</h1>
-        <p className="hero-copy">St. Mary’s Real Estate helps buyers and sellers throughout the area with local knowledge, strong connections, and straightforward advice.</p>
+        <h1>BUYING OR SELLING?<br />START LOCAL.</h1>
+        <p className="hero-copy">Local knowledge, straightforward advice, and real estate experience across Northeast Kansas.</p>
         <HomeLeadButtons />
         <HomeSearch items={activeListings} />
       </div>
