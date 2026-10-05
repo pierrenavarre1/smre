@@ -100,7 +100,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
         <div className="listings-location-search">
           <span aria-hidden="true">⌕</span>
           <input
-            aria-label="Address, city, ZIP code, or neighborhood"
+            aria-label="Address, city, or ZIP code"
             value={filters.address || filters.city}
             onFocus={() => setAddressOpen(true)}
             onChange={(e) => {
@@ -114,7 +114,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
                 setPage(1);
               }
             }}
-            placeholder="Address, city, ZIP code, or neighborhood"
+            placeholder="Address, city, or ZIP code"
           />
           {(filters.address || filters.city) && (
             <button type="button" onClick={() => { update('address', ''); update('city', ''); setAddressOpen(false); }} aria-label="Clear location search">
@@ -292,7 +292,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
                 </div>)}
               </div>
               <select aria-label="Bedrooms" value={filters.beds} onChange={(e) => update('beds', e.target.value)}><option value="">Beds</option><option value="1">1+ beds</option><option value="2">2+ beds</option><option value="3">3+ beds</option><option value="4">4+ beds</option><option value="5">5+ beds</option></select>
-              <select aria-label="Bathrooms" value={filters.baths} onChange={(e) => update('baths', e.target.value)}><option value="">Baths</option><option value="1">1+ baths</option><option value="1.5">1.5+ baths</option><option value="2">2+ baths</option><option value="2.5">2.5+ baths</option><option value="3">3+ baths</option><option value="4">4+ baths</option></select>
+              <select aria-label="Bathrooms" value={filters.baths} onChange={(e) => update('baths', e.target.value)}><option value="">Baths</option><option value="1">1+ baths</option><option value="1.5">1.5+ baths</option><option value="2">2+ baths</option><option value="2.5">2+ baths</option><option value="3">3+ baths</option><option value="4">4+ baths</option></select>
               <select aria-label="Maximum price" value={filters.max} onChange={(e) => update('max', e.target.value)}><option value="">Price</option><option value="200000">Under $200k</option><option value="300000">Under $300k</option><option value="400000">Under $400k</option><option value="500000">Under $500k</option><option value="750000">Under $750k</option><option value="1000000">Under $1M</option></select>
               <select aria-label="Acreage" value={filters.acreage} onChange={(e) => update('acreage', e.target.value)}><option value="">Acreage</option><option value="0.25">¼+ acre</option><option value="0.5">½+ acre</option><option value="1">1+ acre</option><option value="2">2+ acres</option><option value="5">5+ acres</option><option value="10">10+ acres</option><option value="20">20+ acres</option><option value="40">40+ acres</option></select>
               <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}><option value="Active">Active</option><option value="">All statuses</option><option value="Pending">Pending</option></select>
