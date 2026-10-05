@@ -1,5 +1,6 @@
 import { getListings } from '../lib/listings';
 import { ListingsExplorer } from '../components/ListingsExplorer';
+import { MLSDisclosure } from '../components/MLSDisclosure';
 
 export const metadata = { title: 'Listings' };
 
@@ -23,6 +24,7 @@ export default async function Listings({ searchParams }: { searchParams: SearchP
         <h1>Find a property.</h1>
         <p>Search active listings across St. Marys, Wamego and surrounding Northeast Kansas.</p>
       </div>
+      <MLSDisclosure />
       <ListingsExplorer items={items} initialFilters={initialFilters} />
     </section>
   );
