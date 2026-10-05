@@ -2,12 +2,11 @@ import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getListing } from '../../lib/listings';
-import { MLSDisclosure, SourceBadge } from '../../components/MLSDisclosure';
+import { MLSDisclosure, SourceBadge, MLS_OFFICE, MLS_PHONE } from '../../components/MLSDisclosure';
 import { ListingGallery } from '../../components/ListingGallery';
 
 const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const number = new Intl.NumberFormat('en-US');
-
 function DetailItem({label,value}:{label:string,value?:string|number}){if(value===undefined||value==='')return null;return <div className="detail-item"><span>{label}</span><strong>{value}</strong></div>}
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -32,9 +31,9 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
         </div></div>
         {p.Directions?<div className="details-section"><p className="eyebrow">DIRECTIONS</p><p>{p.Directions}</p></div>:null}
         <div className="map-placeholder">Map location<br/><small>Map integration can be added without exposing MLS credentials client-side.</small></div>
-        <MLSDisclosure />
+        <MLSDisclosure source={p.MlsSource}/>
       </div>
-      <aside className="contact-card"><p className="eyebrow">LISTING CONTACT</p><h3>{p.ListAgentFullName}</h3><p>St. Mary’s Real Estate · {p.MlsSource}</p><Link className="button button-dark" href={`/contact?listing=${p.ListingId}`}>Ask about this property</Link></aside>
+      <aside className="contact-card"><p className="eyebrow">LISTING CONTACT</p><h3>{p.ListAgentFullName}</h3><p>{MLS_OFFICE} · {MLS_PHONE}</p><p className="listing-contact-meta"><strong>{p.StandardStatus}</strong> · MLS # {p.MLSNumber || p.ListingId}</p><Link className="button button-dark" href={`/contact?listing=${p.ListingId}`}>Ask about this property</Link></aside>
     </div>
   </section>;
 }
