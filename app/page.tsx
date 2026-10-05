@@ -6,6 +6,7 @@ import { ListingMap } from './components/ListingMap';
 import { ReviewsCarousel } from './components/ReviewsCarousel';
 import { HomeLeadButtons } from './components/HomeLeadButtons';
 import { HomeSearch } from './components/HomeSearch';
+import { MLSDisclosure } from './components/MLSDisclosure';
 
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
 const areaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
@@ -49,7 +50,7 @@ export default async function Home(){
 
     <section className="section container">
       <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
-      <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-mobile-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
+      <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><MLSDisclosure source={listings[0]?.MlsSource}/><div className="home-mobile-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
       {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings}/></div>}
     </section>
 
