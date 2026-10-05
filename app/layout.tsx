@@ -51,11 +51,12 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
           <strong>Information</strong>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
+          <Link href="/dmca">DMCA / Copyright</Link>
         </div>
       </div>
       <div className="container footer-bottom">
         <span>© {new Date().getFullYear()} St. Mary’s Real Estate</span>
-        <span>MLS attribution and disclosures appear on listing detail pages.</span>
+        <span>MLS attribution and disclosures appear wherever IDX listings are displayed.</span>
       </div>
     </footer>
     <ChatBubble />
