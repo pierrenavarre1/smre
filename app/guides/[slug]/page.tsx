@@ -10,7 +10,7 @@ export async function generateMetadata({params}:{params:Promise<{slug:string}>})
 }
 
 export default async function GuidePage({params}:{params:Promise<{slug:string}>}){
-  const {slug}=await params; const g=getGuide(slug); if(!g)notFound();
+  const {slug}=await params; const {guides}=await getAdminData(); const g=guides.find(item=>item.slug===slug); if(!g)notFound();
   return <article className="section container guide-detail">
     <Link href="/guides" className="back">← All Guides</Link>
     <div className="guide-detail-intro">
