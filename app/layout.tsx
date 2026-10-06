@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { BrandLogo } from './components/BrandLogoFixed';
 import { ChatBubble } from './components/ChatBubble';
 import { MobileMenu } from './components/MobileMenu';
+import { getAdminData } from './lib/admin-store';
 
 export const metadata: Metadata = {title:{default:'St. Mary’s Real Estate | SMRE',template:'%s | St. Mary’s Real Estate'},description:'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.'};
 
@@ -18,7 +19,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       <div className="container nav">
         <Link href="/" className="brand-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
         <nav className="nav-links" aria-label="Main navigation">
-          <a className="header-phone" href="tel:7854652543" aria-label="Call St. Mary’s Real Estate">(785) 465-2543</a>
+          <a className="header-phone" href={`tel:${settings.phone.replace(/\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{settings.phone}</a>
           <Link href="/listings">Listings</Link>
           <Link href="/valuation">Home Value</Link>
           <Link href="/about">About</Link>
