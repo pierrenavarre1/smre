@@ -8,7 +8,7 @@ export default async function Guides(){const {guides}=await getAdminData();retur
     <p className="eyebrow">LOCAL REAL ESTATE GUIDES</p>
     <h1>Real Estate Guides for Northeast Kansas</h1>
   </div>
-  <div className="guide-grid">{guides.map(g=><Link href={`/guides/${g.slug}`} className="guide-card" key={g.slug}>
+  <div className="guide-grid">{guides.filter(g=>!g.draft).map(g=><Link href={`/guides/${g.slug}`} className="guide-card" key={g.slug}>
     <p className="eyebrow">{g.category}</p><h2>{g.title}</h2><p>{g.description}</p><span className="guide-link">Read Guide →</span>
   </Link>)}</div>
 </section>}
