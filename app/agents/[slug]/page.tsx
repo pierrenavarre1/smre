@@ -3,11 +3,12 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getListings } from '../../lib/listings';
 import { ListingCard } from '../../components/ListingCard';
-import { getAgent } from '../../lib/agents';
+import { getAdminData } from '../../lib/admin-store';
 
 export default async function AgentPage({params}:{params:Promise<{slug:string}>}){
   const {slug}=await params;
-  const person=getAgent(slug);
+  const {agents}=await getAdminData();
+  const person=agents.find(a=>a.slug===slug);
   if(!person)notFound();
   const listings=(await getListings()).filter(p=>p.ListAgentFullName===person.name && (p.StandardStatus==='Active'||p.StandardStatus==='Pending'));
   return <section className="section container">
