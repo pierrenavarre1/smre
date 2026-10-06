@@ -13,7 +13,8 @@ import { getAdminData } from './lib/admin-store';
 
 export const metadata: Metadata = {title:{default:'St. Mary’s Real Estate | SMRE',template:'%s | St. Mary’s Real Estate'},description:'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.'};
 
-export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){
+export default async function RootLayout({children}:Readonly<{children:React.ReactNode}>){
+  const {settings}=await getAdminData();
   return <html lang="en"><body>
     <header className="site-header">
       <div className="container nav">
@@ -33,7 +34,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       <div className="container footer-grid">
         <div className="footer-brand-block">
           <Link href="/" className="brand-logo footer-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
-          <p>512 W Bertrand Ave<br />St Marys, KS 66536<br /><a href="tel:7854652543" style={{color:'#fff'}}>(785) 465-2543</a></p>
+          <p>{settings.address.split(',')[0]}<br />{settings.address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${settings.phone.replace(/\D/g,'')}`} style={{color:'#fff'}}>{settings.phone}</a></p>
         </div>
         <div className="footer-links">
           <strong>Explore</strong>
