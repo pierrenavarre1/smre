@@ -10,12 +10,16 @@ import { MLSDisclosure } from './components/MLSDisclosure';
 import { getAdminData } from './lib/admin-store';
 
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
-const areaImage = settings.localImage || '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
+const fallbackAreaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 
 export default async function Home(){
   const activeListings=(await getListings()).filter(p=>p.StandardStatus==='Active');
   const {settings}=await getAdminData();
   const listings=activeListings.slice(0,settings.featuredCount||6);
+  const headlineParts=settings.homepageHeadline.split(',');
+  const headlineKicker=headlineParts.shift()?.trim()||'REAL ESTATE,';
+  const headlineMain=headlineParts.join(',').trim()||'Close to Home.';
+  const areaImage=settings.localImage||fallbackAreaImage;
   return <>
     <style>{`
       .home-hero-actions{display:flex;gap:10px;margin:-10px 0 30px;flex-wrap:wrap}
@@ -42,7 +46,7 @@ export default async function Home(){
       <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
       <div className="home-hero-overlay" />
       <div className="container home-hero-inner">
-        <h1><span className="hero-heading-kicker">REAL ESTATE,</span><span className="hero-heading-main">Close to Home.</span></h1>
+        <h1><span className="hero-heading-kicker">{headlineKicker}{headlineParts.length||settings.homepageHeadline.includes(",")?",":""}</span><span className="hero-heading-main">{headlineMain}</span></h1>
         <p className="hero-copy">{settings.heroDescription}</p>
         <HomeLeadButtons />
         <HomeSearch items={activeListings} />
