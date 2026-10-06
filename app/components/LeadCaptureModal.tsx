@@ -2,13 +2,14 @@
 
 import { FormEvent, useState } from 'react';
 
-type LeadType = 'buyer' | 'seller';
+type LeadType = 'buyer' | 'seller' | 'property';
 
-export function LeadCaptureModal({ type, onClose }: { type: LeadType; onClose: () => void }) {
+export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: { type: LeadType; onClose: () => void; propertyAddress?: string; listingId?: string }) {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const isBuyer = type === 'buyer';
+  const isProperty = type === 'property';
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -18,7 +19,7 @@ export function LeadCaptureModal({ type, onClose }: { type: LeadType; onClose: (
     const email = String(form.get('email') || '');
     const phone = String(form.get('phone') || '');
     const details = String(form.get('details') || '');
-    const address = String(form.get('address') || '');
+    const address = String(form.get('address') || propertyAddress || '');
 
     if (!email && !phone) {
       setError('Please enter an email or phone number.');
@@ -30,7 +31,7 @@ export function LeadCaptureModal({ type, onClose }: { type: LeadType; onClose: (
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, name, email, phone, address, message: details }),
+        body: JSON.stringify({ type, name, email, phone, address, listingId, message: details }),
       });
       if (!response.ok) throw new Error('Unable to submit');
       setSubmitted(true);
@@ -56,16 +57,21 @@ export function LeadCaptureModal({ type, onClose }: { type: LeadType; onClose: (
             </div>
           ) : (
             <>
-              <p className="eyebrow">{isBuyer ? 'BUYING' : 'SELLING'}</p>
-              <h2 id="lead-modal-title">{isBuyer ? 'Let’s find the right place.' : 'Thinking about selling?'}</h2>
-              <p className="lead-modal-intro">{isBuyer ? 'Tell us a little about what you’re looking for. We’ll get back to you.' : 'Tell us a little about the property and what you’re considering. We’ll get back to you.'}</p>
+              <p className="eyebrow">{isProperty ? 'PROPERTY INQUIRY' : isBuyer ? 'BUYING' : 'SELLING'}</p>
+              <h2 id="lead-modal-title">{isProperty ? 'Interested in this property?' : isBuyer ? 'Let’s find the right place.' : 'Thinking about selling?'}</h2>
+              <p className="lead-modal-intro">{isProperty ? `Ask a question or request a showing for ${propertyAddress || 'this property'}. We’ll get back to you.` : isBuyer ? 'Tell us a little about what you’re looking for. We’ll get back to you.' : 'Tell us a little about the property and what you’re considering. We’ll get back to you.'}</p>
               <form onSubmit={handleSubmit} className="lead-form">
                 <label>Name<input name="name" required autoComplete="name" /></label>
                 <div className="lead-form-row">
                   <label>Email<input name="email" type="email" autoComplete="email" /></label>
                   <label>Phone<input name="phone" type="tel" autoComplete="tel" /></label>
                 </div>
-                {isBuyer ? (
+                {isProperty ? (
+                  <>
+                    <label>Property address<input name="address" value={propertyAddress || ''} readOnly /></label>
+                    <label>What would you like to know?<textarea name="details" rows={3} placeholder="Questions, showing request, offer, or anything else." /></label>
+                  </>
+                ) : isBuyer ? (
                   <label>What are you looking for?<textarea name="details" rows={3} placeholder="Area, price range, type of property, timing, etc." /></label>
                 ) : (
                   <>
