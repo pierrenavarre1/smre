@@ -18,12 +18,12 @@ export async function POST(request:Request){
       const contact=String(lead.contact || '');
       const email=String(lead.email || (contact.includes('@')?contact:''));
       const phone=String(lead.phone || (!contact.includes('@')?contact:''));
-      const eventType=lead.type==='seller'?'Seller Inquiry':lead.type==='valuation'?'Seller Inquiry':lead.type==='property'?'Property Inquiry':lead.type==='chat'?'General Inquiry':'General Inquiry';
+      const eventType=lead.type==='seller'?'Seller Inquiry':lead.type==='valuation'?'Seller Inquiry':lead.type==='showing'?'Showing Request':lead.type==='property'?'Property Inquiry':lead.type==='chat'?'General Inquiry':'General Inquiry';
       const event={
         source:'smre.info',
         system:'SMRE Website',
         type:eventType,
-        message:[lead.listingId?`MLS/Listing ID: ${String(lead.listingId)}`:'',String(lead.message || '')].filter(Boolean).join('\n'),
+        message:[lead.listingId?`MLS/Listing ID: ${String(lead.listingId)}`:'',lead.preferredDate?`Preferred date: ${String(lead.preferredDate)}`:'',lead.preferredTime?`Preferred time: ${String(lead.preferredTime)}`:'',String(lead.message || '')].filter(Boolean).join('\n'),
         sourceUrl:'https://smre.info',
         person:{
           firstName,
