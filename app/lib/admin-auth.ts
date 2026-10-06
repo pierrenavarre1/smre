@@ -1,4 +1,4 @@
-import { createHmac, createHash, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 import { get, put } from '@vercel/blob';
 import { cookies } from 'next/headers';
 
