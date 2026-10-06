@@ -1,5 +1,5 @@
 export type GuideSource={label:string;url:string};
-export type Guide={slug:string;title:string;category:string;description:string;intro:string;updated:string;sections:{heading:string;body:string}[];sources?:GuideSource[]};
+export type Guide={slug:string;title:string;category:string;description:string;intro:string;updated:string;sections:{heading:string;body:string}[];sources?:GuideSource[];draft?:boolean};
 
 const countySources:GuideSource[]=[
   {label:'Pottawatomie County Unified Development Regulations',url:'https://www.pottcounty.org/DocumentCenter/View/10064/Updated-Complete-UDR-2023-Digital'},
