@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 
-type LeadType = 'buyer' | 'seller' | 'property';
+type LeadType = 'buyer' | 'seller' | 'property' | 'showing';
 
 export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: { type: LeadType; onClose: () => void; propertyAddress?: string; listingId?: string }) {
   const [submitted, setSubmitted] = useState(false);
@@ -10,6 +10,7 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
   const [error, setError] = useState('');
   const isBuyer = type === 'buyer';
   const isProperty = type === 'property';
+  const isShowing = type === 'showing';
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,19 +58,28 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
             </div>
           ) : (
             <>
-              <p className="eyebrow">{isProperty ? 'PROPERTY INQUIRY' : isBuyer ? 'BUYING' : 'SELLING'}</p>
-              <h2 id="lead-modal-title">{isProperty ? 'Interested in this property?' : isBuyer ? 'Let’s find the right place.' : 'Thinking about selling?'}</h2>
-              <p className="lead-modal-intro">{isProperty ? `Ask a question or request a showing for ${propertyAddress || 'this property'}. We’ll get back to you.` : isBuyer ? 'Tell us a little about what you’re looking for. We’ll get back to you.' : 'Tell us a little about the property and what you’re considering. We’ll get back to you.'}</p>
+              <p className="eyebrow">{isShowing ? 'REQUEST A SHOWING' : isProperty ? 'PROPERTY INQUIRY' : isBuyer ? 'BUYING' : 'SELLING'}</p>
+              <h2 id="lead-modal-title">{isShowing ? 'Request a showing.' : isProperty ? 'Interested in this property?' : isBuyer ? 'Let’s find the right place.' : 'Thinking about selling?'}</h2>
+              <p className="lead-modal-intro">{isShowing ? `Tell us when you’d like to see ${propertyAddress || 'this property'}. We’ll get back to you to confirm availability.` : isProperty ? `Ask a question about ${propertyAddress || 'this property'}. We’ll get back to you.` : isBuyer ? 'Tell us a little about what you’re looking for. We’ll get back to you.' : 'Tell us a little about the property and what you’re considering. We’ll get back to you.'}</p>
               <form onSubmit={handleSubmit} className="lead-form">
                 <label>Name<input name="name" required autoComplete="name" /></label>
                 <div className="lead-form-row">
                   <label>Email<input name="email" type="email" autoComplete="email" /></label>
                   <label>Phone<input name="phone" type="tel" autoComplete="tel" /></label>
                 </div>
-                {isProperty ? (
+                {isShowing ? (
                   <>
                     <label>Property address<input name="address" value={propertyAddress || ''} readOnly /></label>
-                    <label>What would you like to know?<textarea name="details" rows={3} placeholder="Questions, showing request, offer, or anything else." /></label>
+                    <div className="lead-form-row">
+                      <label>Preferred date<input name="preferredDate" type="date" /></label>
+                      <label>Preferred time<input name="preferredTime" type="time" /></label>
+                    </div>
+                    <label>Anything we should know?<textarea name="details" rows={3} placeholder="Availability, questions, or anything else." /></label>
+                  </>
+                ) : isProperty ? (
+                  <>
+                    <label>Property address<input name="address" value={propertyAddress || ''} readOnly /></label>
+                    <label>What would you like to know?<textarea name="details" rows={3} placeholder="Questions about the property, an offer, or anything else." /></label>
                   </>
                 ) : isBuyer ? (
                   <label>What are you looking for?<textarea name="details" rows={3} placeholder="Area, price range, type of property, timing, etc." /></label>
@@ -81,7 +91,7 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
                 )}
                 <p className="lead-form-note">Enter an email or phone number so we know how to reach you.</p>
                 {error && <p className="lead-form-error">{error}</p>}
-                <button className="button button-dark" type="submit" disabled={submitting}>{submitting ? 'Sending…' : 'Talk with SMRE'}</button>
+                <button className="button button-dark" type="submit" disabled={submitting}>{submitting ? 'Sending…' : isShowing ? 'Request Showing' : 'Talk with SMRE'}</button>
               </form>
             </>
           )}
