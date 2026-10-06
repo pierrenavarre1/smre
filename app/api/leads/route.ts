@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { addLead } from '../../lib/admin-store';
 
 function splitName(name:string){
   const parts=name.trim().split(/\s+/).filter(Boolean);
@@ -9,6 +10,8 @@ export async function POST(request:Request){
   try{
     const lead=await request.json();
     if(!lead?.name || (!lead?.email && !lead?.phone && !lead?.contact)) return NextResponse.json({error:'Name and contact information are required.'},{status:400});
+
+    await addLead({type:lead.type==='showing'?'Showing Request':lead.type==='seller'||lead.type==='valuation'?'Seller Inquiry':lead.type==='property'?'Property Inquiry':'General Inquiry',name:String(lead.name),email:lead.email?String(lead.email):undefined,phone:lead.phone?String(lead.phone):undefined,address:lead.address?String(lead.address):undefined,listingId:lead.listingId?String(lead.listingId):undefined,message:lead.message?String(lead.message):undefined});
 
     const apiKey=process.env.FUB_API_KEY;
     const systemKey=process.env.FUB_SYSTEM_KEY;
