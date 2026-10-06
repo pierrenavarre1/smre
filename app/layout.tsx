@@ -11,7 +11,7 @@ import { ChatBubble } from './components/ChatBubble';
 import { MobileMenu } from './components/MobileMenu';
 import { getAdminData } from './lib/admin-store';
 
-export const metadata: Metadata = {title:{default:'St. Mary’s Real Estate | SMRE',template:'%s | St. Mary’s Real Estate'},description:'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.'};
+export async function generateMetadata():Promise<Metadata>{const {settings}=await getAdminData();return {title:{default:settings.defaultTitle||'St. Mary’s Real Estate | SMRE',template:'%s | St. Mary’s Real Estate'},description:settings.defaultDescription||'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.'};}
 
 export default async function RootLayout({children}:Readonly<{children:React.ReactNode}>){
   const {settings}=await getAdminData();
