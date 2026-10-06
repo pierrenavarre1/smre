@@ -95,3 +95,4 @@
 .admin-guide-row{border-bottom:1px solid var(--line);padding:16px 0;display:flex;justify-content:space-between;gap:20px}.admin-guide-row span{color:var(--muted);font-size:11px}
 @media(max-width:800px){.admin-shell{padding:24px 14px}.admin-layout{grid-template-columns:1fr}.admin-nav{min-height:0}.admin-nav button:last-child{margin-top:10px}.admin-main{padding:22px}.admin-cards{grid-template-columns:1fr 1fr}.admin-edit-grid{grid-template-columns:1fr}.admin-top h1{font-size:36px}}
 @media(max-width:500px){.admin-cards{grid-template-columns:1fr}.admin-login{margin:30px auto;padding:28px}}
+.admin-login-toggle{border:0;background:none;color:var(--navy);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:2px 0;text-align:left}.admin-success{color:#17653a;font-size:12px}.admin-login form+ .admin-login-toggle{margin-top:2px}
