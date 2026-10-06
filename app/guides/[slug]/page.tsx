@@ -5,7 +5,7 @@ import { getAdminData } from '../../lib/admin-store';
 export async function generateStaticParams(){const {guides}=await getAdminData();return guides.map(g=>({slug:g.slug}));}
 
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}){
-  const {slug}=await params; const {guides}=await getAdminData(); const g=guides.find(item=>item.slug===slug);
+  const {slug}=await params; const {guides}=await getAdminData(); const g=guides.find(item=>item.slug===slug && !item.draft);
   return g?{title:g.title,description:g.description}:{}; 
 }
 
