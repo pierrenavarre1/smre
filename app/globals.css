@@ -65,3 +65,5 @@
 @media(max-width:600px){.idx-use-notice{display:grid;gap:5px}.listing-idx-meta{font-size:8px}.mls-grid-source{align-items:flex-start;flex-direction:column;gap:7px}}
 
 @media(max-width:700px){.contact-card{padding:26px}.contact-card h3{font-size:21px}.contact-card .button{width:100%}}
+
+.listing-lead-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}.listing-lead-actions .button{margin:0}.listing-lead-actions .button-light{color:var(--navy);border:1px solid var(--line);background:#fff}@media(max-width:700px){.listing-lead-actions{display:grid;grid-template-columns:1fr}.listing-lead-actions .button{width:100%}}
