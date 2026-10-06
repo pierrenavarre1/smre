@@ -46,6 +46,7 @@ export default async function Home(){
       <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
       <div className="home-hero-overlay" />
       <div className="container home-hero-inner">
+        <p className="eyebrow">{settings.heroEyebrow}</p>
         <h1><span className="hero-heading-kicker">{headlineKicker}{headlineParts.length||settings.homepageHeadline.includes(",")?",":""}</span><span className="hero-heading-main">{headlineMain}</span></h1>
         <p className="hero-copy">{settings.heroDescription}</p>
         <HomeLeadButtons />
