@@ -8,9 +8,10 @@ export function ListingLeadButton({ address, listingId }: { address: string; lis
 
   return (
     <>
-      <button type="button" className="button button-dark" onClick={() => setOpen(true)}>
-        Ask about this property
-      </button>
+      <div className="listing-lead-actions">
+        <button type="button" className="button button-dark" onClick={() => setOpen(true)}>Request a Showing</button>
+        <button type="button" className="button button-light" onClick={() => setOpen(true)}>Ask About This Property</button>
+      </div>
       {open && <LeadCaptureModal type="property" propertyAddress={address} listingId={listingId} onClose={() => setOpen(false)} />}
     </>
   );
