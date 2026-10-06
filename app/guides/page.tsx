@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import { guides } from '../lib/guides';
+import { getAdminData } from '../lib/admin-store';
 
 export const metadata={title:'Local Real Estate Guides',description:'Practical real estate guides for St. Marys, Wamego, Topeka, Manhattan and Northeast Kansas.'};
 
-export default function Guides(){return <section className="section container guides-page">
+export default async function Guides(){const {guides}=await getAdminData();return <section className="section container guides-page">
   <div className="page-intro">
     <p className="eyebrow">LOCAL REAL ESTATE GUIDES</p>
     <h1>Real Estate Guides for Northeast Kansas</h1>
