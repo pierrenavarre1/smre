@@ -7,13 +7,15 @@ import { ReviewsCarousel } from './components/ReviewsCarousel';
 import { HomeLeadButtons } from './components/HomeLeadButtons';
 import { HomeSearch } from './components/HomeSearch';
 import { MLSDisclosure } from './components/MLSDisclosure';
+import { getAdminData } from './lib/admin-store';
 
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
-const areaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
+const areaImage = settings.localImage || '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 
 export default async function Home(){
   const activeListings=(await getListings()).filter(p=>p.StandardStatus==='Active');
-  const listings=activeListings.slice(0,6);
+  const {settings}=await getAdminData();
+  const listings=activeListings.slice(0,settings.featuredCount||6);
   return <>
     <style>{`
       .home-hero-actions{display:flex;gap:10px;margin:-10px 0 30px;flex-wrap:wrap}
@@ -41,7 +43,7 @@ export default async function Home(){
       <div className="home-hero-overlay" />
       <div className="container home-hero-inner">
         <h1><span className="hero-heading-kicker">REAL ESTATE,</span><span className="hero-heading-main">Close to Home.</span></h1>
-        <p className="hero-copy">Local knowledge, straightforward advice, and real estate experience across Northeast Kansas.</p>
+        <p className="hero-copy">{settings.heroDescription}</p>
         <HomeLeadButtons />
         <HomeSearch items={activeListings} />
       </div>
@@ -56,7 +58,7 @@ export default async function Home(){
     <section className="home-rural-strip">
       <div className="home-rural-grid home-rural-balanced">
         <div className="home-rural-photo"><img src={areaImage} alt="Kansas farm at sunset with a barn, fields and a country road" loading="lazy" /></div>
-        <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>Small towns. Open country. Real local knowledge.</h2><p>From St. Marys and Wamego to the farms, acreage, and communities between Topeka and Manhattan, we understand that buying here is about more than an address.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
+        <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>{settings.localHeading}</h2><p>{settings.localDescription}</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
 
