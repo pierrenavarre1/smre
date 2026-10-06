@@ -1,5 +1,5 @@
 export type AgentProfile = {
-  slug:string; name:string; role:string; phone:string; photo:string; bio:string; specialties:string[]; market:string; snapshot:string; review:string;
+  slug:string; name:string; role:string; phone:string; photo:string; bio:string; specialties:string[]; market:string; snapshot:string; review:string;email?:string;hidden?:boolean;sort?:number;
 };
 const legacy='https://s3.amazonaws.com/eap03.easyagentpro.com/wp-content/uploads/sites/1258/2022/06/';
 export const agents:AgentProfile[]=[
