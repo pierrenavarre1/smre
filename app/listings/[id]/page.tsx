@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { getListing } from '../../lib/listings';
 import { MLSDisclosure, SourceBadge, MLS_OFFICE, MLS_PHONE } from '../../components/MLSDisclosure';
 import { ListingGallery } from '../../components/ListingGallery';
+import { ListingLeadButton } from '../../components/ListingLeadButton';
 
 const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const number = new Intl.NumberFormat('en-US');
@@ -33,7 +34,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
         <div className="map-placeholder">Map location<br/><small>Map integration can be added without exposing MLS credentials client-side.</small></div>
         <MLSDisclosure source={p.MlsSource}/>
       </div>
-      <aside className="contact-card"><p className="eyebrow">CONTACT AN AGENT</p><h3>{MLS_OFFICE}</h3><p>Have questions about this property or want to schedule a showing? A St. Mary’s Real Estate agent can help.</p><p className="listing-contact-meta"><strong>{p.StandardStatus}</strong> · MLS # {p.MLSNumber || p.ListingId}</p><p className="listing-contact-phone">{MLS_PHONE}</p><Link className="button button-dark" href={`/contact?listing=${p.ListingId}`}>Ask about this property</Link></aside>
+      <aside className="contact-card"><p className="eyebrow">CONTACT AN AGENT</p><h3>{MLS_OFFICE}</h3><p>Have questions about this property or want to schedule a showing? A St. Mary’s Real Estate agent can help.</p><p className="listing-contact-meta"><strong>{p.StandardStatus}</strong> · MLS # {p.MLSNumber || p.ListingId}</p><p className="listing-contact-phone">{MLS_PHONE}</p><ListingLeadButton address={`${p.StreetNumber} ${p.StreetName}, ${p.City}, KS ${p.PostalCode}`} listingId={p.ListingId} /></aside>
     </div>
   </section>;
 }
