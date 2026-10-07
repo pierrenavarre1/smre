@@ -26,18 +26,18 @@ export async function fetchMLSGridPage(source: string, url?: string): Promise<Ml
   const token = process.env.MLSGRID_ACCESS_TOKEN;
   if (!token) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
-    '$filter': `OriginatingSystemName eq '${source}' and MlgCanView eq true and (StandardStatus eq 'Active' or StandardStatus eq 'Pending')`,
+    '$filter': `OriginatingSystemName eq '${source}' and MlgCanView eq true`,
     '$select': [
-      'ListingId','ListingKey','StandardStatus','ListPrice','BedroomsTotal','BathroomsTotalInteger','BathroomsTotal','BathroomsFull','BathroomsHalf',
-      'PropertyType','PropertySubType','StreetNumber','StreetName','City','StateOrProvince','PostalCode','LivingArea','LivingAreaTotal',
-      'LotSizeAcres','LotSizeSquareFeet','LotSizeSquareFeetTotal','YearBuilt','PublicRemarks','ListAgentFullName','ListAgentMlsId',
-      'ListOfficeName','OriginatingSystemName','Latitude','Longitude','PricePerSquareFoot','TaxAnnualAmount','TaxYear','GarageSpaces',
-      'ParkingFeatures','Basement','FoundationDetails','Roof','ExteriorFeatures','Flooring','Appliances','Heating','Cooling',
-      'WaterSource','Sewer','AssociationName','SchoolDistrict','Directions','ArchitecturalStyle','OriginalEntryTimestamp','OnMarketDate',
-      'ParcelNumber','OtherStructures','InteriorFeatures'
+      'ListingId','ListingKey','StandardStatus','ListPrice','BedroomsTotal','BathroomsTotalInteger','BathroomsTotal',
+      'PropertyType','PropertySubType','StreetNumber','StreetName','City','StateOrProvince','PostalCode',
+      'LivingArea','LivingAreaTotal','LotSizeAcres','LotSizeSquareFeet','YearBuilt','PublicRemarks',
+      'ListAgentFullName','ListAgentMlsId','ListOfficeName','OriginatingSystemName','Latitude','Longitude',
+      'PricePerSquareFoot','TaxAnnualAmount','TaxYear','GarageSpaces','ParkingFeatures','Basement',
+      'FoundationDetails','Roof','ExteriorFeatures','Flooring','Appliances','Heating','Cooling',
+      'WaterSource','Sewer','AssociationName','SchoolDistrict','Directions','ArchitecturalStyle',
+      'OriginalEntryTimestamp','OnMarketDate','ParcelNumber','OtherStructures','InteriorFeatures'
     ].join(','),
-    '$expand': 'Media',
-    '$top': '250'
+    '$top': '100'
   }).toString();
   const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, cache: 'no-store' });
   if (!response.ok) throw new Error(`MLS Grid request failed for ${source}: ${response.status} ${response.statusText}`);
