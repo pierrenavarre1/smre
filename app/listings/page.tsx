@@ -3,6 +3,7 @@ import { ListingsExplorer } from '../components/ListingsExplorer';
 import { MLSDisclosure } from '../components/MLSDisclosure';
 
 export const metadata = { title: 'Listings' };
+export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{ city?: string; address?: string; beds?: string; baths?: string; max?: string }>;
 
