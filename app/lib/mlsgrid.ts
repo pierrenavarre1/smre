@@ -28,9 +28,9 @@ export async function fetchMLSGridPage(source: string, url?: string): Promise<Ml
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
     '$filter': `OriginatingSystemName eq '${source}' and MlgCanView eq true and StandardStatus in ('Active','Pending')`,
     '$expand': 'Media',
-    '$top': '250'
+    '$top': '100'
   }).toString();
-  const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, cache: 'no-store' });
+  const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, next: { revalidate: 120 } });
   if (!response.ok) throw new Error(`MLS Grid request failed for ${source}: ${response.status} ${response.statusText}`);
   return response.json();
 }
@@ -38,16 +38,21 @@ export async function fetchMLSGridPage(source: string, url?: string): Promise<Ml
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
   const all: RESOProperty[] = [];
   for (const source of sourceKeys()) {
-    let url: string | undefined;
-    let pages = 0;
-    do {
-      const page = await fetchMLSGridPage(source, url);
+    try {
+      const page = await fetchMLSGridPage(source);
       for (const record of page.value || []) all.push(normalizeMLSGridProperty(record, source));
-      url = page['@odata.nextLink'];
-      pages += 1;
-    } while (url && pages < 5);
+    } catch (error) {
+      console.error(`MLS Grid source failed for ${source}:`, error);
+    }
   }
-  return all;
+
+  const seen = new Set<string>();
+  return all.filter((listing) => {
+    const key = listing.MLSNumber || listing.ListingKey || listing.ListingId;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflower'): RESOProperty {
