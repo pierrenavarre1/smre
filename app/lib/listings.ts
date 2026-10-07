@@ -4,7 +4,7 @@ import { fetchMLSGridListings, isMLSGridConfigured } from './mlsgrid';
 
 const getCachedMLSGridListings = unstable_cache(
   async () => fetchMLSGridListings(),
-  ['sunflower-mls-listings'],
+  ['mls-grid-listings'],
   { revalidate: 600 }
 );
 
@@ -16,7 +16,8 @@ export async function getListings(): Promise<RESOProperty[]> {
 export async function getListing(id: string): Promise<RESOProperty | undefined> {
   if (!isMLSGridConfigured()) return getMockProperty(id);
   const listings = await getCachedMLSGridListings();
-  return listings.find(p => p.ListingId === id || p.ListingKey === id);
+  const decodedId = decodeURIComponent(id);
+  return listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
 }
 
 export type ListingFilters = { minPrice?:number; maxPrice?:number; beds?:number; propertyType?:string; source?:string; status?:string; sort?:string; };
