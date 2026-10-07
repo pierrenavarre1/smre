@@ -36,7 +36,7 @@ export async function fetchMLSGridPage(source: string, url?: string): Promise<Ml
       'WaterSource','Sewer','AssociationName','SchoolDistrict','Directions','ArchitecturalStyle','OriginalEntryTimestamp','OnMarketDate',
       'ParcelNumber','OtherStructures','InteriorFeatures'
     ].join(','),
-    '$expand': 'Media($select=MediaKey,MediaURL,MediaCategory,ShortDescription)',
+    '$expand': 'Media',
     '$top': '250'
   }).toString();
   const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, cache: 'no-store' });
