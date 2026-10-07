@@ -26,8 +26,9 @@ export async function fetchMLSGridPage(source: string, url?: string): Promise<Ml
   const token = process.env.MLSGRID_ACCESS_TOKEN;
   if (!token) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
-    '$filter': `OriginatingSystemName eq '${source}' and MlgCanView eq true`,
-    '$top': '100'
+    '$filter': `OriginatingSystemName eq '${source}' and MlgCanView eq true and StandardStatus in ('Active','Pending')`,
+    '$expand': 'Media',
+    '$top': '250'
   }).toString();
   const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, cache: 'no-store' });
   if (!response.ok) throw new Error(`MLS Grid request failed for ${source}: ${response.status} ${response.statusText}`);
@@ -44,7 +45,7 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
       for (const record of page.value || []) all.push(normalizeMLSGridProperty(record, source));
       url = page['@odata.nextLink'];
       pages += 1;
-    } while (url && pages < 20);
+    } while (url && pages < 5);
   }
   return all;
 }
