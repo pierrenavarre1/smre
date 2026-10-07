@@ -1,14 +1,21 @@
+import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { fetchMLSGridListings, isMLSGridConfigured } from './mlsgrid';
 
+const getCachedMLSGridListings = unstable_cache(
+  async () => fetchMLSGridListings(),
+  ['sunflower-mls-listings'],
+  { revalidate: 600 }
+);
+
 export async function getListings(): Promise<RESOProperty[]> {
   if (!isMLSGridConfigured()) return mockProperties;
-  return fetchMLSGridListings();
+  return getCachedMLSGridListings();
 }
 
 export async function getListing(id: string): Promise<RESOProperty | undefined> {
   if (!isMLSGridConfigured()) return getMockProperty(id);
-  const listings = await fetchMLSGridListings();
+  const listings = await getCachedMLSGridListings();
   return listings.find(p => p.ListingId === id || p.ListingKey === id);
 }
 
