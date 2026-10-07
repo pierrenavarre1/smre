@@ -1,23 +1,17 @@
-import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
-import { fetchMLSGridListings, isMLSGridConfigured } from './mlsgrid';
-
-const getCachedMLSGridListings = unstable_cache(
-  async () => fetchMLSGridListings(),
-  ['mls-grid-listings'],
-  { revalidate: 600 }
-);
+import { readMLSCache } from './mls-store';
 
 export async function getListings(): Promise<RESOProperty[]> {
-  if (!isMLSGridConfigured()) return mockProperties;
-  return getCachedMLSGridListings();
+  const listings = await readMLSCache();
+  if (listings.length) return listings;
+  return process.env.NODE_ENV === 'development' ? mockProperties : [];
 }
 
 export async function getListing(id: string): Promise<RESOProperty | undefined> {
-  if (!isMLSGridConfigured()) return getMockProperty(id);
-  const listings = await getCachedMLSGridListings();
   const decodedId = decodeURIComponent(id);
-  return listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
+  const listings = await getListings();
+  if (listings.length) return listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
+  return process.env.NODE_ENV === 'development' ? getMockProperty(decodedId) : undefined;
 }
 
 export type ListingFilters = { minPrice?:number; maxPrice?:number; beds?:number; propertyType?:string; source?:string; status?:string; sort?:string; };
