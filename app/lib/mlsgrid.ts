@@ -86,6 +86,15 @@ export function isMLSGridConfigured() {
   return sourceKeys().some(source => Boolean(sourceToken(source)));
 }
 
+const MIN_REQUEST_INTERVAL_MS = 650;
+let lastRequestAt = 0;
+
+async function waitForMLSGridSlot() {
+  const wait = Math.max(0, MIN_REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt));
+  if (wait) await new Promise(resolve => setTimeout(resolve, wait));
+  lastRequestAt = Date.now();
+}
+
 export async function fetchMLSGridPage(
   source: string,
   url?: string,
@@ -94,10 +103,12 @@ export async function fetchMLSGridPage(
   const token = sourceToken(source);
   if (!token) throw new Error('No MLS Grid access token is configured for ' + source + '.');
 
+  await waitForMLSGridSlot();
+
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
-    '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and (StandardStatus eq 'Active' or StandardStatus eq 'Pending')",
+    '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and StandardStatus in ('Active','Pending')",
     ...(expandMedia ? { '$expand': 'Media' } : {}),
-    '$top': expandMedia ? '25' : '1000'
+    '$top': expandMedia ? '100' : '5000'
   }).toString();
 
   const response = await fetch(endpoint, {
@@ -106,7 +117,7 @@ export async function fetchMLSGridPage(
       Accept: 'application/json',
       'Accept-Encoding': 'gzip'
     },
-    next: { revalidate: 600 }
+    cache: 'no-store'
   });
 
   if (!response.ok) {
@@ -131,12 +142,15 @@ async function fetchAllPropertyRecords(source: string) {
 
 async function fetchMediaForRecords(source: string, records: MlsGridRecord[]) {
   const byId = new Map<string, MlsGridRecord>();
-  records.forEach(record => byId.set(String(record.ListingId || record.ListingKey || ''), record));
+  records.forEach(record => {
+    const id = String(record.ListingId || record.ListingKey || '');
+    if (id) byId.set(id, record);
+  });
 
-  const ids = [...byId.keys()].filter(Boolean);
+  const ids = [...byId.keys()];
 
-  for (let i = 0; i < ids.length; i += 25) {
-    const batch = ids.slice(i, i + 25);
+  for (let i = 0; i < ids.length; i += 100) {
+    const batch = ids.slice(i, i + 100);
     const values = batch.map(id => "'" + id.replace(/'/g, "''") + "'").join(',');
     const filter =
       "OriginatingSystemName eq '" + source +
@@ -147,7 +161,7 @@ async function fetchMediaForRecords(source: string, records: MlsGridRecord[]) {
       API_BASE + '/Property?' + new URLSearchParams({
         '$filter': filter,
         '$expand': 'Media',
-        '$top': '25'
+        '$top': '100'
       }).toString(),
       true
     );
@@ -172,10 +186,6 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
     }
 
     try {
-      // Property searches are restricted by MLS Grid to replication fields such as
-      // status, ListingId and ModificationTimestamp. We therefore retrieve the
-      // active/pending records, filter the service area locally, then retrieve media
-      // only for the matching listings.
       const records = await fetchAllPropertyRecords(source);
       const serviceAreaRecords = records.filter(isInServiceArea);
       const recordsWithMedia = await fetchMediaForRecords(source, serviceAreaRecords);
