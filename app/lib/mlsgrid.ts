@@ -20,11 +20,18 @@ function sourceKeys() {
 }
 function sourceLabel(source: string): MLSSource { return SOURCE_CONFIG[source]?.label || 'Sunflower MLS'; }
 
-export function isMLSGridConfigured() { return Boolean(process.env.MLSGRID_ACCESS_TOKEN); }
+function sourceToken(source: string) {
+  if (source === 'flinthills') return process.env.MLSGRID_FLINTHILLS_ACCESS_TOKEN;
+  return process.env.MLSGRID_SUNFLOWER_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN;
+}
+
+export function isMLSGridConfigured() {
+  return sourceKeys().some(source => Boolean(sourceToken(source)));
+}
 
 export async function fetchMLSGridPage(source: string, url?: string): Promise<MlsGridResponse> {
-  const token = process.env.MLSGRID_ACCESS_TOKEN;
-  if (!token) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
+  const token = sourceToken(source);
+  if (!token) throw new Error('No MLS Grid access token is configured for ' + source + '.');
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
     '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and (StandardStatus eq 'Active' or StandardStatus eq 'Pending')",
     '$expand': 'Media',
@@ -38,6 +45,10 @@ export async function fetchMLSGridPage(source: string, url?: string): Promise<Ml
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
   const all: RESOProperty[] = [];
   for (const source of sourceKeys()) {
+    if (!sourceToken(source)) {
+      console.warn('MLS Grid source skipped because no access token is configured for ' + source + '.');
+      continue;
+    }
     try {
       const page = await fetchMLSGridPage(source);
       for (const record of page.value || []) all.push(normalizeMLSGridProperty(record, source));
