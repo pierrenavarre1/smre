@@ -7,51 +7,182 @@ const SOURCE_CONFIG: Record<string, { label: MLSSource }> = {
   flinthills: { label: 'FHAR MLS' },
 };
 
+const SERVICE_CITIES = new Set([
+  'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka',
+  'st george', 'saint george', 'rossville', 'silver lake', 'auburn', 'willard',
+  'berryton', 'dover', 'elmont', 'pauline', 'tecumseh', 'wakarusa',
+  'leonardville', 'ogden', 'randolph', 'riley', 'fort riley', 'keats', 'zeandale',
+  'belvue', 'bellevue', 'emmett', 'havensville', 'louisville', 'olsburg', 'onaga',
+  'westmoreland', 'wheaton', 'blaine', 'duluth', 'flush', 'fostoria', 'st clere',
+  'saint clere', 'alma', 'paxico', 'maple hill', 'eskridge', 'harveyville',
+  'mcfarland', 'junction city', 'mayetta', 'holton'
+]);
+
 type MlsGridRecord = Record<string, any>;
 type MlsGridResponse = { value?: MlsGridRecord[]; '@odata.nextLink'?: string };
 
-function asNumber(value: unknown, fallback = 0) { const n = typeof value === 'number' ? value : Number(value); return Number.isFinite(n) ? n : fallback; }
-function firstString(...values: unknown[]) { return values.find(v => typeof v === 'string' && v.trim()) as string | undefined; }
-function propertyType(value: unknown): PropertyType { const v = String(value || '').toLowerCase(); if (v.includes('farm')) return 'Farm'; if (v.includes('land')) return 'Land'; if (v.includes('commercial')) return 'Commercial'; return 'Residential'; }
-function media(record: MlsGridRecord) { const items = Array.isArray(record.Media) ? record.Media : []; return items.filter((m: any) => m?.MediaURL).map((m: any) => ({ MediaKey: String(m.MediaKey || ''), MediaURL: String(m.MediaURL), MediaCategory: 'Photo' as const, ShortDescription: firstString(m.ShortDescription) })); }
-function sourceKeys() {
-  const configured = (process.env.MLSGRID_ORIGINATING_SYSTEMS || '').split(',').map(v => v.trim()).filter(Boolean);
-  return configured.length ? configured.filter(source => source === 'sunflower' || source === 'flinthills') : [...DEFAULT_SOURCES];
+function asNumber(value: unknown, fallback = 0) {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? n : fallback;
 }
-function sourceLabel(source: string): MLSSource { return SOURCE_CONFIG[source]?.label || 'Sunflower MLS'; }
 
-function sourceToken(source: string) {
-  if (source === 'flinthills') return process.env.MLSGRID_FLINTHILLS_ACCESS_TOKEN;
-  return process.env.MLSGRID_SUNFLOWER_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN;
+function firstString(...values: unknown[]) {
+  return values.find(v => typeof v === 'string' && v.trim()) as string | undefined;
+}
+
+function propertyType(value: unknown): PropertyType {
+  const v = String(value || '').toLowerCase();
+  if (v.includes('farm')) return 'Farm';
+  if (v.includes('land')) return 'Land';
+  if (v.includes('commercial')) return 'Commercial';
+  return 'Residential';
+}
+
+function media(record: MlsGridRecord) {
+  const items = Array.isArray(record.Media) ? record.Media : [];
+  return items
+    .filter((m: any) => m?.MediaURL)
+    .map((m: any) => ({
+      MediaKey: String(m.MediaKey || ''),
+      MediaURL: String(m.MediaURL),
+      MediaCategory: 'Photo' as const,
+      ShortDescription: firstString(m.ShortDescription)
+    }));
+}
+
+function normalizeCity(value: unknown) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[.'’,-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isInServiceArea(record: MlsGridRecord) {
+  return SERVICE_CITIES.has(normalizeCity(record.City));
+}
+
+function sourceKeys() {
+  const configured = (process.env.MLSGRID_ORIGINATING_SYSTEMS || '')
+    .split(',')
+    .map(v => v.trim())
+    .filter(Boolean);
+
+  return configured.length
+    ? configured.filter(source => source === 'sunflower' || source === 'flinthills')
+    : [...DEFAULT_SOURCES];
+}
+
+function sourceLabel(source: string): MLSSource {
+  return SOURCE_CONFIG[source]?.label || 'Sunflower MLS';
+}
+
+// MLS Grid provides one access token for the subscription. Both MLS sources use it.
+function sourceToken(_source: string) {
+  return process.env.MLSGRID_ACCESS_TOKEN;
 }
 
 export function isMLSGridConfigured() {
   return sourceKeys().some(source => Boolean(sourceToken(source)));
 }
 
-export async function fetchMLSGridPage(source: string, url?: string): Promise<MlsGridResponse> {
+export async function fetchMLSGridPage(
+  source: string,
+  url?: string,
+  expandMedia = false
+): Promise<MlsGridResponse> {
   const token = sourceToken(source);
   if (!token) throw new Error('No MLS Grid access token is configured for ' + source + '.');
+
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
     '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and (StandardStatus eq 'Active' or StandardStatus eq 'Pending')",
-    '$expand': 'Media',
-    '$top': '50'
+    ...(expandMedia ? { '$expand': 'Media' } : {}),
+    '$top': expandMedia ? '25' : '1000'
   }).toString();
-  const response = await fetch(endpoint, { headers: { Authorization: 'Bearer ' + token, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, next: { revalidate: 600 } });
-  if (!response.ok) throw new Error('MLS Grid request failed for ' + source + ': ' + response.status + ' ' + response.statusText);
+
+  const response = await fetch(endpoint, {
+    headers: {
+      Authorization: 'Bearer ' + token,
+      Accept: 'application/json',
+      'Accept-Encoding': 'gzip'
+    },
+    next: { revalidate: 600 }
+  });
+
+  if (!response.ok) {
+    throw new Error('MLS Grid request failed for ' + source + ': ' + response.status + ' ' + response.statusText);
+  }
+
   return response.json();
+}
+
+async function fetchAllPropertyRecords(source: string) {
+  const records: MlsGridRecord[] = [];
+  let url: string | undefined;
+
+  do {
+    const page = await fetchMLSGridPage(source, url, false);
+    records.push(...(page.value || []));
+    url = page['@odata.nextLink'];
+  } while (url);
+
+  return records;
+}
+
+async function fetchMediaForRecords(source: string, records: MlsGridRecord[]) {
+  const byId = new Map<string, MlsGridRecord>();
+  records.forEach(record => byId.set(String(record.ListingId || record.ListingKey || ''), record));
+
+  const ids = [...byId.keys()].filter(Boolean);
+
+  for (let i = 0; i < ids.length; i += 25) {
+    const batch = ids.slice(i, i + 25);
+    const values = batch.map(id => "'" + id.replace(/'/g, "''") + "'").join(',');
+    const filter =
+      "OriginatingSystemName eq '" + source +
+      "' and MlgCanView eq true and ListingId in (" + values + ")";
+
+    const page = await fetchMLSGridPage(
+      source,
+      API_BASE + '/Property?' + new URLSearchParams({
+        '$filter': filter,
+        '$expand': 'Media',
+        '$top': '25'
+      }).toString(),
+      true
+    );
+
+    for (const record of page.value || []) {
+      const id = String(record.ListingId || record.ListingKey || '');
+      const existing = byId.get(id);
+      if (existing) existing.Media = record.Media;
+    }
+  }
+
+  return [...byId.values()];
 }
 
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
   const all: RESOProperty[] = [];
+
   for (const source of sourceKeys()) {
     if (!sourceToken(source)) {
       console.warn('MLS Grid source skipped because no access token is configured for ' + source + '.');
       continue;
     }
+
     try {
-      const page = await fetchMLSGridPage(source);
-      for (const record of page.value || []) all.push(normalizeMLSGridProperty(record, source));
+      // Property searches are restricted by MLS Grid to replication fields such as
+      // status, ListingId and ModificationTimestamp. We therefore retrieve the
+      // active/pending records, filter the service area locally, then retrieve media
+      // only for the matching listings.
+      const records = await fetchAllPropertyRecords(source);
+      const serviceAreaRecords = records.filter(isInServiceArea);
+      const recordsWithMedia = await fetchMediaForRecords(source, serviceAreaRecords);
+
+      for (const record of recordsWithMedia) {
+        all.push(normalizeMLSGridProperty(record, source));
+      }
     } catch (error) {
       console.error('MLS Grid source failed for ' + source + ':', error);
     }
@@ -73,14 +204,60 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
   const originalId = String(record.ListingId || record.ListingKey || '');
   const sourceKey = source.toLowerCase();
   const internalId = sourceKey + ':' + originalId;
+
   return {
-    ListingId: internalId, ListingKey: String(record.ListingKey || originalId), StandardStatus: ['Pending','Closed'].includes(String(record.StandardStatus)) ? String(record.StandardStatus) as RESOProperty['StandardStatus'] : 'Active',
-    ListPrice: listPrice, BedroomsTotal: asNumber(record.BedroomsTotal), BathroomsTotalInteger: asNumber(record.BathroomsTotalInteger || record.BathroomsTotal), BathroomsFull: asNumber(record.BathroomsFull), BathroomsHalf: asNumber(record.BathroomsHalf),
-    PropertyType: propertyType(record.PropertyType), PropertySubType: firstString(record.PropertySubType) || '', StreetNumber: firstString(record.StreetNumber) || '', StreetName: firstString(record.StreetName) || '', City: firstString(record.City) || '', StateOrProvince: firstString(record.StateOrProvince) || 'KS', PostalCode: firstString(record.PostalCode) || '',
-    LivingArea: livingArea, LotSizeAcres: asNumber(record.LotSizeAcres || (lotSqFt ? lotSqFt / 43560 : 0)), LotSizeSqFt: lotSqFt || undefined, YearBuilt: asNumber(record.YearBuilt), PublicRemarks: firstString(record.PublicRemarks) || '', Media: media(record),
-    ListAgentFullName: firstString(record.ListAgentFullName) || '', ListAgentMlsId: firstString(record.ListAgentMlsId) || '', ListOfficeName: firstString(record.ListOfficeName) || '', MlsSource: sourceLabel(source), Latitude: asNumber(record.Latitude), Longitude: asNumber(record.Longitude),
-    PricePerSqFt: asNumber(record.PricePerSquareFoot || (livingArea ? listPrice / livingArea : 0)) || undefined, AnnualTaxes: asNumber(record.TaxAnnualAmount) || undefined, TaxYear: asNumber(record.TaxYear) || undefined, GarageSpaces: asNumber(record.GarageSpaces) || undefined,
-    ParkingFeatures: Array.isArray(record.ParkingFeatures) ? record.ParkingFeatures.join(', ') : firstString(record.ParkingFeatures), Basement: Array.isArray(record.Basement) ? record.Basement.join(', ') : firstString(record.Basement), Foundation: Array.isArray(record.FoundationDetails) ? record.FoundationDetails.join(', ') : firstString(record.FoundationDetails), Roof: Array.isArray(record.Roof) ? record.Roof.join(', ') : firstString(record.Roof), Exterior: Array.isArray(record.ExteriorFeatures) ? record.ExteriorFeatures.join(', ') : firstString(record.ExteriorFeatures), Flooring: Array.isArray(record.Flooring) ? record.Flooring.join(', ') : firstString(record.Flooring), Appliances: Array.isArray(record.Appliances) ? record.Appliances.join(', ') : firstString(record.Appliances), Heating: Array.isArray(record.Heating) ? record.Heating.join(', ') : firstString(record.Heating), Cooling: Array.isArray(record.Cooling) ? record.Cooling.join(', ') : firstString(record.Cooling), WaterSource: Array.isArray(record.WaterSource) ? record.WaterSource.join(', ') : firstString(record.WaterSource), Sewer: Array.isArray(record.Sewer) ? record.Sewer.join(', ') : firstString(record.Sewer),
-    HOA: firstString(record.AssociationName), Schools: Array.isArray(record.SchoolDistrict) ? record.SchoolDistrict.join(', ') : firstString(record.SchoolDistrict), Directions: firstString(record.Directions), ArchitecturalStyle: Array.isArray(record.ArchitecturalStyle) ? record.ArchitecturalStyle.join(', ') : firstString(record.ArchitecturalStyle), ListingDate: firstString(record.OriginalEntryTimestamp, record.OnMarketDate), MLSNumber: firstString(record.ListingId), ParcelNumber: firstString(record.ParcelNumber), OtherStructures: Array.isArray(record.OtherStructures) ? record.OtherStructures.join(', ') : firstString(record.OtherStructures), Features: Array.isArray(record.InteriorFeatures) ? record.InteriorFeatures : undefined
+    ListingId: internalId,
+    ListingKey: String(record.ListingKey || originalId),
+    StandardStatus: ['Pending', 'Closed'].includes(String(record.StandardStatus))
+      ? String(record.StandardStatus) as RESOProperty['StandardStatus']
+      : 'Active',
+    ListPrice: listPrice,
+    BedroomsTotal: asNumber(record.BedroomsTotal),
+    BathroomsTotalInteger: asNumber(record.BathroomsTotalInteger || record.BathroomsTotal),
+    BathroomsFull: asNumber(record.BathroomsFull),
+    BathroomsHalf: asNumber(record.BathroomsHalf),
+    PropertyType: propertyType(record.PropertyType),
+    PropertySubType: firstString(record.PropertySubType) || '',
+    StreetNumber: firstString(record.StreetNumber) || '',
+    StreetName: firstString(record.StreetName) || '',
+    City: firstString(record.City) || '',
+    StateOrProvince: firstString(record.StateOrProvince) || 'KS',
+    PostalCode: firstString(record.PostalCode) || '',
+    LivingArea: livingArea,
+    LotSizeAcres: asNumber(record.LotSizeAcres || (lotSqFt ? lotSqFt / 43560 : 0)),
+    LotSizeSqFt: lotSqFt || undefined,
+    YearBuilt: asNumber(record.YearBuilt),
+    PublicRemarks: firstString(record.PublicRemarks) || '',
+    Media: media(record),
+    ListAgentFullName: firstString(record.ListAgentFullName) || '',
+    ListAgentMlsId: firstString(record.ListAgentMlsId) || '',
+    ListOfficeName: firstString(record.ListOfficeName) || '',
+    MlsSource: sourceLabel(source),
+    Latitude: asNumber(record.Latitude),
+    Longitude: asNumber(record.Longitude),
+    PricePerSqFt: asNumber(record.PricePerSquareFoot || (livingArea ? listPrice / livingArea : 0)) || undefined,
+    AnnualTaxes: asNumber(record.TaxAnnualAmount) || undefined,
+    TaxYear: asNumber(record.TaxYear) || undefined,
+    GarageSpaces: asNumber(record.GarageSpaces) || undefined,
+    ParkingFeatures: Array.isArray(record.ParkingFeatures) ? record.ParkingFeatures.join(', ') : firstString(record.ParkingFeatures),
+    Basement: Array.isArray(record.Basement) ? record.Basement.join(', ') : firstString(record.Basement),
+    Foundation: Array.isArray(record.FoundationDetails) ? record.FoundationDetails.join(', ') : firstString(record.FoundationDetails),
+    Roof: Array.isArray(record.Roof) ? record.Roof.join(', ') : firstString(record.Roof),
+    Exterior: Array.isArray(record.ExteriorFeatures) ? record.ExteriorFeatures.join(', ') : firstString(record.ExteriorFeatures),
+    Flooring: Array.isArray(record.Flooring) ? record.Flooring.join(', ') : firstString(record.Flooring),
+    Appliances: Array.isArray(record.Appliances) ? record.Appliances.join(', ') : firstString(record.Appliances),
+    Heating: Array.isArray(record.Heating) ? record.Heating.join(', ') : firstString(record.Heating),
+    Cooling: Array.isArray(record.Cooling) ? record.Cooling.join(', ') : firstString(record.Cooling),
+    WaterSource: Array.isArray(record.WaterSource) ? record.WaterSource.join(', ') : firstString(record.WaterSource),
+    Sewer: Array.isArray(record.Sewer) ? record.Sewer.join(', ') : firstString(record.Sewer),
+    HOA: firstString(record.AssociationName),
+    Schools: Array.isArray(record.SchoolDistrict) ? record.SchoolDistrict.join(', ') : firstString(record.SchoolDistrict),
+    Directions: firstString(record.Directions),
+    ArchitecturalStyle: Array.isArray(record.ArchitecturalStyle) ? record.ArchitecturalStyle.join(', ') : firstString(record.ArchitecturalStyle),
+    ListingDate: firstString(record.OriginalEntryTimestamp, record.OnMarketDate),
+    MLSNumber: firstString(record.ListingId),
+    ParcelNumber: firstString(record.ParcelNumber),
+    OtherStructures: Array.isArray(record.OtherStructures) ? record.OtherStructures.join(', ') : firstString(record.OtherStructures),
+    Features: Array.isArray(record.InteriorFeatures) ? record.InteriorFeatures : undefined
   };
 }
