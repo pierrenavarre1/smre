@@ -12,6 +12,8 @@ import { getAdminData } from './lib/admin-store';
 const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
 const fallbackAreaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home(){
   const activeListings=(await getListings()).filter(p=>p.StandardStatus==='Active');
   const {settings}=await getAdminData();
