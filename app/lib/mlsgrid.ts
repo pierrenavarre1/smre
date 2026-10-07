@@ -44,7 +44,9 @@ function media(record: MlsGridRecord) {
     .filter((m: any) => m?.MediaURL)
     .map((m: any) => ({
       MediaKey: String(m.MediaKey || ''),
-      MediaURL: String(m.MediaURL),
+      // MLS Grid media URLs are download URLs. Normalize older http values so
+      // the public image proxy can always retrieve them over HTTPS.
+      MediaURL: String(m.MediaURL).replace(/^http:/i, 'https:'),
       MediaCategory: 'Photo' as const,
       ShortDescription: firstString(m.ShortDescription)
     }));
