@@ -1,9 +1,10 @@
 import type { RESOProperty, PropertyType, MLSSource } from './mock-properties';
 
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
-const DEFAULT_SOURCES = ['sunflower'] as const;
+const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
 const SOURCE_CONFIG: Record<string, { label: MLSSource }> = {
   sunflower: { label: 'Sunflower MLS' },
+  flinthills: { label: 'FHAR MLS' },
 };
 
 type MlsGridRecord = Record<string, any>;
@@ -15,7 +16,7 @@ function propertyType(value: unknown): PropertyType { const v = String(value || 
 function media(record: MlsGridRecord) { const items = Array.isArray(record.Media) ? record.Media : []; return items.filter((m: any) => m?.MediaURL).map((m: any) => ({ MediaKey: String(m.MediaKey || ''), MediaURL: String(m.MediaURL), MediaCategory: 'Photo' as const, ShortDescription: firstString(m.ShortDescription) })); }
 function sourceKeys() {
   const configured = (process.env.MLSGRID_ORIGINATING_SYSTEMS || '').split(',').map(v => v.trim()).filter(Boolean);
-  return configured.length ? configured.filter(source => source === 'sunflower') : [...DEFAULT_SOURCES];
+  return configured.length ? configured.filter(source => source === 'sunflower' || source === 'flinthills') : [...DEFAULT_SOURCES];
 }
 function sourceLabel(source: string): MLSSource { return SOURCE_CONFIG[source]?.label || 'Sunflower MLS'; }
 
@@ -25,12 +26,12 @@ export async function fetchMLSGridPage(source: string, url?: string): Promise<Ml
   const token = process.env.MLSGRID_ACCESS_TOKEN;
   if (!token) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
-    '$filter': `OriginatingSystemName eq '${source}' and MlgCanView eq true and StandardStatus in ('Active','Pending')`,
+    '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and (StandardStatus eq 'Active' or StandardStatus eq 'Pending')",
     '$expand': 'Media',
     '$top': '50'
   }).toString();
-  const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, next: { revalidate: 600 } });
-  if (!response.ok) throw new Error(`MLS Grid request failed for ${source}: ${response.status} ${response.statusText}`);
+  const response = await fetch(endpoint, { headers: { Authorization: 'Bearer ' + token, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, next: { revalidate: 600 } });
+  if (!response.ok) throw new Error('MLS Grid request failed for ' + source + ': ' + response.status + ' ' + response.statusText);
   return response.json();
 }
 
@@ -41,13 +42,13 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
       const page = await fetchMLSGridPage(source);
       for (const record of page.value || []) all.push(normalizeMLSGridProperty(record, source));
     } catch (error) {
-      console.error(`MLS Grid source failed for ${source}:`, error);
+      console.error('MLS Grid source failed for ' + source + ':', error);
     }
   }
 
   const seen = new Set<string>();
   return all.filter((listing) => {
-    const key = listing.MLSNumber || listing.ListingKey || listing.ListingId;
+    const key = listing.MlsSource + ':' + (listing.MLSNumber || listing.ListingKey || listing.ListingId);
     if (!key || seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -60,7 +61,7 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
   const lotSqFt = asNumber(record.LotSizeSquareFeet || record.LotSizeSquareFeetTotal);
   const originalId = String(record.ListingId || record.ListingKey || '');
   const sourceKey = source.toLowerCase();
-  const internalId = `${sourceKey}:${originalId}`;
+  const internalId = sourceKey + ':' + originalId;
   return {
     ListingId: internalId, ListingKey: String(record.ListingKey || originalId), StandardStatus: ['Pending','Closed'].includes(String(record.StandardStatus)) ? String(record.StandardStatus) as RESOProperty['StandardStatus'] : 'Active',
     ListPrice: listPrice, BedroomsTotal: asNumber(record.BedroomsTotal), BathroomsTotalInteger: asNumber(record.BathroomsTotalInteger || record.BathroomsTotal), BathroomsFull: asNumber(record.BathroomsFull), BathroomsHalf: asNumber(record.BathroomsHalf),
