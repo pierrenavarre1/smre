@@ -3,7 +3,6 @@ import type { RESOProperty, PropertyType, MLSSource } from './mock-properties';
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
 const DEFAULT_SOURCES = ['sunflower'] as const;
 const SOURCE_CONFIG: Record<string, { label: MLSSource }> = {
-  flinthills: { label: 'FHAR MLS' },
   sunflower: { label: 'Sunflower MLS' },
 };
 
@@ -16,9 +15,9 @@ function propertyType(value: unknown): PropertyType { const v = String(value || 
 function media(record: MlsGridRecord) { const items = Array.isArray(record.Media) ? record.Media : []; return items.filter((m: any) => m?.MediaURL).map((m: any) => ({ MediaKey: String(m.MediaKey || ''), MediaURL: String(m.MediaURL), MediaCategory: 'Photo' as const, ShortDescription: firstString(m.ShortDescription) })); }
 function sourceKeys() {
   const configured = (process.env.MLSGRID_ORIGINATING_SYSTEMS || '').split(',').map(v => v.trim()).filter(Boolean);
-  return configured.length ? configured : [...DEFAULT_SOURCES];
+  return configured.length ? configured.filter(source => source === 'sunflower') : [...DEFAULT_SOURCES];
 }
-function sourceLabel(source: string): MLSSource { return SOURCE_CONFIG[source]?.label || (source === 'sunflower' ? 'Sunflower MLS' : 'FHAR MLS'); }
+function sourceLabel(source: string): MLSSource { return SOURCE_CONFIG[source]?.label || 'Sunflower MLS'; }
 
 export function isMLSGridConfigured() { return Boolean(process.env.MLSGRID_ACCESS_TOKEN); }
 
@@ -28,7 +27,7 @@ export async function fetchMLSGridPage(source: string, url?: string): Promise<Ml
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
     '$filter': `OriginatingSystemName eq '${source}' and MlgCanView eq true and StandardStatus in ('Active','Pending')`,
     '$expand': 'Media',
-    '$top': '100'
+    '$top': '50'
   }).toString();
   const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, next: { revalidate: 120 } });
   if (!response.ok) throw new Error(`MLS Grid request failed for ${source}: ${response.status} ${response.statusText}`);
