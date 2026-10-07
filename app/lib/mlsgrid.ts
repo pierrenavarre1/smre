@@ -1,7 +1,7 @@
 import type { RESOProperty, PropertyType, MLSSource } from './mock-properties';
 
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
-const DEFAULT_SOURCES = ['flinthills', 'sunflower'] as const;
+const DEFAULT_SOURCES = ['sunflower'] as const;
 const SOURCE_CONFIG: Record<string, { label: MLSSource }> = {
   flinthills: { label: 'FHAR MLS' },
   sunflower: { label: 'Sunflower MLS' },
