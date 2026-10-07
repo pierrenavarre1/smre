@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import './brand.css';
 import './brand-overrides.css';
@@ -62,5 +63,6 @@ export default async function RootLayout({children}:Readonly<{children:React.Rea
       </div>
     </footer>
     <ChatBubble />
+    <Analytics />
   </body></html>
 }
