@@ -29,7 +29,7 @@ export async function fetchMLSGridPage(source: string, url?: string): Promise<Ml
     '$expand': 'Media',
     '$top': '50'
   }).toString();
-  const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, next: { revalidate: 120 } });
+  const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json', 'Accept-Encoding': 'gzip' }, next: { revalidate: 600 } });
   if (!response.ok) throw new Error(`MLS Grid request failed for ${source}: ${response.status} ${response.statusText}`);
   return response.json();
 }
