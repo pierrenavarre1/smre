@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchMLSGridListings } from '../../../lib/mlsgrid';
-import { writeMLSCache } from '../../../lib/mls-store';
+import { fetchMLSGridListings } from '../../lib/mlsgrid';
+import { writeMLSCache } from '../../lib/mls-store';
 
 export const maxDuration = 60;
 
