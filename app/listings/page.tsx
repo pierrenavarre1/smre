@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 type SearchParams = Promise<{ city?: string; address?: string; beds?: string; baths?: string; max?: string }>;
 
 export default async function Listings({ searchParams }: { searchParams: SearchParams }) {
-  const items = (await getListings()).filter((p) => p.StandardStatus === 'Active');
+  const items = await getListings();
   const params = await searchParams;
   const initialFilters = {
     ...(params.city ? { city: params.city } : {}),
