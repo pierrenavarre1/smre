@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
+import {AdminAnalytics} from './AdminAnalytics';
 
 type Lead={id:string;createdAt:string;type:string;name:string;email?:string;phone?:string;address?:string;listingId?:string;message?:string;status:'new'|'contacted'|'closed';assignedAgent?:string;notes?:string;lastContactedAt?:string;nextFollowUpAt?:string};
 type Agent={slug:string;name:string;role:string;phone:string;photo:string;bio:string;specialties:string[];market:string;snapshot:string;review:string;email?:string;hidden?:boolean;sort?:number};
@@ -9,7 +10,7 @@ type Settings={phone:string;address:string;email:string;homepageHeadline:string;
 type Data={settings:Settings;agents:Agent[];guides:Guide[];leads:Lead[];testimonials:Testimonial[];updatedAt?:string};
 type Media={url:string;pathname:string;size?:number;uploadedAt?:string};
 
-const tabs=[['dashboard','Dashboard'],['leads','Leads'],['agents','Agents'],['guides','Guides'],['testimonials','Testimonials'],['homepage','Homepage'],['media','Media'],['settings','Settings']] as const;
+const tabs=[['dashboard','Dashboard'],['analytics','Analytics'],['leads','Leads'],['agents','Agents'],['guides','Guides'],['testimonials','Testimonials'],['homepage','Homepage'],['media','Media'],['settings','Settings']] as const;
 
 export function AdminDashboard(){
  const [data,setData]=useState<Data|null>(null);const [section,setSection]=useState('dashboard');const [message,setMessage]=useState('');const [selectedLead,setSelectedLead]=useState<string|null>(null);
@@ -23,6 +24,7 @@ export function AdminDashboard(){
   <aside className="admin-nav"><div><p className="eyebrow">SMRE ADMIN</p><h2>Website</h2></div>{tabs.map(([id,label])=><button key={id} className={section===id?'active':''} onClick={()=>setSection(id)}>{label}{id==='leads'&&newLeads>0?<b>{newLeads}</b>:null}</button>)}<button onClick={async()=>{await fetch('/api/admin/logout',{method:'POST'});location.href='/admin/login'}}>Sign out</button></aside>
   <section className="admin-main"><div className="admin-top"><div><p className="eyebrow">ST. MARY’S REAL ESTATE</p><h1>{tabs.find(x=>x[0]===section)?.[1]}</h1></div><span className="admin-save">{message}</span></div>
    {section==='dashboard'&&<Dashboard data={data} setSection={setSection}/>}
+   {section==='analytics'&&<AdminAnalytics/>}
    {section==='leads'&&<Leads data={data} save={save} selectedLead={selectedLead} setSelectedLead={setSelectedLead}/>}
    {section==='agents'&&<Agents data={data} save={save}/>}
    {section==='guides'&&<Guides data={data} save={save}/>}
