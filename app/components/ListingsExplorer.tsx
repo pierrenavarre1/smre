@@ -33,13 +33,43 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
     address: '',
     ...initialFilters,
   });
-  const [sort, setSort] = useState('price-asc');
+  const [sort, setSort] = useState('priority');
   const [page, setPage] = useState(1);
   const [addressOpen, setAddressOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const shown = useMemo(() => {
+    const normalize = (value: string) =>
+      value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\\s+/g, ' ').trim();
+
+    const isSMRE = (p: RESOProperty) => {
+      const office = normalize(p.ListOfficeName || '');
+      return office.includes('st mary') && office.includes('real estate');
+    };
+
+    const isCoreLocalArea = (p: RESOProperty) => {
+      const city = normalize(p.City || '');
+      return city === 'st marys' || city === 'saint marys' || city === 'wamego';
+    };
+
+    const listingTimestamp = (p: RESOProperty) => {
+      const value = p.ListingDate ? Date.parse(p.ListingDate) : 0;
+      return Number.isFinite(value) ? value : 0;
+    };
+
+    const priorityCompare = (a: RESOProperty, b: RESOProperty) => {
+      const aSMRE = isSMRE(a);
+      const bSMRE = isSMRE(b);
+      if (aSMRE !== bSMRE) return aSMRE ? -1 : 1;
+
+      const aLocal = isCoreLocalArea(a);
+      const bLocal = isCoreLocalArea(b);
+      if (aLocal !== bLocal) return aLocal ? -1 : 1;
+
+      return listingTimestamp(b) - listingTimestamp(a);
+    };
+
     return items
       .filter((p) => {
         const baths = p.BathroomsTotalInteger + (p.BathroomsHalf ? 0.5 : 0);
@@ -59,9 +89,11 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
             ).includes(normalizeSearch(filters.address)))
         );
       })
-      .sort((a, b) =>
-        sort === 'price-desc' ? b.ListPrice - a.ListPrice : a.ListPrice - b.ListPrice
-      );
+      .sort((a, b) => {
+        if (sort === 'price-desc') return b.ListPrice - a.ListPrice;
+        if (sort === 'price-asc') return a.ListPrice - b.ListPrice;
+        return priorityCompare(a, b);
+      });
   }, [items, filters, sort]);
 
   const addressSuggestions = useMemo(() => {
@@ -324,6 +356,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
                     setPage(1);
                   }}
                 >
+                  <option value="priority">SMRE & local first</option>
                   <option value="price-asc">Price: low to high</option>
                   <option value="price-desc">Price: high to low</option>
                 </select>
