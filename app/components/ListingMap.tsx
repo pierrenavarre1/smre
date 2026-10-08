@@ -5,7 +5,7 @@ import type { RESOProperty } from '../lib/mock-properties';
 
 const TILE=256, MIN_ZOOM=6, MAX_ZOOM=14;
 const DEFAULT={lat:39.22,lon:-96.02,zoom:9};
-const SERVICE_AREA_DEFAULT={lat:39.17,lon:-96.13,zoom:10};
+const SERVICE_AREA_DEFAULT={lat:39.15,lon:-96.80,zoom:12};
 function project(lat:number,lon:number,zoom:number){const scale=TILE*Math.pow(2,zoom),safe=Math.max(-85.0511,Math.min(85.0511,lat)),sin=Math.sin(safe*Math.PI/180);return{x:((lon+180)/360)*scale,y:(.5-Math.log((1+sin)/(1-sin))/(4*Math.PI))*scale};}
 function unproject(x:number,y:number,zoom:number){const scale=TILE*Math.pow(2,zoom),lon=x/scale*360-180,merc=.5-y/scale,lat=180/Math.PI*(2*Math.atan(Math.exp(merc*2*Math.PI))-Math.PI/2);return{lat,lon};}
 function fitView(listings:RESOProperty[],width:number,height:number){const valid=listings.filter(p=>Number.isFinite(p.Latitude)&&Number.isFinite(p.Longitude)&&p.Latitude!==0&&p.Longitude!==0);if(!valid.length)return DEFAULT;const minLat=Math.min(...valid.map(p=>p.Latitude)),maxLat=Math.max(...valid.map(p=>p.Latitude)),minLon=Math.min(...valid.map(p=>p.Longitude)),maxLon=Math.max(...valid.map(p=>p.Longitude)),lat=(minLat+maxLat)/2,lon=(minLon+maxLon)/2;const paddingX=Math.max(72,width*.1),paddingY=Math.max(96,height*.14);for(let zoom=MAX_ZOOM;zoom>=MIN_ZOOM;zoom--){const a=project(minLat,minLon,zoom),b=project(maxLat,maxLon,zoom);const spanX=Math.abs(b.x-a.x),spanY=Math.abs(b.y-a.y);if(spanX<=Math.max(80,width-paddingX*2)&&spanY<=Math.max(80,height-paddingY*2))return{lat,lon,zoom};}return{lat,lon,zoom:MIN_ZOOM};}
