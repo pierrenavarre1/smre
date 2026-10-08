@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { RESOProperty } from '../lib/mock-properties';
+import { compareListingPriority } from '../lib/listings';
 
 const PAGE_SIZE = 24;
 
@@ -65,9 +66,7 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
       .sort((a, b) => {
         if (sort === 'price-desc') return b.ListPrice - a.ListPrice;
         if (sort === 'price-asc') return a.ListPrice - b.ListPrice;
-        return a.ListingDate || a.ModificationTimestamp
-          ? Date.parse(b.ListingDate || b.ModificationTimestamp || '') - Date.parse(a.ListingDate || a.ModificationTimestamp || '')
-          : 0;
+        return compareListingPriority(a, b);
       });
   }, [items, filters, sort]);
 
