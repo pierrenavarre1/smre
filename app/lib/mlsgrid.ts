@@ -247,7 +247,7 @@ function preferListing(a: RESOProperty, b: RESOProperty) {
   return listingDateValue(a) >= listingDateValue(b) ? a : b;
 }
 
-function dedupeListings(listings: RESOProperty[]) {
+export function dedupeListings(listings: RESOProperty[]) {
   const result: RESOProperty[] = [];
   const byAddress = new Map<string, number>();
 
