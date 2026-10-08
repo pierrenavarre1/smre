@@ -11,7 +11,7 @@ function formatListingDate(value?: string) {
 
 export function ListingCard({ p }: { p: RESOProperty }) {
   const baths = p.BathroomsTotalInteger + (p.BathroomsHalf ? 0.5 : 0);
-  const photo = p.Media[0]?.MediaURL;
+  const photo = (p.Media.find(m => m.PreferredPhoto) || p.Media[0])?.MediaURL;
   const photoSrc = photo ? `/api/mls-image?url=${encodeURIComponent(photo)}` : '';
 
   return (
