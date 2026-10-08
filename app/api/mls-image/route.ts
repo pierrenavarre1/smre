@@ -26,13 +26,25 @@ export async function GET(request: NextRequest) {
   const key = createHash('sha256').update(rawUrl).digest('hex');
   const pathname = 'mls/images/' + key + '.image';
 
+  const imageIdentity = (() => {
+    const parts = url.pathname.split('/').filter(Boolean);
+    const imagesIndex = parts.findIndex((part) => part.toLowerCase() === 'images');
+    if (imagesIndex >= 0 && parts[imagesIndex + 1] && parts[imagesIndex + 2]) {
+      return `${parts[imagesIndex + 1]}/${parts[imagesIndex + 2]}`;
+    }
+    return null;
+  })();
+  const stablePathname = imageIdentity
+    ? 'mls/images/stable-' + createHash('sha256').update(imageIdentity).digest('hex') + '.image'
+    : null;
+
   try {
-    const cached = await get(pathname, { access: 'private', useCache: true });
+    const cached = await get(stablePathname || pathname, { access: 'private', useCache: true });
     if (cached?.statusCode === 200 && cached.stream) {
       return new Response(cached.stream, {
         headers: {
           'Content-Type': cached.blob.contentType || 'image/jpeg',
-          'Cache-Control': 'public, max-age=86400',
+          'Cache-Control': 'public, max-age=31536000, immutable',
           'X-Content-Type-Options': 'nosniff'
         }
       });
@@ -60,6 +72,27 @@ export async function GET(request: NextRequest) {
   }
 
   if (!response.ok || !response.body) {
+    if (imageIdentity) {
+      const [listingId, filename] = imageIdentity.split('/');
+      const freshListing = { ListingId: url.hostname === 'media.mlsgrid.com' ? (rawUrl.includes('/FHR') ? 'flinthills:' : 'sunflower:') + listingId : '', Media: [] } as any;
+      if (freshListing.ListingId) {
+        try {
+          const freshMedia = await fetchFreshMediaForListing(freshListing);
+          const fresh = freshMedia.find((photo) => photo.MediaURL.split('/').pop()?.split('?')[0] === filename);
+          if (fresh?.MediaURL && fresh.MediaURL !== rawUrl) {
+            const freshResponse = await fetch(fresh.MediaURL, { headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*' }, redirect: 'follow' });
+            if (freshResponse.ok && freshResponse.body) {
+              const freshType = freshResponse.headers.get('content-type') || 'image/jpeg';
+              if (freshType.toLowerCase().startsWith('image/')) {
+                const freshBytes = await freshResponse.arrayBuffer();
+                try { await put(stablePathname || pathname, freshBytes, { access: 'private', allowOverwrite: true, cacheControlMaxAge: 31536000, contentType: freshType }); } catch {}
+                return new Response(freshBytes, { headers: { 'Content-Type': freshType, 'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' } });
+              }
+            }
+          }
+        } catch (error) { console.error('MLS image refresh failed:', error); }
+      }
+    }
     console.error('MLS image source returned', response.status, response.statusText, url.hostname);
     return new Response('Unable to retrieve image.', { status: 502 });
   }
@@ -73,10 +106,10 @@ export async function GET(request: NextRequest) {
   const bytes = await response.arrayBuffer();
 
   try {
-    await put(pathname, bytes, {
+    await put(stablePathname || pathname, bytes, {
       access: 'private',
       allowOverwrite: true,
-      cacheControlMaxAge: 86400,
+      cacheControlMaxAge: 31536000,
       contentType
     });
   } catch (error) {
