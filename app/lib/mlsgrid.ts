@@ -48,7 +48,7 @@ function media(record: MlsGridRecord) {
       MediaCategory: 'Photo' as const,
       ShortDescription: firstString(m.ShortDescription),
       PreferredPhoto: m.PreferredPhotoYN === true || String(m.PreferredPhotoYN).toLowerCase() === 'true',
-      MediaOrder: Number.isFinite(Number(m.Order)) ? Number(m.Order) : index + 1
+      MediaOrder: Number.isFinite(Number(m.MediaOrder)) ? Number(m.MediaOrder) : (Number.isFinite(Number(m.Order)) ? Number(m.Order) : index)
     }))
     .sort((a, b) => a.MediaOrder - b.MediaOrder);
 }
