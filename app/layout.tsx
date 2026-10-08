@@ -10,18 +10,18 @@ import Link from 'next/link';
 import { BrandLogo } from './components/BrandLogoFixed';
 import { ChatBubble } from './components/ChatBubble';
 import { MobileMenu } from './components/MobileMenu';
-import { getAdminData } from './lib/admin-store';
 
 export async function generateMetadata():Promise<Metadata>{const {settings}=await getAdminData();return {title:{default:settings.defaultTitle||'St. Mary’s Real Estate | SMRE',template:'%s | St. Mary’s Real Estate'},description:settings.defaultDescription||'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.'};}
 
-export default async function RootLayout({children}:Readonly<{children:React.ReactNode}>){
-  const {settings}=await getAdminData();
+export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){
+  const phone = '(785) 465-2543';
+  const address = '512 W Bertrand Ave, St Marys, KS 66536';
   return <html lang="en"><body>
     <header className="site-header">
       <div className="container nav">
         <Link href="/" className="brand-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
         <nav className="nav-links" aria-label="Main navigation">
-          <a className="header-phone" href={`tel:${settings.phone.replace(/\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{settings.phone}</a>
+          <a className="header-phone" href={`tel:${phone.replace(/\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
           <Link href="/listings">Listings</Link>
           <Link href="/valuation">Home Value</Link>
           <Link href="/about">About</Link>
@@ -35,7 +35,7 @@ export default async function RootLayout({children}:Readonly<{children:React.Rea
       <div className="container footer-grid">
         <div className="footer-brand-block">
           <Link href="/" className="brand-logo footer-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
-          <p>{settings.address.split(',')[0]}<br />{settings.address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${settings.phone.replace(/\D/g,'')}`} style={{color:'#fff'}}>{settings.phone}</a></p>
+          <p>{address.split(',')[0]}<br />{address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${settings.phone.replace(/\D/g,'')}`} style={{color:'#fff'}}>{settings.phone}</a></p>
         </div>
         <div className="footer-links">
           <strong>Explore</strong>
