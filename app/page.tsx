@@ -75,6 +75,6 @@ export default async function Home(){
     </section>
 
     <ReviewsCarousel />
-    <MLSDisclosure />
+    <div className="container home-mls-disclosure"><MLSDisclosure /></div>
   </>;
 }
