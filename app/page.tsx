@@ -15,7 +15,7 @@ const fallbackAreaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 export const dynamic = 'force-dynamic';
 
 export default async function Home(){
-  const activeListings=sortListingsByPriority((await getListings()).filter(p=>p.StandardStatus==='Active'));
+  const activeListings=sortListingsByPriority((await getListings()).filter(p=>p.StandardStatus==='Active')).map((p) => ({ ...p, Media: p.Media.slice(0, 1) }));
   const {settings}=await getAdminData();
   const listings=activeListings.slice(0,settings.featuredCount||6);
   const headlineParts=settings.homepageHeadline.split(',');
