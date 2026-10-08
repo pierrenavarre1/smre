@@ -50,7 +50,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   const [page, setPage] = useState(1);
   const [addressOpen, setAddressOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);\n  const [mapBounds, setMapBounds] = useState<{ minLat:number; maxLat:number; minLon:number; maxLon:number } | null>(null);
 
   const shown = useMemo(() => {
     const normalize = (value: string) =>
@@ -87,7 +87,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
       });
   }, [items, filters, sort]);
 
-  const addressSuggestions = useMemo(() => {
+  const mapShown = useMemo(() => {\n    if (!mapBounds) return shown;\n    return shown.filter((p) => Number.isFinite(p.Latitude) && Number.isFinite(p.Longitude) && p.Latitude >= mapBounds.minLat && p.Latitude <= mapBounds.maxLat && p.Longitude >= mapBounds.minLon && p.Longitude <= mapBounds.maxLon);\n  }, [shown, mapBounds]);\n\n  const addressSuggestions = useMemo(() => {
     const query = normalizeSearch(filters.address);
     if (!query) return [];
     return items
@@ -100,9 +100,9 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
       .slice(0, 6);
   }, [items, filters.address]);
 
-  const pageCount = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(mapShown.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
-  const paged = shown.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const paged = mapShown.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const update = (key: keyof Filters, value: string) => {
     setFilters((current) => ({ ...current, [key]: value }));
@@ -328,7 +328,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
       {shown.length > 0 ? (
         <div className="listings-search-layout">
           <div className="listings-map-column">
-            <ListingMap listings={shown} />
+            <ListingMap listings={shown} onSearchArea={setMapBounds} />
           </div>
 
           <div className="listings-results-column">
@@ -356,7 +356,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
             </div>
 
             <div className="listing-grid">
-              {paged.map((p) => (
+              {mapShown.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((p) => (
                 <ListingCard key={p.ListingId} p={p} />
               ))}
             </div>
