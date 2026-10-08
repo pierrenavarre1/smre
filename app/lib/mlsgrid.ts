@@ -41,15 +41,16 @@ function propertyType(value: unknown): PropertyType {
 function media(record: MlsGridRecord) {
   const items = Array.isArray(record.Media) ? record.Media : [];
   return items
-    .filter((m: any) => m?.MediaURL)
-    .map((m: any) => ({
-      MediaKey: String(m.MediaKey || ''),
-      // MLS Grid media URLs are download URLs. Normalize older http values so
-      // the public image proxy can always retrieve them over HTTPS.
+    .filter((m: any) => m?.MediaURL && (!m.MediaCategory || String(m.MediaCategory).toLowerCase() === 'photo'))
+    .map((m: any, index: number) => ({
+      MediaKey: String(m.MediaKey || `${record.ListingKey || record.ListingId || 'media'}-${index}`),
       MediaURL: String(m.MediaURL).replace(/^http:/i, 'https:'),
       MediaCategory: 'Photo' as const,
-      ShortDescription: firstString(m.ShortDescription)
-    }));
+      ShortDescription: firstString(m.ShortDescription),
+      order: Number.isFinite(Number(m.Order)) ? Number(m.Order) : index + 1
+    }))
+    .sort((a, b) => a.order - b.order)
+    .map(({ order: _order, ...photo }) => photo);
 }
 
 function normalizeCity(value: unknown) {
