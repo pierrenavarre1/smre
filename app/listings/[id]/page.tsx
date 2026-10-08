@@ -9,7 +9,11 @@ import { ListingMap } from '../../components/ListingMap';
 const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const number = new Intl.NumberFormat('en-US');
 const date = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-function formatListingDate(value?: string) {\n  if (!value) return undefined;\n  const parsed = Date.parse(value);\n  return Number.isFinite(parsed) ? date.format(new Date(parsed)) : value;\n}
+function formatListingDate(value?: string) {
+  if (!value) return undefined;
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? date.format(new Date(parsed)) : value;
+}
 function DetailItem({label,value}:{label:string,value?:string|number}){if(value===undefined||value==='')return null;return <div className="detail-item"><span>{label}</span><strong>{value}</strong></div>}
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
