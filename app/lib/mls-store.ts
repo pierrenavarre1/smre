@@ -29,7 +29,10 @@ export async function readMLSSummaryCache(): Promise<RESOProperty[]> {
   if (!listings.length) {
     const fullListings = await readBlob(LISTINGS_PATH);
     if (fullListings.length) {
-      listings = fullListings.map(({ Media: _media, ...listing }) => ({ ...listing, Media: [] }));
+      listings = fullListings.map((listing) => ({
+        ...listing,
+        Media: listing.Media?.length ? [listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0]] : []
+      }));
       void put(LISTINGS_SUMMARY_PATH, JSON.stringify({ updatedAt: new Date().toISOString(), listings }), {
         access: 'private',
         allowOverwrite: true,
@@ -44,7 +47,12 @@ export async function readMLSSummaryCache(): Promise<RESOProperty[]> {
 
 export async function writeMLSCache(listings: RESOProperty[]) {
   memoryCache = { listings, expiresAt: Date.now() + MEMORY_CACHE_MS };
-  const summary = listings.map(({ Media: _media, ...listing }) => ({ ...listing, Media: [] }));
+  const summary = listings.map((listing) => ({
+    ...listing,
+    // Keep only the MLS-selected preview photo in the lightweight cache. This
+    // avoids a fresh MLS API media request when the listings page is rendered.
+    Media: listing.Media?.length ? [listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0]] : []
+  }));
   memorySummaryCache = { listings: summary, expiresAt: Date.now() + MEMORY_CACHE_MS };
 
   await Promise.all([
