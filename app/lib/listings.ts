@@ -23,9 +23,10 @@ function normalizeCity(value: string) {
 }
 
 function listingTimestamp(p: RESOProperty) {
-  const value = p.ListingDate || p.ModificationTimestamp;
-  const time = value ? Date.parse(value) : NaN;
-  return Number.isFinite(time) ? time : 0;
+  const listingTime = p.ListingDate ? Date.parse(p.ListingDate) : NaN;
+  if (Number.isFinite(listingTime)) return listingTime;
+  const modificationTime = p.ModificationTimestamp ? Date.parse(p.ModificationTimestamp) : NaN;
+  return Number.isFinite(modificationTime) ? modificationTime : 0;
 }
 
 function isSMRE(p: RESOProperty) {
