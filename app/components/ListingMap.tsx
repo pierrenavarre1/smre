@@ -74,7 +74,8 @@ export function ListingMap({listings,onSearchArea}:{listings:RESOProperty[];onSe
     drag.current={x:remaining.x,y:remaining.y,cx:centerPoint.x,cy:centerPoint.y};
   } else if(pointers.current.size===0)drag.current=null;
 }
- function getBounds(){const topLeft=unproject(centerPoint.x-size.width/2,centerPoint.y-size.height/2,view.zoom),bottomRight=unproject(centerPoint.x+size.width/2,centerPoint.y+size.height/2,view.zoom);return{minLat:bottomRight.lat,maxLat:topLeft.lat,minLon:topLeft.lon,maxLon:bottomRight.lon};}\n function reset(){setView(listings.length>1?SERVICE_AREA_DEFAULT:fitView(valid,size.width,size.height));setSelected(null);setMoved(false);onSearchArea?.(null);}
+ function getBounds(){const topLeft=unproject(centerPoint.x-size.width/2,centerPoint.y-size.height/2,view.zoom),bottomRight=unproject(centerPoint.x+size.width/2,centerPoint.y+size.height/2,view.zoom);return{minLat:bottomRight.lat,maxLat:topLeft.lat,minLon:topLeft.lon,maxLon:bottomRight.lon};}
+ function reset(){setView(listings.length>1?SERVICE_AREA_DEFAULT:fitView(valid,size.width,size.height));setSelected(null);setMoved(false);onSearchArea?.(null);}
  return <section className="listing-map-wrap">
   <div className="listing-map-heading"><div><p className="eyebrow">{listings.length === 1 ? 'PROPERTY LOCATION' : 'ACTIVE LISTINGS'}</p><h3>{listings.length === 1 ? 'Property location.' : 'Explore homes on the map.'}</h3></div><p>{valid.length} {valid.length===1?'listing':'listings'} shown. Drag, zoom, or switch to satellite.</p></div>
   <div className="listing-map-shell"><div className="listing-map" ref={mapRef} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>
