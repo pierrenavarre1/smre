@@ -47,10 +47,14 @@ function media(record: MlsGridRecord) {
       MediaURL: String(m.MediaURL).replace(/^http:/i, 'https:'),
       MediaCategory: 'Photo' as const,
       ShortDescription: firstString(m.ShortDescription),
+      preferred: m.PreferredPhotoYN === true || String(m.PreferredPhotoYN).toLowerCase() === 'true',
       order: Number.isFinite(Number(m.Order)) ? Number(m.Order) : index + 1
     }))
-    .sort((a, b) => a.order - b.order)
-    .map(({ order: _order, ...photo }) => photo);
+    .sort((a, b) => {
+      if (a.preferred !== b.preferred) return a.preferred ? -1 : 1;
+      return a.order - b.order;
+    })
+    .map(({ order: _order, preferred: _preferred, ...photo }) => photo);
 }
 
 function normalizeCity(value: unknown) {
