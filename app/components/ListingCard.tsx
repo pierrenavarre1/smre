@@ -11,7 +11,7 @@ export function ListingCard({ p }: { p: RESOProperty }) {
     <Link href={`/listings/${encodeURIComponent(p.ListingId)}`} className="listing-card">
       <div className="card-image">
         {photoSrc ? (
-          <img src={photoSrc} alt={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} loading="lazy" />
+          <img className="listing-card-photo" src={photoSrc} alt={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} loading="lazy" />
         ) : (
           <div className="card-image-placeholder">No photo available</div>
         )}
