@@ -22,8 +22,20 @@ type Filters = {
   address: string;
 };
 
-export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOProperty[]; initialFilters?: Partial<Filters> }) {
-  const [filters, setFilters] = useState<Filters>({
+function filtersFromUrl(): Partial<Filters> {
+  if (typeof window === 'undefined') return {};
+  const params = new URLSearchParams(window.location.search);
+  return {
+    ...(params.get('city') ? { city: params.get('city')! } : {}),
+    ...(params.get('address') ? { address: params.get('address')! } : {}),
+    ...(params.get('beds') ? { beds: params.get('beds')! } : {}),
+    ...(params.get('baths') ? { baths: params.get('baths')! } : {}),
+    ...(params.get('max') ? { max: params.get('max')! } : {}),
+  };
+}
+
+export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
+  const [filters, setFilters] = useState<Filters>(() => ({
     type: [],
     status: 'Active',
     beds: '',
@@ -32,8 +44,8 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
     acreage: '',
     city: '',
     address: '',
-    ...initialFilters,
-  });
+    ...filtersFromUrl(),
+  }));
   const [sort, setSort] = useState('priority');
   const [page, setPage] = useState(1);
   const [addressOpen, setAddressOpen] = useState(false);
