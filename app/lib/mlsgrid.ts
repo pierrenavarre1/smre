@@ -219,6 +219,7 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
 
   return {
     ListingId: internalId,
+    ModificationTimestamp: firstString(record.ModificationTimestamp),
     ListingKey: String(record.ListingKey || originalId),
     StandardStatus: ['Pending', 'Closed'].includes(String(record.StandardStatus))
       ? String(record.StandardStatus) as RESOProperty['StandardStatus']
