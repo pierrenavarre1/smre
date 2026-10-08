@@ -5,17 +5,18 @@ import type { RESOProperty } from '../lib/mock-properties';
 
 const TILE=256, MIN_ZOOM=6, MAX_ZOOM=14;
 const DEFAULT={lat:39.22,lon:-96.02,zoom:9};
+const SERVICE_AREA_DEFAULT={lat:39.17,lon:-96.13,zoom:10};
 function project(lat:number,lon:number,zoom:number){const scale=TILE*Math.pow(2,zoom),safe=Math.max(-85.0511,Math.min(85.0511,lat)),sin=Math.sin(safe*Math.PI/180);return{x:((lon+180)/360)*scale,y:(.5-Math.log((1+sin)/(1-sin))/(4*Math.PI))*scale};}
 function unproject(x:number,y:number,zoom:number){const scale=TILE*Math.pow(2,zoom),lon=x/scale*360-180,merc=.5-y/scale,lat=180/Math.PI*(2*Math.atan(Math.exp(merc*2*Math.PI))-Math.PI/2);return{lat,lon};}
 function fitView(listings:RESOProperty[],width:number,height:number){const valid=listings.filter(p=>Number.isFinite(p.Latitude)&&Number.isFinite(p.Longitude)&&p.Latitude!==0&&p.Longitude!==0);if(!valid.length)return DEFAULT;const minLat=Math.min(...valid.map(p=>p.Latitude)),maxLat=Math.max(...valid.map(p=>p.Latitude)),minLon=Math.min(...valid.map(p=>p.Longitude)),maxLon=Math.max(...valid.map(p=>p.Longitude)),lat=(minLat+maxLat)/2,lon=(minLon+maxLon)/2;const paddingX=Math.max(72,width*.1),paddingY=Math.max(96,height*.14);for(let zoom=MAX_ZOOM;zoom>=MIN_ZOOM;zoom--){const a=project(minLat,minLon,zoom),b=project(maxLat,maxLon,zoom);const spanX=Math.abs(b.x-a.x),spanY=Math.abs(b.y-a.y);if(spanX<=Math.max(80,width-paddingX*2)&&spanY<=Math.max(80,height-paddingY*2))return{lat,lon,zoom};}return{lat,lon,zoom:MIN_ZOOM};}
 
 export function ListingMap({listings}:{listings:RESOProperty[]}){
  const mapRef=useRef<HTMLDivElement>(null),drag=useRef<{x:number;y:number;cx:number;cy:number}|null>(null),pointers=useRef<Map<number,{x:number;y:number}>>(new Map()),pinch=useRef<{distance:number;zoom:number;cx:number;cy:number;worldX:number;worldY:number}|null>(null),wheelLock=useRef(false);
- const [size,setSize]=useState({width:1100,height:560}),[view,setView]=useState(()=>fitView(listings,1100,560)),[selected,setSelected]=useState<string|null>(null),[satellite,setSatellite]=useState(false),[moved,setMoved]=useState(false);
+ const [size,setSize]=useState({width:1100,height:560}),[view,setView]=useState(()=>listings.length>1?SERVICE_AREA_DEFAULT:fitView(listings,1100,560)),[selected,setSelected]=useState<string|null>(null),[satellite,setSatellite]=useState(false),[moved,setMoved]=useState(false);
  const valid=listings.filter(p=>Number.isFinite(p.Latitude)&&Number.isFinite(p.Longitude)&&p.Latitude!==0&&p.Longitude!==0);
  useEffect(()=>{const el=mapRef.current;if(!el)return;const resize=()=>setSize({width:el.clientWidth,height:el.clientHeight});resize();const ro=new ResizeObserver(resize);ro.observe(el);return()=>ro.disconnect();},[]);
  const listingKey=useMemo(()=>valid.map(p=>p.ListingId).sort().join('|'),[valid]);
- useEffect(()=>{if(valid.length)setView(fitView(valid,size.width,size.height));},[listingKey,size.width,size.height]);
+ useEffect(()=>{if(valid.length)setView(listings.length>1?SERVICE_AREA_DEFAULT:fitView(valid,size.width,size.height));},[listingKey,size.width,size.height,listings.length]);
  useEffect(()=>{const el=mapRef.current;if(!el)return;const onWheel=(e:WheelEvent)=>{e.preventDefault();e.stopPropagation();if(wheelLock.current)return;wheelLock.current=true;zoomBy(e.deltaY<0?1:-1,e.clientX,e.clientY);window.setTimeout(()=>{wheelLock.current=false},260);};el.addEventListener('wheel',onWheel,{passive:false});return()=>el.removeEventListener('wheel',onWheel);},[view,size.width,size.height]);
  const centerPoint=useMemo(()=>project(view.lat,view.lon,view.zoom),[view]);
  const tiles=useMemo(()=>{const tileZoom=view.zoom,ox=Math.floor(centerPoint.x/TILE),oy=Math.floor(centerPoint.y/TILE),dx=centerPoint.x-ox*TILE,dy=centerPoint.y-oy*TILE,max=Math.pow(2,tileZoom),left=Math.floor((centerPoint.x-size.width/2)/TILE)-1,right=Math.floor((centerPoint.x+size.width/2)/TILE)+1,top=Math.floor((centerPoint.y-size.height/2)/TILE)-1,bottom=Math.floor((centerPoint.y+size.height/2)/TILE)+1,out=[] as {key:string;x:number;y:number;tx:number;ty:number}[];for(let ty=top;ty<=bottom;ty++)for(let tx=left;tx<=right;tx++){if(ty>=0&&ty<max)out.push({key:String(tx)+'-'+String(ty),x:(tx-ox)*TILE-dx+size.width/2,y:(ty-oy)*TILE-dy+size.height/2,tx:((tx%max)+max)%max,ty});}return out;},[centerPoint,view.zoom,size.width,size.height]);
@@ -73,7 +74,7 @@ export function ListingMap({listings}:{listings:RESOProperty[]}){
     drag.current={x:remaining.x,y:remaining.y,cx:centerPoint.x,cy:centerPoint.y};
   } else if(pointers.current.size===0)drag.current=null;
 }
- function reset(){setView(fitView(valid,size.width,size.height));setSelected(null);setMoved(false);}
+ function reset(){setView(listings.length>1?SERVICE_AREA_DEFAULT:fitView(valid,size.width,size.height));setSelected(null);setMoved(false);}
  return <section className="listing-map-wrap">
   <div className="listing-map-heading"><div><p className="eyebrow">{listings.length === 1 ? 'PROPERTY LOCATION' : 'ACTIVE LISTINGS'}</p><h3>{listings.length === 1 ? 'Property location.' : 'Explore homes on the map.'}</h3></div><p>{valid.length} {valid.length===1?'listing':'listings'} shown. Drag, zoom, or switch to satellite.</p></div>
   <div className="listing-map-shell"><div className="listing-map" ref={mapRef} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag}>
