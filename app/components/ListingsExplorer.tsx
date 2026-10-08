@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { RESOProperty } from '../lib/mock-properties';
+import { compareListingPriority } from '../lib/listings';
 
 const PAGE_SIZE = 24;
 
@@ -95,6 +96,12 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
         return priorityCompare(a, b);
       });
   }, [items, filters, sort]);
+
+  function listingTimestamp(p: RESOProperty) {
+    const value = p.ListingDate || p.ModificationTimestamp;
+    const time = value ? Date.parse(value) : NaN;
+    return Number.isFinite(time) ? time : 0;
+  }
 
   const addressSuggestions = useMemo(() => {
     const query = normalizeSearch(filters.address);
@@ -357,6 +364,8 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
                   }}
                 >
                   <option value="priority">SMRE & local first</option>
+                  <option value="priority">Recommended</option>
+                  <option value="newest">Newest</option>
                   <option value="price-asc">Price: low to high</option>
                   <option value="price-desc">Price: high to low</option>
                 </select>
