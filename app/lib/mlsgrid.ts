@@ -201,13 +201,76 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
     }
   }
 
-  const seen = new Set<string>();
-  return all.filter((listing) => {
-    const key = listing.MlsSource + ':' + (listing.MLSNumber || listing.ListingKey || listing.ListingId);
-    if (!key || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return dedupeListings(all);
+}
+
+function normalizeAddressPart(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function listingAddressKey(listing: RESOProperty) {
+  return [
+    listing.StreetNumber,
+    listing.StreetName,
+    listing.City,
+    listing.StateOrProvince,
+    listing.PostalCode
+  ].map(normalizeAddressPart).join('|');
+}
+
+function sameApproximateLocation(a: RESOProperty, b: RESOProperty) {
+  if (!a.Latitude || !a.Longitude || !b.Latitude || !b.Longitude) return false;
+  if (normalizeCity(a.City) !== normalizeCity(b.City)) return false;
+  if (a.PostalCode && b.PostalCode && a.PostalCode !== b.PostalCode) return false;
+  return Math.abs(a.Latitude - b.Latitude) < 0.00035 &&
+    Math.abs(a.Longitude - b.Longitude) < 0.00035;
+}
+
+function isSMREListing(listing: RESOProperty) {
+  return /st\\.?\\s*mary['’]?s\\s*real\\s*estate/i.test(listing.ListOfficeName || '');
+}
+
+function listingDateValue(listing: RESOProperty) {
+  const value = Date.parse(listing.ListingDate || listing.ModificationTimestamp || '');
+  return Number.isFinite(value) ? value : 0;
+}
+
+function preferListing(a: RESOProperty, b: RESOProperty) {
+  const aSMRE = isSMREListing(a);
+  const bSMRE = isSMREListing(b);
+  if (aSMRE !== bSMRE) return aSMRE ? a : b;
+
+  if (a.Media.length !== b.Media.length) return a.Media.length > b.Media.length ? a : b;
+
+  return listingDateValue(a) >= listingDateValue(b) ? a : b;
+}
+
+function dedupeListings(listings: RESOProperty[]) {
+  const result: RESOProperty[] = [];
+  const byAddress = new Map<string, number>();
+
+  for (const listing of listings) {
+    const addressKey = listingAddressKey(listing);
+    const exactIndex = addressKey ? byAddress.get(addressKey) : undefined;
+
+    if (exactIndex !== undefined) {
+      result[exactIndex] = preferListing(result[exactIndex], listing);
+      continue;
+    }
+
+    const nearbyIndex = result.findIndex(existing => sameApproximateLocation(existing, listing));
+    if (nearbyIndex >= 0) {
+      result[nearbyIndex] = preferListing(result[nearbyIndex], listing);
+      continue;
+    }
+
+    if (addressKey) byAddress.set(addressKey, result.length);
+    result.push(listing);
+  }
+
+  return result;
 }
 
 export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflower'): RESOProperty {
