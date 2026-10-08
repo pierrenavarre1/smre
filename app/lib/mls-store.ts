@@ -25,7 +25,19 @@ export async function readMLSCache(): Promise<RESOProperty[]> {
 
 export async function readMLSSummaryCache(): Promise<RESOProperty[]> {
   if (memorySummaryCache && memorySummaryCache.expiresAt > Date.now()) return memorySummaryCache.listings;
-  const listings = await readBlob(LISTINGS_SUMMARY_PATH);
+  let listings = await readBlob(LISTINGS_SUMMARY_PATH);
+  if (!listings.length) {
+    const fullListings = await readBlob(LISTINGS_PATH);
+    if (fullListings.length) {
+      listings = fullListings.map(({ Media: _media, ...listing }) => ({ ...listing, Media: [] }));
+      void put(LISTINGS_SUMMARY_PATH, JSON.stringify({ updatedAt: new Date().toISOString(), listings }), {
+        access: 'private',
+        allowOverwrite: true,
+        cacheControlMaxAge: 300,
+        contentType: 'application/json'
+      }).catch(() => {});
+    }
+  }
   memorySummaryCache = { listings, expiresAt: Date.now() + MEMORY_CACHE_MS };
   return listings;
 }
