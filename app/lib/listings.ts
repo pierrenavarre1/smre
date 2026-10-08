@@ -1,9 +1,13 @@
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
-import { readMLSCache } from './mls-store';
-import { dedupeListings } from './mlsgrid';
+import { readMLSCache, readMLSSummaryCache } from './mls-store';
+import { dedupeListings, fetchFreshMediaForListing, fetchFreshPreviewMedia, isMLSGridConfigured } from './mlsgrid';
 
 export async function getListings(): Promise<RESOProperty[]> {
-  const listings = dedupeListings(await readMLSCache());
+  const listings = dedupeListings(await readMLSSummaryCache());
+  if (listings.length && isMLSGridConfigured()) {
+    const previews = await fetchFreshPreviewMedia(listings);
+    return listings.map(listing => ({ ...listing, Media: previews.get(listing.ListingId) || [] }));
+  }
   if (listings.length) return listings;
   return process.env.NODE_ENV === 'development' ? mockProperties : [];
 }
@@ -11,7 +15,12 @@ export async function getListings(): Promise<RESOProperty[]> {
 export async function getListing(id: string): Promise<RESOProperty | undefined> {
   const decodedId = decodeURIComponent(id);
   const listings = dedupeListings(await readMLSCache());
-  if (listings.length) return listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
+  if (listings.length) {
+    const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
+    if (!listing) return undefined;
+    if (isMLSGridConfigured()) return { ...listing, Media: await fetchFreshMediaForListing(listing) };
+    return listing;
+  }
   return process.env.NODE_ENV === 'development' ? getMockProperty(decodedId) : undefined;
 }
 

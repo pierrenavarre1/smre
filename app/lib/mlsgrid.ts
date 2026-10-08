@@ -1,4 +1,4 @@
-import type { RESOProperty, PropertyType, MLSSource } from './mock-properties';
+import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
 
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
 const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
@@ -48,10 +48,9 @@ function media(record: MlsGridRecord) {
       MediaCategory: 'Photo' as const,
       ShortDescription: firstString(m.ShortDescription),
       PreferredPhoto: m.PreferredPhotoYN === true || String(m.PreferredPhotoYN).toLowerCase() === 'true',
-      order: Number.isFinite(Number(m.Order)) ? Number(m.Order) : index + 1
+      MediaOrder: Number.isFinite(Number(m.Order)) ? Number(m.Order) : index + 1
     }))
-    .sort((a, b) => a.order - b.order)
-    .map(({ order: _order, ...photo }) => photo);
+    .sort((a, b) => a.MediaOrder - b.MediaOrder);
 }
 
 function normalizeCity(value: unknown) {
@@ -178,6 +177,73 @@ async function fetchMediaForRecords(source: string, records: MlsGridRecord[]) {
   }
 
   return [...byId.values()];
+}
+
+const freshMediaCache = new Map<string, { expiresAt: number; media: RESOMedia[] }>();
+const FRESH_MEDIA_CACHE_MS = 10 * 60_000;
+
+function listingSourceAndId(listing: RESOProperty) {
+  const separator = listing.ListingId.indexOf(':');
+  if (separator < 0) return null;
+  return { source: listing.ListingId.slice(0, separator), listingId: listing.ListingId.slice(separator + 1) };
+}
+
+async function fetchFreshMediaBatch(source: string, listingIds: string[]) {
+  const values = listingIds.map(id => "'" + id.replace(/'/g, "''") + "'").join(',');
+  const filter = "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and ListingId in (" + values + ")";
+  const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
+    '$filter': filter, '$expand': 'Media', '$top': '100'
+  }).toString(), true);
+  const result = new Map<string, RESOMedia[]>();
+  for (const record of page.value || []) {
+    const id = String(record.ListingId || record.ListingKey || '');
+    if (id) result.set(id, media(record));
+  }
+  return result;
+}
+
+export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
+  const result = new Map<string, RESOMedia[]>();
+  const groups = new Map<string, Array<{ listingId: string; internalId: string }>>();
+
+  for (const listing of listings) {
+    const cached = freshMediaCache.get(listing.ListingId);
+    if (cached && cached.expiresAt > Date.now()) {
+      const preview = cached.media.find(photo => photo.PreferredPhoto) || cached.media[0];
+      result.set(listing.ListingId, preview ? [preview] : []);
+      continue;
+    }
+    const parsed = listingSourceAndId(listing);
+    if (!parsed) continue;
+    const group = groups.get(parsed.source) || [];
+    group.push({ listingId: parsed.listingId, internalId: listing.ListingId });
+    groups.set(parsed.source, group);
+  }
+
+  for (const [source, group] of groups) {
+    for (let i = 0; i < group.length; i += 100) {
+      const batch = group.slice(i, i + 100);
+      const mediaById = await fetchFreshMediaBatch(source, batch.map(item => item.listingId));
+      for (const item of batch) {
+        const photos = mediaById.get(item.listingId) || [];
+        const preview = photos.find(photo => photo.PreferredPhoto) || photos[0];
+        result.set(item.internalId, preview ? [preview] : []);
+        freshMediaCache.set(item.internalId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: photos });
+      }
+    }
+  }
+  return result;
+}
+
+export async function fetchFreshMediaForListing(listing: RESOProperty) {
+  const cached = freshMediaCache.get(listing.ListingId);
+  if (cached && cached.expiresAt > Date.now()) return cached.media;
+  const parsed = listingSourceAndId(listing);
+  if (!parsed) return listing.Media;
+  const mediaById = await fetchFreshMediaBatch(parsed.source, [parsed.listingId]);
+  const photos = mediaById.get(parsed.listingId) || [];
+  freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: photos });
+  return photos;
 }
 
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {

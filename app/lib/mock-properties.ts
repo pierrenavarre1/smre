@@ -1,6 +1,6 @@
 export type MLSSource = 'Sunflower MLS' | 'FHAR MLS';
 export type PropertyType = 'Residential' | 'Farm' | 'Land' | 'Commercial';
-export interface RESOMedia { MediaKey:string; MediaURL:string; MediaCategory:'Photo'; ShortDescription?:string; PreferredPhoto?:boolean; }
+export interface RESOMedia { MediaKey:string; MediaURL:string; MediaCategory:'Photo'; ShortDescription?:string; PreferredPhoto?:boolean; MediaOrder?:number; }
 export interface RESOProperty {
  ListingId:string; ModificationTimestamp?:string; StandardStatus:'Active'|'Pending'|'Closed'; ListPrice:number; BedroomsTotal:number; BathroomsTotalInteger:number; PropertyType:PropertyType; PropertySubType:string; StreetNumber:string; StreetName:string; City:string; StateOrProvince:string; PostalCode:string; LivingArea:number; LotSizeAcres:number; YearBuilt:number; PublicRemarks:string; Media:RESOMedia[]; ListingKey:string; ListAgentFullName:string; ListAgentMlsId:string; ListOfficeName:string; MlsSource:MLSSource; Latitude:number; Longitude:number;
  BathroomsFull?:number; BathroomsHalf?:number; PricePerSqFt?:number; AnnualTaxes?:number; TaxYear?:number; LotSizeSqFt?:number; GarageSpaces?:number; ParkingFeatures?:string; Basement?:string; Foundation?:string; Roof?:string; Exterior?:string; Flooring?:string; Appliances?:string; Heating?:string; Cooling?:string; WaterSource?:string; Sewer?:string; HOA?:string; Schools?:string; Directions?:string; ArchitecturalStyle?:string; ListingDate?:string; MLSNumber?:string; ParcelNumber?:string; OtherStructures?:string; Features?:string[];
