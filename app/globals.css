@@ -22,11 +22,11 @@
 @media(max-width:600px){.featured-grid,.listing-grid,.team-grid,.cta-grid{grid-template-columns:1fr}.section{padding:70px 0}.section-head{align-items:start;flex-direction:column}.gallery{grid-template-columns:1fr}.gallery-main,.gallery-side>div{min-height:360px}.gallery-side{grid-template-rows:220px 220px}.detail h1{font-size:48px}.form-row{grid-template-columns:1fr}.contact-form-card{padding:30px 24px}.footer-grid{grid-template-columns:1fr}.footer-brand-block{grid-column:auto}.home-hero h1{font-size:clamp(44px,12vw,60px);max-width:100%}.home-hero-inner{padding:68px 0 72px}.search-panel{grid-template-columns:1fr}.search-panel select{border-right:0;border-bottom:1px solid var(--line)}.search-panel input{grid-column:auto}.home-hero-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:430px}.home-hero-actions .button{min-width:0;width:100%}}
 @media(max-width:800px){.guide-grid{grid-template-columns:1fr 1fr}.guide-detail-intro{padding-top:40px}}@media(max-width:600px){.guide-grid{grid-template-columns:1fr}.guide-card{min-height:250px}.guide-detail-intro h1{font-size:48px}.guide-content{padding:40px 0}.guide-cta{padding:28px}}
 /* Final mobile UX pass */
-.home-mobile-listings-link{display:none}
+.home-all-listings-link{display:flex;justify-content:center;margin-top:28px}
 @media(max-width:600px){
   .home-featured-grid .listing-card:nth-child(n+4){display:none}
-  .home-mobile-listings-link{display:flex;justify-content:center;margin-top:24px}
-  .home-mobile-listings-link .button{width:100%;max-width:320px}
+  .home-all-listings-link{margin-top:24px}
+  .home-all-listings-link .button{width:100%;max-width:320px}
   .home-listing-map{margin-top:34px}
   .home-listing-map .listing-map{height:300px}
   .home-listing-map .listing-map-heading{margin-bottom:14px}
