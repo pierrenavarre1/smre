@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { getListings } from './lib/listings';
+import { getListings, sortListingsByPriority } from './lib/listings';
 import { ListingCard } from './components/ListingCard';
 import { ListingMap } from './components/ListingMap';
 import { ReviewsCarousel } from './components/ReviewsCarousel';
@@ -15,7 +15,7 @@ const fallbackAreaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 export const dynamic = 'force-dynamic';
 
 export default async function Home(){
-  const activeListings=(await getListings()).filter(p=>p.StandardStatus==='Active');
+  const activeListings=sortListingsByPriority((await getListings()).filter(p=>p.StandardStatus==='Active'));
   const {settings}=await getAdminData();
   const listings=activeListings.slice(0,settings.featuredCount||6);
   const headlineParts=settings.homepageHeadline.split(',');
