@@ -10,7 +10,7 @@ export async function getListings(): Promise<RESOProperty[]> {
 
 export async function getListing(id: string): Promise<RESOProperty | undefined> {
   const decodedId = decodeURIComponent(id);
-  const listings = await getListings();
+  const listings = dedupeListings(await readMLSCache());
   if (listings.length) return listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
   return process.env.NODE_ENV === 'development' ? getMockProperty(decodedId) : undefined;
 }
