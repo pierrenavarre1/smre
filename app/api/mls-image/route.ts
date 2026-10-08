@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { get, put } from '@vercel/blob';
-import { fetchFreshMediaForListing } from '../../../lib/mlsgrid';
+import { fetchFreshMediaForListing } from '../../lib/mlsgrid';
 
 function allowedMediaHost(hostname: string) {
   const host = hostname.toLowerCase();
