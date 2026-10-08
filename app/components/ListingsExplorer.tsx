@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { RESOProperty } from '../lib/mock-properties';
-import { compareListingPriority } from '../lib/listings';
 
 const PAGE_SIZE = 24;
 
@@ -44,33 +43,6 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
     const normalize = (value: string) =>
       value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\\s+/g, ' ').trim();
 
-    const isSMRE = (p: RESOProperty) => {
-      const office = normalize(p.ListOfficeName || '');
-      return office.includes('st mary') && office.includes('real estate');
-    };
-
-    const isCoreLocalArea = (p: RESOProperty) => {
-      const city = normalize(p.City || '');
-      return city === 'st marys' || city === 'saint marys' || city === 'wamego';
-    };
-
-    const listingTimestamp = (p: RESOProperty) => {
-      const value = p.ListingDate ? Date.parse(p.ListingDate) : 0;
-      return Number.isFinite(value) ? value : 0;
-    };
-
-    const priorityCompare = (a: RESOProperty, b: RESOProperty) => {
-      const aSMRE = isSMRE(a);
-      const bSMRE = isSMRE(b);
-      if (aSMRE !== bSMRE) return aSMRE ? -1 : 1;
-
-      const aLocal = isCoreLocalArea(a);
-      const bLocal = isCoreLocalArea(b);
-      if (aLocal !== bLocal) return aLocal ? -1 : 1;
-
-      return listingTimestamp(b) - listingTimestamp(a);
-    };
-
     return items
       .filter((p) => {
         const baths = p.BathroomsTotalInteger + (p.BathroomsHalf ? 0.5 : 0);
@@ -93,15 +65,11 @@ export function ListingsExplorer({ items, initialFilters = {} }: { items: RESOPr
       .sort((a, b) => {
         if (sort === 'price-desc') return b.ListPrice - a.ListPrice;
         if (sort === 'price-asc') return a.ListPrice - b.ListPrice;
-        return priorityCompare(a, b);
+        return a.ListingDate || a.ModificationTimestamp
+          ? Date.parse(b.ListingDate || b.ModificationTimestamp || '') - Date.parse(a.ListingDate || a.ModificationTimestamp || '')
+          : 0;
       });
   }, [items, filters, sort]);
-
-  function listingTimestamp(p: RESOProperty) {
-    const value = p.ListingDate || p.ModificationTimestamp;
-    const time = value ? Date.parse(value) : NaN;
-    return Number.isFinite(time) ? time : 0;
-  }
 
   const addressSuggestions = useMemo(() => {
     const query = normalizeSearch(filters.address);
