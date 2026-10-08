@@ -180,6 +180,7 @@ async function fetchMediaForRecords(source: string, records: MlsGridRecord[]) {
 }
 
 const freshMediaCache = new Map<string, { expiresAt: number; media: RESOMedia[] }>();
+const freshPreviewCache = new Map<string, { expiresAt: number; media: RESOMedia[] }>();
 const FRESH_MEDIA_CACHE_MS = 10 * 60_000;
 
 function listingSourceAndId(listing: RESOProperty) {
@@ -207,28 +208,45 @@ export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
   const groups = new Map<string, Array<{ listingId: string; internalId: string }>>();
 
   for (const listing of listings) {
-    const cached = freshMediaCache.get(listing.ListingId);
-    if (cached && cached.expiresAt > Date.now()) {
-      const preview = cached.media.find(photo => photo.PreferredPhoto) || cached.media[0];
-      result.set(listing.ListingId, preview ? [preview] : []);
+    const cachedPreview = freshPreviewCache.get(listing.ListingId);
+    if (cachedPreview && cachedPreview.expiresAt > Date.now()) {
+      result.set(listing.ListingId, cachedPreview.media);
       continue;
     }
+
+    // Use the already-cached MLS media when the sync populated it. This keeps the
+    // listings page fast and still preserves the MLS-provided MediaOrder.
+    const localPreview = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
+    if (localPreview) {
+      const preview = [localPreview];
+      result.set(listing.ListingId, preview);
+      freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preview });
+      continue;
+    }
+
     const parsed = listingSourceAndId(listing);
-    if (!parsed) continue;
+    if (!parsed) {
+      result.set(listing.ListingId, []);
+      continue;
+    }
     const group = groups.get(parsed.source) || [];
     group.push({ listingId: parsed.listingId, internalId: listing.ListingId });
     groups.set(parsed.source, group);
   }
 
+  // Only fetch media for listings that truly have no cached preview. These
+  // requests remain batched, but the normal page should no longer need them.
   for (const [source, group] of groups) {
     for (let i = 0; i < group.length; i += 100) {
       const batch = group.slice(i, i + 100);
       const mediaById = await fetchFreshMediaBatch(source, batch.map(item => item.listingId));
       for (const item of batch) {
         const photos = mediaById.get(item.listingId) || [];
-        const preview = photos.find(photo => photo.PreferredPhoto) || photos[0];
-        result.set(item.internalId, preview ? [preview] : []);
-        freshMediaCache.set(item.internalId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: photos });
+        const previewPhoto = photos.find(photo => photo.PreferredPhoto) || photos[0];
+        const preview = previewPhoto ? [previewPhoto] : [];
+        result.set(item.internalId, preview);
+        freshPreviewCache.set(item.internalId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preview });
+        if (photos.length) freshMediaCache.set(item.internalId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: photos });
       }
     }
   }
@@ -241,8 +259,9 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const parsed = listingSourceAndId(listing);
   if (!parsed) return listing.Media;
   const mediaById = await fetchFreshMediaBatch(parsed.source, [parsed.listingId]);
-  const photos = mediaById.get(parsed.listingId) || [];
+  const photos = mediaById.get(parsed.listingId) || listing.Media;
   freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: photos });
+  freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: photos[0] ? [photos.find(photo => photo.PreferredPhoto) || photos[0]] : [] });
   return photos;
 }
 
