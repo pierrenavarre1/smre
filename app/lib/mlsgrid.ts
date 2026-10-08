@@ -208,6 +208,12 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
 function normalizeAddressPart(value: string) {
   return value
     .toLowerCase()
+    .replace(/\b(north|south|east|west)\b/g, (m) => ({ north: 'n', south: 's', east: 'e', west: 'w' } as Record<string, string>)[m])
+    .replace(/\b(street|avenue|road|drive|lane|court|circle|boulevard|highway|parkway|place|terrace|trail|way)\b/g, (m) => ({
+      street: 'st', avenue: 'ave', road: 'rd', drive: 'dr', lane: 'ln', court: 'ct',
+      circle: 'cir', boulevard: 'blvd', highway: 'hwy', parkway: 'pkwy', place: 'pl',
+      terrace: 'ter', trail: 'trl', way: 'way'
+    } as Record<string, string>)[m])
     .replace(/[^a-z0-9]/g, '');
 }
 
