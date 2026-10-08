@@ -40,11 +40,22 @@ function normalize(data:Partial<AdminData>):AdminData{
  const testimonials=(data.testimonials||seed.testimonials).map((t:any)=>({featured:false,sort:99,...t}));
  return {...seed,...data,settings:{...s,featuredCount:Number(s.featuredCount)||6},agents,guides,leads,testimonials};
 }
+const ADMIN_CACHE_MS=60_000;
+let adminMemoryCache:{data:AdminData;expiresAt:number}|null=null;
+
 async function read(){
- try{const result=await get(PATH,{access:'private',useCache:false});if(!result)return null;return JSON.parse(await new Response(result.stream).text()) as AdminData}catch{return null}
+ try{const result=await get(PATH,{access:'private',useCache:true});if(!result)return null;return JSON.parse(await new Response(result.stream).text()) as AdminData}catch{return null}
 }
-export async function getAdminData(){const existing=await read();if(existing)return normalize(existing);const data={...seed,updatedAt:new Date().toISOString()};await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});return data}
-export async function saveAdminData(input:AdminData){const data=normalize({...input,updatedAt:new Date().toISOString()});await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});return data}
+export async function getAdminData(){
+ if(adminMemoryCache && adminMemoryCache.expiresAt>Date.now()) return adminMemoryCache.data;
+ const existing=await read();
+ if(existing){const data=normalize(existing);adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};return data;}
+ const data={...seed,updatedAt:new Date().toISOString()};
+ await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});
+ adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};
+ return data;
+}
+export async function saveAdminData(input:AdminData){const data=normalize({...input,updatedAt:new Date().toISOString()});await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};return data}
 export async function addLead(input:Omit<AdminLead,'id'|'createdAt'|'status'>){
  const data=await getAdminData();const lead:AdminLead={...input,id:crypto.randomUUID(),createdAt:new Date().toISOString(),status:'new'};
  data.leads=[lead,...data.leads].slice(0,1000);await saveAdminData(data);return lead;
