@@ -229,7 +229,7 @@ function sameApproximateLocation(a: RESOProperty, b: RESOProperty) {
 }
 
 function isSMREListing(listing: RESOProperty) {
-  return /st\\.?\\s*mary['’]?s\\s*real\\s*estate/i.test(listing.ListOfficeName || '');
+  return /st\.?\s*mary['’]?s\s*real\s*estate/i.test(listing.ListOfficeName || '');
 }
 
 function listingDateValue(listing: RESOProperty) {
