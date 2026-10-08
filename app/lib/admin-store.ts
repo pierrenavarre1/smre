@@ -1,4 +1,5 @@
 import { get, put } from '@vercel/blob';
+import { unstable_cache, revalidateTag } from 'next/cache';
 import { agents as seedAgents, type AgentProfile } from './agents';
 import { guides as seedGuides, type Guide } from './guides';
 
@@ -46,16 +47,17 @@ let adminMemoryCache:{data:AdminData;expiresAt:number}|null=null;
 async function read(){
  try{const result=await get(PATH,{access:'private',useCache:true});if(!result)return null;return JSON.parse(await new Response(result.stream).text()) as AdminData}catch{return null}
 }
+const readCached=unstable_cache(read,['smre-admin-data'],{revalidate:60});
 export async function getAdminData(){
  if(adminMemoryCache && adminMemoryCache.expiresAt>Date.now()) return adminMemoryCache.data;
- const existing=await read();
+ const existing=await readCached();
  if(existing){const data=normalize(existing);adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};return data;}
  const data={...seed,updatedAt:new Date().toISOString()};
  await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});
  adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};
  return data;
 }
-export async function saveAdminData(input:AdminData){const data=normalize({...input,updatedAt:new Date().toISOString()});await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};return data}
+export async function saveAdminData(input:AdminData){const data=normalize({...input,updatedAt:new Date().toISOString()});await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});revalidateTag('smre-admin-data');adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};return data}
 export async function addLead(input:Omit<AdminLead,'id'|'createdAt'|'status'>){
  const data=await getAdminData();const lead:AdminLead={...input,id:crypto.randomUUID(),createdAt:new Date().toISOString(),status:'new'};
  data.leads=[lead,...data.leads].slice(0,1000);await saveAdminData(data);return lead;
