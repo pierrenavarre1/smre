@@ -78,6 +78,11 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
       .sort((a, b) => {
         if (sort === 'price-desc') return b.ListPrice - a.ListPrice;
         if (sort === 'price-asc') return a.ListPrice - b.ListPrice;
+        if (sort === 'newest') {
+          const aDate = Date.parse(a.ListingDate || a.ModificationTimestamp || '');
+          const bDate = Date.parse(b.ListingDate || b.ModificationTimestamp || '');
+          return (Number.isFinite(bDate) ? bDate : 0) - (Number.isFinite(aDate) ? aDate : 0);
+        }
         return compareListingPriority(a, b);
       });
   }, [items, filters, sort]);
@@ -342,11 +347,10 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
                     setPage(1);
                   }}
                 >
-                  <option value="priority">SMRE & local first</option>
-                  <option value="priority">Recommended</option>
                   <option value="newest">Newest</option>
-                  <option value="price-asc">Price: low to high</option>
                   <option value="price-desc">Price: high to low</option>
+                  <option value="price-asc">Price: low to high</option>
+                  <option value="priority">Recommended</option>
                 </select>
               </label>
             </div>
