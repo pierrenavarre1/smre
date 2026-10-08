@@ -39,7 +39,10 @@ export async function getListings(): Promise<RESOProperty[]> {
   const listings = dedupeListings(await readMLSSummaryCache());
   if (listings.length && isMLSGridConfigured()) {
     const previews = await fetchFreshPreviewMedia(listings);
-    return listings.map(listing => toListingSummary({ ...listing, Media: previews.get(listing.ListingId) || [] }));
+    return listings.map(listing => toListingSummary({
+      ...listing,
+      Media: previews.get(listing.ListingId) || listing.Media.slice(0, 1)
+    }));
   }
   if (listings.length) return listings.map(toListingSummary);
   return process.env.NODE_ENV === 'development' ? mockProperties : [];
