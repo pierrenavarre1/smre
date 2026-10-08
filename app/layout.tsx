@@ -11,7 +11,14 @@ import { BrandLogo } from './components/BrandLogoFixed';
 import { ChatBubble } from './components/ChatBubble';
 import { MobileMenu } from './components/MobileMenu';
 
-export async function generateMetadata():Promise<Metadata>{const {settings}=await getAdminData();return {title:{default:settings.defaultTitle||'St. Mary’s Real Estate | SMRE',template:'%s | St. Mary’s Real Estate'},description:settings.defaultDescription||'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.'};}
+export const metadata: Metadata = {
+  title: {
+    default: 'St. Mary’s Real Estate | SMRE',
+    template: '%s | St. Mary’s Real Estate'
+  },
+  description:
+    'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.'
+};
 
 export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){
   const phone = '(785) 465-2543';
@@ -35,7 +42,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       <div className="container footer-grid">
         <div className="footer-brand-block">
           <Link href="/" className="brand-logo footer-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
-          <p>{address.split(',')[0]}<br />{address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${settings.phone.replace(/\D/g,'')}`} style={{color:'#fff'}}>{settings.phone}</a></p>
+          <p>{address.split(',')[0]}<br />{address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${phone.replace(/\D/g,'')}`} style={{color:'#fff'}}>{phone}</a></p>
         </div>
         <div className="footer-links">
           <strong>Explore</strong>
