@@ -50,7 +50,8 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   const [page, setPage] = useState(1);
   const [addressOpen, setAddressOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);\n  const [mapBounds, setMapBounds] = useState<{ minLat:number; maxLat:number; minLon:number; maxLon:number } | null>(null);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mapBounds, setMapBounds] = useState<{ minLat:number; maxLat:number; minLon:number; maxLon:number } | null>(null);
 
   const shown = useMemo(() => {
     const normalize = (value: string) =>
@@ -87,7 +88,12 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
       });
   }, [items, filters, sort]);
 
-  const mapShown = useMemo(() => {\n    if (!mapBounds) return shown;\n    return shown.filter((p) => Number.isFinite(p.Latitude) && Number.isFinite(p.Longitude) && p.Latitude >= mapBounds.minLat && p.Latitude <= mapBounds.maxLat && p.Longitude >= mapBounds.minLon && p.Longitude <= mapBounds.maxLon);\n  }, [shown, mapBounds]);\n\n  const addressSuggestions = useMemo(() => {
+  const mapShown = useMemo(() => {
+    if (!mapBounds) return shown;
+    return shown.filter((p) => Number.isFinite(p.Latitude) && Number.isFinite(p.Longitude) && p.Latitude >= mapBounds.minLat && p.Latitude <= mapBounds.maxLat && p.Longitude >= mapBounds.minLon && p.Longitude <= mapBounds.maxLon);
+  }, [shown, mapBounds]);
+
+  const addressSuggestions = useMemo(() => {
     const query = normalizeSearch(filters.address);
     if (!query) return [];
     return items
@@ -114,6 +120,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
     setAddressOpen(false);
     setTypeOpen(false);
     setMobileFiltersOpen(false);
+    setMapBounds(null);
     setPage(1);
   };
 
