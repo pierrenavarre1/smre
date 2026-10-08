@@ -2,6 +2,9 @@ import Link from 'next/link';
 import type { RESOProperty } from '../lib/mock-properties';
 import { SourceBadge, MLS_OFFICE, MLS_PHONE } from './MLSDisclosure';
 
+const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+function formatListingDate(value?: string) {\n  if (!value) return '';\n  const timestamp = Date.parse(value);\n  return Number.isFinite(timestamp) ? dateFormatter.format(new Date(timestamp)) : value;\n}
+
 export function ListingCard({ p }: { p: RESOProperty }) {
   const baths = p.BathroomsTotalInteger + (p.BathroomsHalf ? 0.5 : 0);
   const photo = p.Media[0]?.MediaURL;
@@ -22,7 +25,7 @@ export function ListingCard({ p }: { p: RESOProperty }) {
           <SourceBadge source={p.MlsSource} />
         </div>
         <div className="facts">{p.BedroomsTotal} bd · {baths} ba {p.LivingArea ? `· ${p.LivingArea.toLocaleString()} sq ft` : ''}</div>
-        <div>{p.StreetNumber} {p.StreetName}, {p.City}, KS {p.PostalCode}</div>
+        <div>{p.StreetNumber} {p.StreetName}, {p.City}, KS {p.PostalCode}</div>\n        {p.ListingDate ? <div className="listing-date">Listed {formatListingDate(p.ListingDate)}</div> : null}
         <div className="listing-idx-meta">
           <span>{p.StandardStatus}</span>
           <span>{MLS_OFFICE}</span>
