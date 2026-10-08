@@ -1,8 +1,9 @@
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache } from './mls-store';
+import { dedupeListings } from './mlsgrid';
 
 export async function getListings(): Promise<RESOProperty[]> {
-  const listings = await readMLSCache();
+  const listings = dedupeListings(await readMLSCache());
   if (listings.length) return listings;
   return process.env.NODE_ENV === 'development' ? mockProperties : [];
 }
