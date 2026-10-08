@@ -2,13 +2,46 @@ import { mockProperties, getMockProperty, type RESOProperty } from './mock-prope
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
 import { dedupeListings, fetchFreshMediaForListing, fetchFreshPreviewMedia, isMLSGridConfigured } from './mlsgrid';
 
+function toListingSummary(listing: RESOProperty): RESOProperty {
+  return {
+    ListingId: listing.ListingId,
+    ListingKey: listing.ListingKey,
+    StandardStatus: listing.StandardStatus,
+    ListPrice: listing.ListPrice,
+    BedroomsTotal: listing.BedroomsTotal,
+    BathroomsTotalInteger: listing.BathroomsTotalInteger,
+    BathroomsFull: listing.BathroomsFull,
+    BathroomsHalf: listing.BathroomsHalf,
+    PropertyType: listing.PropertyType,
+    PropertySubType: listing.PropertySubType,
+    StreetNumber: listing.StreetNumber,
+    StreetName: listing.StreetName,
+    City: listing.City,
+    StateOrProvince: listing.StateOrProvince,
+    PostalCode: listing.PostalCode,
+    LivingArea: listing.LivingArea,
+    LotSizeAcres: listing.LotSizeAcres,
+    YearBuilt: listing.YearBuilt,
+    PublicRemarks: '',
+    Media: listing.Media,
+    ListAgentFullName: '',
+    ListAgentMlsId: '',
+    ListOfficeName: listing.ListOfficeName,
+    MlsSource: listing.MlsSource,
+    Latitude: listing.Latitude,
+    Longitude: listing.Longitude,
+    ListingDate: listing.ListingDate,
+    MLSNumber: listing.MLSNumber,
+  };
+}
+
 export async function getListings(): Promise<RESOProperty[]> {
   const listings = dedupeListings(await readMLSSummaryCache());
   if (listings.length && isMLSGridConfigured()) {
     const previews = await fetchFreshPreviewMedia(listings);
-    return listings.map(listing => ({ ...listing, Media: previews.get(listing.ListingId) || [] }));
+    return listings.map(listing => toListingSummary({ ...listing, Media: previews.get(listing.ListingId) || [] }));
   }
-  if (listings.length) return listings;
+  if (listings.length) return listings.map(toListingSummary);
   return process.env.NODE_ENV === 'development' ? mockProperties : [];
 }
 
