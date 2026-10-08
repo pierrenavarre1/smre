@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   const pathname = 'mls/images/' + key + '.image';
 
   try {
-    const cached = await get(pathname, { access: 'private' });
+    const cached = await get(pathname, { access: 'private', useCache: true });
     if (cached?.statusCode === 200 && cached.stream) {
       return new Response(cached.stream, {
         headers: {
@@ -40,6 +40,8 @@ export async function GET(request: NextRequest) {
   } catch {}
 
   let response: Response;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     response = await fetch(url, {
       headers: {
@@ -47,11 +49,14 @@ export async function GET(request: NextRequest) {
         'User-Agent': 'SMRE-MLS-Image-Cache/1.0'
       },
       redirect: 'follow',
-      cache: 'no-store'
+      cache: 'no-store',
+      signal: controller.signal
     });
   } catch (error) {
     console.error('MLS image fetch failed:', error);
     return new Response('Unable to retrieve image.', { status: 502 });
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!response.ok || !response.body) {
