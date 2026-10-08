@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
 import { dedupeListings, fetchFreshMediaForListing, fetchFreshPreviewMedia, isMLSGridConfigured } from './mlsgrid';
@@ -35,7 +36,7 @@ function toListingSummary(listing: RESOProperty): RESOProperty {
   };
 }
 
-export async function getListings(): Promise<RESOProperty[]> {
+async function getListingsUncached(): Promise<RESOProperty[]> {
   const listings = dedupeListings(await readMLSSummaryCache());
   if (listings.length && isMLSGridConfigured()) {
     const previews = await fetchFreshPreviewMedia(listings);
@@ -48,7 +49,20 @@ export async function getListings(): Promise<RESOProperty[]> {
   return process.env.NODE_ENV === 'development' ? mockProperties : [];
 }
 
-export async function getListing(id: string): Promise<RESOProperty | undefined> {
+// Cache the completed, lightweight listing index. The UI still receives the same
+// data, but normal navigation no longer re-reads Blob storage and rebuilds the
+// entire listing set on every request.
+const getListingsCached = unstable_cache(
+  getListingsUncached,
+  ['smre-listings-index'],
+  { revalidate: 60 }
+);
+
+export async function getListings(): Promise<RESOProperty[]> {
+  return getListingsCached();
+}
+
+async function getListingUncached(id: string): Promise<RESOProperty | undefined> {
   const decodedId = decodeURIComponent(id);
   const listings = dedupeListings(await readMLSCache());
   if (listings.length) {
@@ -58,6 +72,16 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
     return listing;
   }
   return process.env.NODE_ENV === 'development' ? getMockProperty(decodedId) : undefined;
+}
+
+export async function getListing(id: string): Promise<RESOProperty | undefined> {
+  const decodedId = decodeURIComponent(id);
+  const cached = unstable_cache(
+    () => getListingUncached(decodedId),
+    ['smre-listing-detail', decodedId],
+    { revalidate: 300 }
+  );
+  return cached();
 }
 
 export type ListingFilters = { minPrice?:number; maxPrice?:number; beds?:number; propertyType?:string; source?:string; status?:string; sort?:string; };
