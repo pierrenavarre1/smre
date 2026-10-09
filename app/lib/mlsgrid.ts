@@ -1,5 +1,4 @@
 import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
-import { createHash } from 'node:crypto';
 import { get, put } from '@vercel/blob';
 
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
@@ -186,14 +185,26 @@ const freshPreviewCache = new Map<string, { expiresAt: number; media: RESOMedia[
 const FRESH_MEDIA_CACHE_MS = 10 * 60_000;
 
 // MLS Grid media URLs are signed, single-use download URLs. Persist the actual
-// image bytes and expose only a stable internal key to the website.
+// image bytes and expose only a stable internal key to the website. Keep this
+// helper browser-compatible because this module is also imported by client code.
+function mediaStorageKey(value: string) {
+  let a = 0x811c9dc5;
+  let b = 0x9e3779b9;
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    a = Math.imul(a ^ code, 0x01000193);
+    b = Math.imul(b ^ (code + i), 0x85ebca6b);
+  }
+  return (a >>> 0).toString(16).padStart(8, '0') + (b >>> 0).toString(16).padStart(8, '0');
+}
+
 async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
   const token = sourceToken(source);
   if (!token) return;
   for (const record of records) {
     const photos = media(record);
     for (const photo of photos) {
-      const key = createHash('sha256').update(photo.MediaKey).digest('hex');
+      const key = mediaStorageKey(photo.MediaKey);
       const pathname = 'mls/images/' + key + '.image';
       let alreadyStored = false;
       try {
