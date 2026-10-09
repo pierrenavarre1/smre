@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchMLSGridListings } from '../../lib/mlsgrid';
 import { writeMLSCache } from '../../lib/mls-store';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 function authorized(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
