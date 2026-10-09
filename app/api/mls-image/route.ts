@@ -71,14 +71,16 @@ export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get('url');
   if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
 
-  let url: URL;
-  try { url = new URL(rawUrl); } catch { return new Response('Invalid image URL.', { status: 400 }); }
-
-  if (url.protocol !== 'https:' || !allowedMediaHost(url.hostname)) {
-    return new Response('Image host is not allowed.', { status: 403 });
+  const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
+  if (!storedKey) {
+    let url: URL;
+    try { url = new URL(rawUrl); } catch { return new Response('Invalid image URL.', { status: 400 }); }
+    if (url.protocol !== 'https:' || !allowedMediaHost(url.hostname)) {
+      return new Response('Image host is not allowed.', { status: 403 });
+    }
   }
 
-  const key = createHash('sha256').update(rawUrl).digest('hex');
+  const key = storedKey || createHash('sha256').update(rawUrl).digest('hex');
   const pathname = 'mls/images/' + key + '.image';
 
   try {
@@ -93,6 +95,8 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch {}
+
+  if (storedKey) return new Response('Stored image not found.', { status: 404 });
 
   try {
     const { bytes, contentType } = await downloadMedia(rawUrl);
