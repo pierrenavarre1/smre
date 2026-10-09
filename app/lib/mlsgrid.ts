@@ -187,7 +187,6 @@ const FRESH_MEDIA_CACHE_MS = 10 * 60_000;
 
 // MLS Grid media URLs are signed, single-use download URLs. Persist the actual
 // image bytes and expose only a stable internal key to the website.
-let lastImageDownloadAt = 0;
 async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
   const token = sourceToken(source);
   if (!token) return;
@@ -202,9 +201,9 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
         alreadyStored = existing?.statusCode === 200;
       } catch {}
       if (!alreadyStored) {
-        const wait = Math.max(0, 700 - (Date.now() - lastImageDownloadAt));
-        if (wait) await new Promise(resolve => setTimeout(resolve, wait));
-        lastImageDownloadAt = Date.now();
+        // Share the same limiter as JSON API requests so image downloads and
+        // API calls together stay below MLS Grid's 2 requests/second ceiling.
+        await waitForMLSGridSlot();
         try {
           const response = await fetch(photo.MediaURL, {
             headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
