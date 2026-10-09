@@ -1,5 +1,5 @@
 import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
-import { get, put } from '@vercel/blob';
+import { del, list, put } from '@vercel/blob';
 
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
 const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
@@ -48,7 +48,7 @@ function media(record: MlsGridRecord) {
       MediaURL: String(m.MediaURL).replace(/^http:/i, 'https:'),
       MediaCategory: 'Photo' as const,
       ShortDescription: firstString(m.ShortDescription),
-      PreferredPhoto: m.PreferredPhotoYN === true || String(m.PreferredPhotoYN).toLowerCase() === 'true',
+      PreferredPhoto: m.PreferredPhoto === true || m.PreferredPhotoYN === true || String(m.PreferredPhotoYN).toLowerCase() === 'true',
       MediaOrder: Number.isFinite(Number(m.MediaOrder)) ? Number(m.MediaOrder) : (Number.isFinite(Number(m.Order)) ? Number(m.Order) : index)
     }))
     .sort((a, b) => a.MediaOrder - b.MediaOrder);
@@ -198,70 +198,87 @@ function mediaStorageKey(value: string) {
   return (a >>> 0).toString(16).padStart(8, '0') + (b >>> 0).toString(16).padStart(8, '0');
 }
 
+async function clearStoredMLSImages() {
+  let cursor: string | undefined;
+  do {
+    const page = await list({ prefix: 'mls/images/', limit: 1000, ...(cursor ? { cursor } : {}) });
+    if (page.blobs.length) {
+      await del(page.blobs.map(blob => blob.url));
+    }
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+}
+
 async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
   const token = sourceToken(source);
   if (!token) return;
 
+  // Listing cards need one reliable preview image per property. Keeping every
+  // original MLS photo exceeded the 1 GB Blob quota and made all images fail.
   const jobs: Array<{ record: MlsGridRecord; photo: RESOMedia }> = [];
-  const photosByRecord = new Map<MlsGridRecord, RESOMedia[]>();
   for (const record of records) {
     const photos = media(record);
-    photosByRecord.set(record, photos);
-    for (const photo of photos) jobs.push({ record, photo });
+    const preview = photos.find(photo => photo.PreferredPhoto) || photos[0];
+    jobs.push({ record, photo: preview as RESOMedia });
+    if (!preview) record.Media = [];
+  }
+  const validJobs = jobs.filter(job => Boolean(job.photo));
+  let cursor = 0;
+
+  async function downloadWithRetry(photo: RESOMedia) {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        const response = await fetch(photo.MediaURL, {
+          headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
+          redirect: 'follow',
+          cache: 'no-store',
+          signal: AbortSignal.timeout(12000)
+        });
+
+        if (response.status === 429 && attempt < 3) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1) * (attempt + 1)));
+          continue;
+        }
+        if (!response.ok || !response.body) {
+          throw new Error('MLS image download failed: ' + response.status + ' ' + response.statusText);
+        }
+
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+        if (!contentType.toLowerCase().startsWith('image/')) {
+          throw new Error('MLS media URL returned non-image content.');
+        }
+
+        const key = mediaStorageKey(source + ':' + photo.MediaKey);
+        await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
+          access: 'private',
+          allowOverwrite: true,
+          cacheControlMaxAge: 31536000,
+          contentType
+        });
+        return key;
+      } catch (error) {
+        if (attempt === 3) {
+          console.error('MLS image download/storage failed:', error instanceof Error ? error.message : error);
+          return '';
+        }
+        await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+      }
+    }
+    return '';
   }
 
-  // Media URLs are single-use downloads, not API replication calls. Keep the
-  // API limiter on JSON requests, and use a small bounded pool for media files
-  // so an initial backfill can finish within the serverless execution window.
-  let cursor = 0;
-  const workers = Array.from({ length: 16 }, async () => {
-    while (cursor < jobs.length) {
-      const job = jobs[cursor++];
-      const { record, photo } = job;
-      const key = mediaStorageKey(photo.MediaKey);
-      const pathname = 'mls/images/' + key + '.image';
-      let stored = false;
-
-      try {
-        const existing = await get(pathname, { access: 'private', useCache: true });
-        stored = existing?.statusCode === 200;
-      } catch {}
-
-      if (!stored) {
-        try {
-          const response = await fetch(photo.MediaURL, {
-            headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
-            redirect: 'follow',
-            cache: 'no-store',
-            signal: AbortSignal.timeout(12000)
-          });
-          if (!response.ok || !response.body) {
-            console.error('MLS image download failed:', response.status, response.statusText);
-            continue;
-          }
-          const contentType = response.headers.get('content-type') || 'image/jpeg';
-          if (!contentType.toLowerCase().startsWith('image/')) continue;
-          await put(pathname, await response.arrayBuffer(), {
-            access: 'private',
-            allowOverwrite: true,
-            cacheControlMaxAge: 31536000,
-            contentType
-          });
-          stored = true;
-        } catch (error) {
-          console.error('MLS image storage failed:', error instanceof Error ? error.message : error);
-        }
-      }
-
-      if (stored) photo.MediaURL = 'smre-blob:' + key;
-      else photo.MediaURL = '';
+  // Two workers avoids the request burst caused by the previous 16-worker pool.
+  const workers = Array.from({ length: 2 }, async () => {
+    while (cursor < validJobs.length) {
+      const job = validJobs[cursor++];
+      const key = await downloadWithRetry(job.photo);
+      job.record.Media = key
+        ? [{ ...job.photo, MediaURL: 'smre-blob:' + key }]
+        : [];
     }
   });
 
   await Promise.all(workers);
-  for (const record of records) {
-    record.Media = (photosByRecord.get(record) || []).filter(photo => Boolean(photo.MediaURL));
-  }
 }
 
 function listingSourceAndId(listing: RESOProperty) {
@@ -322,7 +339,7 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
 }
 
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
-  const all: RESOProperty[] = [];
+  const sourceRecords: Array<{ source: string; records: MlsGridRecord[] }> = [];
 
   for (const source of sourceKeys()) {
     if (!sourceToken(source)) {
@@ -334,13 +351,27 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
       const records = await fetchAllPropertyRecords(source);
       const serviceAreaRecords = records.filter(isInServiceArea);
       const recordsWithMedia = await fetchMediaForRecords(source, serviceAreaRecords);
-      await downloadAndStoreMedia(source, recordsWithMedia);
-
-      for (const record of recordsWithMedia) {
-        all.push(normalizeMLSGridProperty(record, source));
-      }
+      sourceRecords.push({ source, records: recordsWithMedia });
     } catch (error) {
       console.error('MLS Grid source failed for ' + source + ':', error);
+    }
+  }
+
+  // Clear the old full-size image cache only after metadata retrieval succeeds.
+  // The previous all-photo cache exceeded the Hobby plan's 1 GB storage limit.
+  if (sourceRecords.length) {
+    try {
+      await clearStoredMLSImages();
+    } catch (error) {
+      console.error('MLS image cache cleanup failed:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  const all: RESOProperty[] = [];
+  for (const { source, records } of sourceRecords) {
+    await downloadAndStoreMedia(source, records);
+    for (const record of records) {
+      all.push(normalizeMLSGridProperty(record, source));
     }
   }
 
