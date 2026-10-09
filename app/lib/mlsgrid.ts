@@ -205,8 +205,6 @@ async function fetchFreshMediaBatch(source: string, listingIds: string[]) {
 
 export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
   const result = new Map<string, RESOMedia[]>();
-  const groups = new Map<string, Array<{ listingId: string; internalId: string }>>();
-
   for (const listing of listings) {
     const cachedPreview = freshPreviewCache.get(listing.ListingId);
     if (cachedPreview && cachedPreview.expiresAt > Date.now()) {
@@ -214,41 +212,12 @@ export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
       continue;
     }
 
-    // Use the already-cached MLS media when the sync populated it. This keeps the
-    // listings page fast and still preserves the MLS-provided MediaOrder.
+    // Page rendering must never trigger live MLS Grid requests. Use the media
+    // saved by the scheduled sync, and let the next sync refresh missing media.
     const localPreview = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
-    if (localPreview) {
-      const preview = [localPreview];
-      result.set(listing.ListingId, preview);
-      freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preview });
-      continue;
-    }
-
-    const parsed = listingSourceAndId(listing);
-    if (!parsed) {
-      result.set(listing.ListingId, []);
-      continue;
-    }
-    const group = groups.get(parsed.source) || [];
-    group.push({ listingId: parsed.listingId, internalId: listing.ListingId });
-    groups.set(parsed.source, group);
-  }
-
-  // Only fetch media for listings that truly have no cached preview. These
-  // requests remain batched, but the normal page should no longer need them.
-  for (const [source, group] of groups) {
-    for (let i = 0; i < group.length; i += 100) {
-      const batch = group.slice(i, i + 100);
-      const mediaById = await fetchFreshMediaBatch(source, batch.map(item => item.listingId));
-      for (const item of batch) {
-        const photos = mediaById.get(item.listingId) || [];
-        const previewPhoto = photos.find(photo => photo.PreferredPhoto) || photos[0];
-        const preview = previewPhoto ? [previewPhoto] : [];
-        result.set(item.internalId, preview);
-        freshPreviewCache.set(item.internalId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preview });
-        if (photos.length) freshMediaCache.set(item.internalId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: photos });
-      }
-    }
+    const preview = localPreview ? [localPreview] : [];
+    result.set(listing.ListingId, preview);
+    freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preview });
   }
   return result;
 }
@@ -256,13 +225,19 @@ export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
 export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
   if (cached && cached.expiresAt > Date.now()) return cached.media;
-  const parsed = listingSourceAndId(listing);
-  if (!parsed) return listing.Media;
-  const mediaById = await fetchFreshMediaBatch(parsed.source, [parsed.listingId]);
-  const photos = mediaById.get(parsed.listingId) || listing.Media;
-  freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: photos });
-  freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: photos[0] ? [photos.find(photo => photo.PreferredPhoto) || photos[0]] : [] });
-  return photos;
+
+  // Individual listing pages use the full photo set already saved by MLS sync.
+  // Avoid one MLS Grid API call every time a listing detail is opened.
+  if (listing.Media.length) {
+    freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: listing.Media });
+    const preferred = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
+    freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
+    return listing.Media;
+  }
+
+  // Do not fall back to live API requests during page rendering. The next
+  // scheduled sync will refresh the saved media set.
+  return [];
 }
 
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
