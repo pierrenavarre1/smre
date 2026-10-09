@@ -214,7 +214,7 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
   // API limiter on JSON requests, and use a small bounded pool for media files
   // so an initial backfill can finish within the serverless execution window.
   let cursor = 0;
-  const workers = Array.from({ length: 8 }, async () => {
+  const workers = Array.from({ length: 16 }, async () => {
     while (cursor < jobs.length) {
       const job = jobs[cursor++];
       const { record, photo } = job;
