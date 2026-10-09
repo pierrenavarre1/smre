@@ -201,24 +201,36 @@ function mediaStorageKey(value: string) {
 async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
   const token = sourceToken(source);
   if (!token) return;
+
+  const jobs: Array<{ record: MlsGridRecord; photo: RESOMedia }> = [];
   for (const record of records) {
-    const photos = media(record);
-    for (const photo of photos) {
+    for (const photo of media(record)) jobs.push({ record, photo });
+  }
+
+  // Media URLs are single-use downloads, not API replication calls. Keep the
+  // API limiter on JSON requests, and use a small bounded pool for media files
+  // so an initial backfill can finish within the serverless execution window.
+  let cursor = 0;
+  const workers = Array.from({ length: 8 }, async () => {
+    while (cursor < jobs.length) {
+      const job = jobs[cursor++];
+      const { record, photo } = job;
       const key = mediaStorageKey(photo.MediaKey);
       const pathname = 'mls/images/' + key + '.image';
-      let alreadyStored = false;
+      let stored = false;
+
       try {
         const existing = await get(pathname, { access: 'private', useCache: true });
-        alreadyStored = existing?.statusCode === 200;
+        stored = existing?.statusCode === 200;
       } catch {}
-      if (!alreadyStored) {
-        // Share the same limiter as JSON API requests so image downloads and
-        // API calls together stay below MLS Grid's 2 requests/second ceiling.
-        await waitForMLSGridSlot();
+
+      if (!stored) {
         try {
           const response = await fetch(photo.MediaURL, {
             headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
-            redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(12000)
+            redirect: 'follow',
+            cache: 'no-store',
+            signal: AbortSignal.timeout(12000)
           });
           if (!response.ok || !response.body) {
             console.error('MLS image download failed:', response.status, response.statusText);
@@ -227,16 +239,25 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
           const contentType = response.headers.get('content-type') || 'image/jpeg';
           if (!contentType.toLowerCase().startsWith('image/')) continue;
           await put(pathname, await response.arrayBuffer(), {
-            access: 'private', allowOverwrite: true, cacheControlMaxAge: 31536000, contentType
+            access: 'private',
+            allowOverwrite: true,
+            cacheControlMaxAge: 31536000,
+            contentType
           });
+          stored = true;
         } catch (error) {
           console.error('MLS image storage failed:', error instanceof Error ? error.message : error);
-          continue;
         }
       }
-      photo.MediaURL = 'smre-blob:' + key;
+
+      if (stored) photo.MediaURL = 'smre-blob:' + key;
+      else photo.MediaURL = '';
     }
-    record.Media = photos;
+  });
+
+  await Promise.all(workers);
+  for (const record of records) {
+    record.Media = media(record).filter((photo: RESOMedia) => Boolean(photo.MediaURL));
   }
 }
 
