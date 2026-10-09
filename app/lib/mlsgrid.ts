@@ -203,8 +203,11 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
   if (!token) return;
 
   const jobs: Array<{ record: MlsGridRecord; photo: RESOMedia }> = [];
+  const photosByRecord = new Map<MlsGridRecord, RESOMedia[]>();
   for (const record of records) {
-    for (const photo of media(record)) jobs.push({ record, photo });
+    const photos = media(record);
+    photosByRecord.set(record, photos);
+    for (const photo of photos) jobs.push({ record, photo });
   }
 
   // Media URLs are single-use downloads, not API replication calls. Keep the
@@ -257,7 +260,7 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
 
   await Promise.all(workers);
   for (const record of records) {
-    record.Media = media(record).filter((photo: RESOMedia) => Boolean(photo.MediaURL));
+    record.Media = (photosByRecord.get(record) || []).filter(photo => Boolean(photo.MediaURL));
   }
 }
 
