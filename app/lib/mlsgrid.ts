@@ -1,4 +1,6 @@
 import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
+import { createHash } from 'node:crypto';
+import { get, put } from '@vercel/blob';
 
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
 const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
@@ -89,7 +91,7 @@ export function isMLSGridConfigured() {
   return sourceKeys().some(source => Boolean(sourceToken(source)));
 }
 
-const MIN_REQUEST_INTERVAL_MS = 650;
+const MIN_REQUEST_INTERVAL_MS = 700;
 let lastRequestAt = 0;
 
 async function waitForMLSGridSlot() {
@@ -183,6 +185,51 @@ const freshMediaCache = new Map<string, { expiresAt: number; media: RESOMedia[] 
 const freshPreviewCache = new Map<string, { expiresAt: number; media: RESOMedia[] }>();
 const FRESH_MEDIA_CACHE_MS = 10 * 60_000;
 
+// MLS Grid media URLs are signed, single-use download URLs. Persist the actual
+// image bytes and expose only a stable internal key to the website.
+let lastImageDownloadAt = 0;
+async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
+  const token = sourceToken(source);
+  if (!token) return;
+  for (const record of records) {
+    const photos = media(record);
+    for (const photo of photos) {
+      const key = createHash('sha256').update(photo.MediaKey).digest('hex');
+      const pathname = 'mls/images/' + key + '.image';
+      let alreadyStored = false;
+      try {
+        const existing = await get(pathname, { access: 'private', useCache: true });
+        alreadyStored = existing?.statusCode === 200;
+      } catch {}
+      if (!alreadyStored) {
+        const wait = Math.max(0, 700 - (Date.now() - lastImageDownloadAt));
+        if (wait) await new Promise(resolve => setTimeout(resolve, wait));
+        lastImageDownloadAt = Date.now();
+        try {
+          const response = await fetch(photo.MediaURL, {
+            headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
+            redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(12000)
+          });
+          if (!response.ok || !response.body) {
+            console.error('MLS image download failed:', response.status, response.statusText);
+            continue;
+          }
+          const contentType = response.headers.get('content-type') || 'image/jpeg';
+          if (!contentType.toLowerCase().startsWith('image/')) continue;
+          await put(pathname, await response.arrayBuffer(), {
+            access: 'private', allowOverwrite: true, cacheControlMaxAge: 31536000, contentType
+          });
+        } catch (error) {
+          console.error('MLS image storage failed:', error instanceof Error ? error.message : error);
+          continue;
+        }
+      }
+      photo.MediaURL = 'smre-blob:' + key;
+    }
+    record.Media = photos;
+  }
+}
+
 function listingSourceAndId(listing: RESOProperty) {
   const separator = listing.ListingId.indexOf(':');
   if (separator < 0) return null;
@@ -253,6 +300,7 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
       const records = await fetchAllPropertyRecords(source);
       const serviceAreaRecords = records.filter(isInServiceArea);
       const recordsWithMedia = await fetchMediaForRecords(source, serviceAreaRecords);
+      await downloadAndStoreMedia(source, recordsWithMedia);
 
       for (const record of recordsWithMedia) {
         all.push(normalizeMLSGridProperty(record, source));
