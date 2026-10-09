@@ -6,7 +6,14 @@ export const metadata = { title: 'Listings' };
 export const revalidate = 60;
 
 export default async function Listings() {
-  const items = await getListings();
+  const listings = await getListings();
+
+  // The explorer only needs one MLS-selected preview image per card/map marker.
+  // The individual listing page reads the full media set independently.
+  const items = listings.map((p) => {
+    const preview = p.Media.find((photo) => photo.PreferredPhoto) || p.Media[0];
+    return { ...p, Media: preview ? [preview] : [] };
+  });
 
   return (
     <section className="section container listings-page">
