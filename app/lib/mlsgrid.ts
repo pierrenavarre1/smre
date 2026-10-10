@@ -229,7 +229,7 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
         const response = await fetch(photo.MediaURL, {
-          headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
+          headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token! },
           redirect: 'follow',
           cache: 'no-store',
           signal: AbortSignal.timeout(12000)
