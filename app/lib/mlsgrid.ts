@@ -345,7 +345,11 @@ export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
     if (!sourceToken(source)) continue;
     try {
       const records = await fetchAllPropertyRecords(source);
-      for (const record of records.filter(isInServiceArea)) {
+      const serviceAreaRecords = records.filter(isInServiceArea);
+      // Media must be fetched explicitly. The lightweight property response
+      // does not include photos, which is why cards went blank during fallback.
+      const recordsWithMedia = await fetchMediaForRecords(source, serviceAreaRecords);
+      for (const record of recordsWithMedia) {
         all.push(normalizeMLSGridProperty(record, source));
       }
     } catch (error) {
@@ -354,6 +358,24 @@ export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
   }
 
   return dedupeListings(all);
+}
+
+export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOProperty | undefined> {
+  const separator = internalId.indexOf(':');
+  if (separator < 0) return undefined;
+  const source = internalId.slice(0, separator);
+  const listingId = internalId.slice(separator + 1);
+  if (!sourceKeys().includes(source) || !sourceToken(source)) return undefined;
+
+  const filter = "OriginatingSystemName eq '" + source +
+    "' and MlgCanView eq true and ListingId eq '" + listingId.replace(/'/g, "''") + "'";
+  const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
+    '$filter': filter,
+    '$expand': 'Media',
+    '$top': '1'
+  }).toString(), true);
+  const record = page.value?.[0];
+  return record ? normalizeMLSGridProperty(record, source) : undefined;
 }
 
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
