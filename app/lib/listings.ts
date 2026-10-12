@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
-import { dedupeListings, fetchFreshMediaForListing, fetchFreshPreviewMedia, isMLSGridConfigured } from './mlsgrid';
+import { dedupeListings, fetchFreshMediaForListing, fetchFreshPreviewMedia, fetchMLSGridLiveIndex, isMLSGridConfigured } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
   return {
@@ -46,6 +46,14 @@ async function getListingsUncached(): Promise<RESOProperty[]> {
     }));
   }
   if (listings.length) return listings.map(toListingSummary);
+
+  // Vercel Blob can be temporarily unavailable. In that case, use the MLS Grid
+  // metadata directly so the public listings page does not go blank.
+  if (isMLSGridConfigured()) {
+    const liveListings = await fetchMLSGridLiveIndex();
+    return liveListings.map(toListingSummary);
+  }
+
   return process.env.NODE_ENV === 'development' ? mockProperties : [];
 }
 
