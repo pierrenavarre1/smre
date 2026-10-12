@@ -1,7 +1,6 @@
 import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { get, put } from '@vercel/blob';
-import { fetchMLSGridLiveListing } from '../../lib/mlsgrid';
 
 function allowedMediaHost(hostname: string) {
   const host = hostname.toLowerCase();
@@ -85,37 +84,26 @@ export async function GET(request: NextRequest) {
           }
         });
       }
+      if (storedKey) {
+        blobUnavailableUntil = Date.now() + 5 * 60_000;
+        return new Response('Stored image unavailable while image storage is offline.', { status: 503 });
+      }
     } catch {
       // Avoid repeating a failing Blob lookup for every image in the same warm instance.
       blobUnavailableUntil = Date.now() + 5 * 60_000;
+      if (storedKey) return new Response('Stored image unavailable while image storage is offline.', { status: 503 });
     }
+  } else if (storedKey) {
+    return new Response('Stored image unavailable while image storage is offline.', { status: 503 });
   }
 
   try {
-    let imageUrl = rawUrl;
-    if (storedKey) {
-      // A stored key cannot be resolved while Blob is unavailable. Ask MLS Grid
-      // for a fresh, signed URL for this exact gallery photo instead.
-      if (!listingId) return new Response('Stored image unavailable.', { status: 404 });
-      const freshListing = await fetchMLSGridLiveListing(listingId);
-      const freshPhoto = freshListing?.Media?.[mediaIndex];
-      if (!freshPhoto?.MediaURL) return new Response('Stored image unavailable.', { status: 404 });
-      imageUrl = freshPhoto.MediaURL;
-    }
+    const imageUrl = rawUrl;
     let image: { bytes: ArrayBuffer; contentType: string };
 
-    try {
-      image = await downloadMedia(imageUrl);
-    } catch (firstError) {
-      // MLS Grid media URLs expire. Refresh the listing's Media records and
-      // retry the same photo index rather than leaving a broken image.
-      if (!listingId) throw firstError;
-      const freshListing = await fetchMLSGridLiveListing(listingId);
-      const freshPhoto = freshListing?.Media?.[mediaIndex];
-      if (!freshPhoto?.MediaURL) throw firstError;
-      imageUrl = freshPhoto.MediaURL;
-      image = await downloadMedia(imageUrl);
-    }
+    // Never refresh MLS Grid records from an image request. Media URLs are
+    // single-use and doing an API request per failed image can exceed RPS limits.
+    image = await downloadMedia(imageUrl);
 
     const imageKey = createHash('sha256').update(imageUrl).digest('hex');
     const imagePath = 'mls/images/' + imageKey + '.image';
