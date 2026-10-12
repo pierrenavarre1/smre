@@ -3,6 +3,7 @@ import { ListingsExplorer } from '../components/ListingsExplorer';
 import { MLSDisclosure } from '../components/MLSDisclosure';
 
 export const metadata = { title: 'Listings' };
+export const dynamic = 'force-dynamic';
 export const revalidate = 60;
 
 export default async function Listings() {
