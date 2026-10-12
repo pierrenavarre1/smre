@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
-import { dedupeListings, fetchFreshMediaForListing, fetchFreshPreviewMedia, fetchMLSGridLiveIndex, isMLSGridConfigured } from './mlsgrid';
+import { dedupeListings, fetchFreshMediaForListing, fetchFreshPreviewMedia, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, isMLSGridConfigured } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
   return {
@@ -78,6 +78,13 @@ async function getListingUncached(id: string): Promise<RESOProperty | undefined>
     if (!listing) return undefined;
     if (isMLSGridConfigured()) return { ...listing, Media: await fetchFreshMediaForListing(listing) };
     return listing;
+  }
+  if (isMLSGridConfigured()) {
+    try {
+      return await fetchMLSGridLiveListing(decodedId);
+    } catch (error) {
+      console.error('Live MLS listing detail fallback failed:', error);
+    }
   }
   return process.env.NODE_ENV === 'development' ? getMockProperty(decodedId) : undefined;
 }
