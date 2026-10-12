@@ -85,7 +85,6 @@ export async function GET(request: NextRequest) {
           }
         });
       }
-      if (cached?.statusCode === 403) blobUnavailableUntil = Date.now() + 5 * 60_000;
     } catch {
       // Avoid repeating a failing Blob lookup for every image in the same warm instance.
       blobUnavailableUntil = Date.now() + 5 * 60_000;
