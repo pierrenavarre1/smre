@@ -24,7 +24,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
   const baths=p.BathroomsTotalInteger+(p.BathroomsHalf?0.5:0);
   return <section className="section container detail">
     <Link href="/listings" className="back">← All listings</Link>
-    <ListingGallery photos={photos} address={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} />
+    <ListingGallery photos={photos} address={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} listingId={p.ListingId} />
     <div className="detail-grid">
       <div>
         <div className="card-top"><p className="eyebrow">{p.StandardStatus}</p><SourceBadge source={p.MlsSource}/></div>
