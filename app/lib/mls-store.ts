@@ -6,19 +6,25 @@ const LISTINGS_SUMMARY_PATH = 'mls/listings-summary.json';
 
 let memoryCache: { listings: RESOProperty[]; expiresAt: number } | null = null;
 let memorySummaryCache: { listings: RESOProperty[]; expiresAt: number } | null = null;
-const MEMORY_CACHE_MS = 30_000;
+const MEMORY_CACHE_MS = 60_000;
+let blobUnavailableUntil = 0;
 
 async function readBlob(pathname: string): Promise<RESOProperty[]> {
+  if (Date.now() < blobUnavailableUntil) return [];
   try {
     const result = await get(pathname, { access: 'private', useCache: true });
+    if (result?.statusCode === 403) {
+      blobUnavailableUntil = Date.now() + 5 * 60_000;
+      return [];
+    }
     if (!result || result.statusCode !== 200 || !result.stream) return [];
     const text = await new Response(result.stream).text();
     const parsed = JSON.parse(text);
     return Array.isArray(parsed?.listings) ? parsed.listings : [];
   } catch {
     // Blob may be temporarily unavailable or suspended. Do not let that
-    // prevent the site from rendering; the MLS sync can repopulate the cache
-    // once storage access is restored.
+    // prevent the site from rendering; avoid retrying it on every page read.
+    blobUnavailableUntil = Date.now() + 5 * 60_000;
     return [];
   }
 }
@@ -33,7 +39,7 @@ export async function readMLSCache(): Promise<RESOProperty[]> {
 export async function readMLSSummaryCache(): Promise<RESOProperty[]> {
   if (memorySummaryCache && memorySummaryCache.expiresAt > Date.now()) return memorySummaryCache.listings;
   let listings = await readBlob(LISTINGS_SUMMARY_PATH);
-  if (!listings.length) {
+  if (!listings.length && Date.now() >= blobUnavailableUntil) {
     const fullListings = await readBlob(LISTINGS_PATH);
     if (fullListings.length) {
       listings = fullListings.map((listing) => ({
