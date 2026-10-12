@@ -365,7 +365,7 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
   if (separator < 0) return undefined;
   const source = internalId.slice(0, separator);
   const listingId = internalId.slice(separator + 1);
-  if (!sourceKeys().includes(source) || !sourceToken(source)) return undefined;
+  if ((source !== 'sunflower' && source !== 'flinthills') || !sourceToken(source)) return undefined;
 
   const filter = "OriginatingSystemName eq '" + source +
     "' and MlgCanView eq true and ListingId eq '" + listingId.replace(/'/g, "''") + "'";
