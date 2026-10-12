@@ -53,7 +53,7 @@ export async function getAdminData(){
  const existing=await readCached();
  if(existing){const data=normalize(existing);adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};return data;}
  const data={...seed,updatedAt:new Date().toISOString()};
- await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});
+ try{await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});}catch{}
  adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};
  return data;
 }
