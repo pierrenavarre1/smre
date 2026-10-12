@@ -9,6 +9,7 @@ function allowedMediaHost(hostname: string) {
 
 const inFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string }>>();
 let blobUnavailableUntil = 0;
+const BLOB_FAILURE_COOLDOWN_MS = 30 * 60_000;
 
 async function downloadMedia(rawUrl: string) {
   const existing = inFlight.get(rawUrl);
@@ -54,6 +55,13 @@ async function downloadMedia(rawUrl: string) {
   }
 }
 
+function unavailableResponse() {
+  return new Response('Listing image storage is temporarily unavailable.', {
+    status: 503,
+    headers: { 'Cache-Control': 'no-store' }
+  });
+}
+
 export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get('url');
   if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
@@ -67,54 +75,49 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Once Blob has failed, do not keep consuming single-use MLS media URLs on
+  // every image request when the downloaded copy cannot be saved permanently.
+  if (Date.now() < blobUnavailableUntil) return unavailableResponse();
+
   const key = storedKey || createHash('sha256').update(rawUrl).digest('hex');
   const pathname = 'mls/images/' + key + '.image';
 
-  if (Date.now() >= blobUnavailableUntil) {
-    try {
-      const cached = await get(pathname, { access: 'private', useCache: true });
-      if (cached?.statusCode === 200 && cached.stream) {
-        return new Response(cached.stream, {
-          headers: {
-            'Content-Type': cached.blob.contentType || 'image/jpeg',
-            'Cache-Control': 'public, max-age=31536000, immutable',
-            'X-Content-Type-Options': 'nosniff'
-          }
-        });
-      }
-      if (storedKey) {
-        blobUnavailableUntil = Date.now() + 5 * 60_000;
-        return new Response('Stored image unavailable while image storage is offline.', { status: 503 });
-      }
-    } catch {
-      // Avoid repeating a failing Blob lookup for every image in the same warm instance.
-      blobUnavailableUntil = Date.now() + 5 * 60_000;
-      if (storedKey) return new Response('Stored image unavailable while image storage is offline.', { status: 503 });
+  try {
+    const cached = await get(pathname, { access: 'private', useCache: true });
+    if (cached?.statusCode === 200 && cached.stream) {
+      return new Response(cached.stream, {
+        headers: {
+          'Content-Type': cached.blob.contentType || 'image/jpeg',
+          'Cache-Control': 'public, max-age=31536000, immutable',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
     }
-  } else if (storedKey) {
-    return new Response('Stored image unavailable while image storage is offline.', { status: 503 });
+    if (storedKey) {
+      blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
+      return unavailableResponse();
+    }
+  } catch (error) {
+    blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
+    console.error('MLS image storage read failed:', error instanceof Error ? error.message : error);
+    return unavailableResponse();
   }
 
   try {
-    const imageUrl = rawUrl;
-    let image: { bytes: ArrayBuffer; contentType: string };
-
-    // Never refresh MLS Grid records from an image request. Media URLs are
-    // single-use and doing an API request per failed image can exceed RPS limits.
-    image = await downloadMedia(imageUrl);
-
-    const imageKey = createHash('sha256').update(imageUrl).digest('hex');
-    const imagePath = 'mls/images/' + imageKey + '.image';
+    // MLS Grid media URLs are single-use and time-limited. Download only when
+    // storage is healthy so the image can be retained as a local copy.
+    const image = await downloadMedia(rawUrl);
     try {
-      await put(imagePath, image.bytes, {
+      await put(pathname, image.bytes, {
         access: 'private',
         allowOverwrite: true,
         cacheControlMaxAge: 31536000,
         contentType: image.contentType
       });
     } catch (error) {
-      // Still serve the downloaded image when Blob storage is unavailable.
-      console.error('MLS image cache write failed:', error);
+      blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
+      console.error('MLS image cache write failed:', error instanceof Error ? error.message : error);
+      return unavailableResponse();
     }
 
     return new Response(image.bytes, {
