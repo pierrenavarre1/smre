@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { get, put } from '@vercel/blob';
+import { fetchMLSGridLiveListing } from '../../lib/mlsgrid';
 
 function allowedMediaHost(hostname: string) {
   const host = hostname.toLowerCase();
@@ -70,6 +71,8 @@ async function downloadMedia(rawUrl: string) {
 export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get('url');
   if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
+  const listingId = request.nextUrl.searchParams.get('listingId') || '';
+  const mediaIndex = Math.max(0, Number.parseInt(request.nextUrl.searchParams.get('index') || '0', 10) || 0);
 
   const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
   if (!storedKey) {
@@ -99,22 +102,41 @@ export async function GET(request: NextRequest) {
   if (storedKey) return new Response('Stored image not found.', { status: 404 });
 
   try {
-    const { bytes, contentType } = await downloadMedia(rawUrl);
+    let imageUrl = rawUrl;
+    let image: { bytes: ArrayBuffer; contentType: string };
+
     try {
-      await put(pathname, bytes, {
+      image = await downloadMedia(imageUrl);
+    } catch (firstError) {
+      // MLS Grid media URLs expire. Refresh the listing's Media records and
+      // retry the same photo index rather than leaving a broken image.
+      if (!listingId) throw firstError;
+      const freshListing = await fetchMLSGridLiveListing(listingId);
+      const freshPhoto = freshListing?.Media?.[mediaIndex];
+      if (!freshPhoto?.MediaURL) throw firstError;
+      imageUrl = freshPhoto.MediaURL;
+      image = await downloadMedia(imageUrl);
+    }
+
+    const imageKey = createHash('sha256').update(imageUrl).digest('hex');
+    const imagePath = 'mls/images/' + imageKey + '.image';
+    try {
+      await put(imagePath, image.bytes, {
         access: 'private',
         allowOverwrite: true,
         cacheControlMaxAge: 31536000,
-        contentType
+        contentType: image.contentType
       });
     } catch (error) {
+      // Still serve the downloaded image when Blob storage is unavailable.
       console.error('MLS image cache write failed:', error);
     }
 
-    return new Response(bytes, {
+    return new Response(image.bytes, {
       headers: {
-        'Content-Type': contentType,
+        'Content-Type': image.contentType,
         'Cache-Control': 'public, max-age=31536000, immutable',
+        'Vercel-CDN-Cache-Control': 'public, max-age=31536000, immutable',
         'X-Content-Type-Options': 'nosniff'
       }
     });
