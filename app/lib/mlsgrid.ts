@@ -338,6 +338,24 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   return [];
 }
 
+export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
+  const all: RESOProperty[] = [];
+
+  for (const source of sourceKeys()) {
+    if (!sourceToken(source)) continue;
+    try {
+      const records = await fetchAllPropertyRecords(source);
+      for (const record of records.filter(isInServiceArea)) {
+        all.push(normalizeMLSGridProperty(record, source));
+      }
+    } catch (error) {
+      console.error('MLS Grid live index failed for ' + source + ':', error);
+    }
+  }
+
+  return dedupeListings(all);
+}
+
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
   const sourceRecords: Array<{ source: string; records: MlsGridRecord[] }> = [];
 
