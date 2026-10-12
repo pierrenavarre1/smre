@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 type Photo = { MediaKey: string; MediaURL: string };
 
-export function ListingGallery({ photos, address }: { photos: Photo[]; address: string }) {
+export function ListingGallery({ photos, address, listingId }: { photos: Photo[]; address: string; listingId: string }) {
   const [open, setOpen] = useState<number | null>(null);
   const touchStart = useRef<number | null>(null);
 
@@ -28,12 +28,13 @@ export function ListingGallery({ photos, address }: { photos: Photo[]; address: 
   }, [open, photos.length]);
 
   if (!photos.length) return null;
+  const photoUrl = (index: number) => `/api/mls-image?url=${encodeURIComponent(photos[index].MediaURL)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
 
   return (
     <>
       <div className="gallery">
         <button type="button" className="gallery-photo-button gallery-main" onClick={() => setOpen(0)} aria-label="Open photo 1">
-          <img src={`/api/mls-image?url=${encodeURIComponent(photos[0].MediaURL)}`} alt={address} loading="eager" />
+          <img src={photoUrl(0)} alt={address} loading="eager" />
           <span className="gallery-view-label">View photos</span>
         </button>
         <div className="gallery-side">
@@ -45,7 +46,7 @@ export function ListingGallery({ photos, address }: { photos: Photo[]; address: 
               onClick={() => setOpen(index + 1)}
               aria-label={`Open photo ${index + 2}`}
             >
-              <img src={`/api/mls-image?url=${encodeURIComponent(media.MediaURL)}`} alt={`${address} property photo`} loading="lazy" />
+              <img src={photoUrl(index + 1)} alt={`${address} property photo`} loading="lazy" />
               {index === 3 && photos.length > 5 ? <span className="gallery-more">+{photos.length - 5} more</span> : null}
             </button>
           ))}
@@ -67,7 +68,7 @@ export function ListingGallery({ photos, address }: { photos: Photo[]; address: 
               if (Math.abs(delta) > 50) delta < 0 ? next() : previous();
             }}
           >
-            <img src={`/api/mls-image?url=${encodeURIComponent(photos[open].MediaURL)}`} alt={`${address} property photo ${open + 1}`} />
+            <img src={photoUrl(open)} alt={`${address} property photo ${open + 1}`} />
           </div>
           <button type="button" className="photo-lightbox-arrow photo-lightbox-next" onClick={(event) => { event.stopPropagation(); next(); }} aria-label="Next photo">›</button>
           <div className="photo-lightbox-count">{open + 1} / {photos.length}</div>
