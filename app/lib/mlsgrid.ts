@@ -90,13 +90,18 @@ export function isMLSGridConfigured() {
   return sourceKeys().some(source => Boolean(sourceToken(source)));
 }
 
-const MIN_REQUEST_INTERVAL_MS = 700;
+const MIN_REQUEST_INTERVAL_MS = 800;
 let lastRequestAt = 0;
+let mlsGridRequestQueue: Promise<void> = Promise.resolve();
 
 async function waitForMLSGridSlot() {
-  const wait = Math.max(0, MIN_REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt));
-  if (wait) await new Promise(resolve => setTimeout(resolve, wait));
-  lastRequestAt = Date.now();
+  const slot = mlsGridRequestQueue.then(async () => {
+    const wait = Math.max(0, MIN_REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt));
+    if (wait) await new Promise(resolve => setTimeout(resolve, wait));
+    lastRequestAt = Date.now();
+  });
+  mlsGridRequestQueue = slot.catch(() => undefined);
+  await slot;
 }
 
 export async function fetchMLSGridPage(
@@ -325,22 +330,11 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
   if (cached && cached.expiresAt > Date.now()) return cached.media;
 
-  // Older cached records may contain only the preview key from the exhausted
-  // Blob store. Replace that one-image placeholder with the current full MLS gallery.
+  // A stored image key cannot be repaired by querying MLS Grid during a page
+  // request. Doing so once per image/gallery creates an RPS burst and reuses
+  // single-use media URLs. Wait for storage/scheduled sync to repair the cache.
   const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
-  if (hasBlobPlaceholder) {
-    try {
-      const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
-      if (freshListing?.Media.length) {
-        freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: freshListing.Media });
-        const preferred = freshListing.Media.find(photo => photo.PreferredPhoto) || freshListing.Media[0];
-        freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
-        return freshListing.Media;
-      }
-    } catch (error) {
-      console.error('Refreshing listing gallery media failed:', error instanceof Error ? error.message : error);
-    }
-  }
+  if (hasBlobPlaceholder) return [];
 
   // Reuse media already available from the live feed or a healthy local cache.
   if (listing.Media.length && !hasBlobPlaceholder) {
@@ -361,10 +355,11 @@ export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
   for (const source of sourceKeys()) {
     if (!sourceToken(source)) continue;
     try {
-      // Fetch Media in the same paged request as listing metadata. A second
-      // round of 100-listing media lookups made a cold page load take 10+ seconds.
-      const records = await fetchAllPropertyRecords(source, true);
-      for (const record of records.filter(isInServiceArea)) {
+      // Emergency page fallback: request metadata only and fetch one page per
+      // MLS. Never expand/download every photo during a public page request.
+      // Full replication and photo downloads belong in the scheduled sync.
+      const page = await fetchMLSGridPage(source);
+      for (const record of (page.value || []).filter(isInServiceArea)) {
         all.push(normalizeMLSGridProperty(record, source));
       }
     } catch (error) {
