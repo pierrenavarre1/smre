@@ -9,11 +9,18 @@ let memorySummaryCache: { listings: RESOProperty[]; expiresAt: number } | null =
 const MEMORY_CACHE_MS = 30_000;
 
 async function readBlob(pathname: string): Promise<RESOProperty[]> {
-  const result = await get(pathname, { access: 'private', useCache: true });
-  if (!result || result.statusCode !== 200 || !result.stream) return [];
-  const text = await new Response(result.stream).text();
-  const parsed = JSON.parse(text);
-  return Array.isArray(parsed?.listings) ? parsed.listings : [];
+  try {
+    const result = await get(pathname, { access: 'private', useCache: true });
+    if (!result || result.statusCode !== 200 || !result.stream) return [];
+    const text = await new Response(result.stream).text();
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed?.listings) ? parsed.listings : [];
+  } catch {
+    // Blob may be temporarily unavailable or suspended. Do not let that
+    // prevent the site from rendering; the MLS sync can repopulate the cache
+    // once storage access is restored.
+    return [];
+  }
 }
 
 export async function readMLSCache(): Promise<RESOProperty[]> {
