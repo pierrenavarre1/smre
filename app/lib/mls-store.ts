@@ -13,10 +13,6 @@ async function readBlob(pathname: string): Promise<RESOProperty[]> {
   if (Date.now() < blobUnavailableUntil) return [];
   try {
     const result = await get(pathname, { access: 'private', useCache: true });
-    if (result?.statusCode === 403) {
-      blobUnavailableUntil = Date.now() + 5 * 60_000;
-      return [];
-    }
     if (!result || result.statusCode !== 200 || !result.stream) return [];
     const text = await new Response(result.stream).text();
     const parsed = JSON.parse(text);
