@@ -57,8 +57,6 @@ async function downloadMedia(rawUrl: string) {
 export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get('url');
   if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
-  const listingId = request.nextUrl.searchParams.get('listingId') || '';
-  const mediaIndex = Math.max(0, Number.parseInt(request.nextUrl.searchParams.get('index') || '0', 10) || 0);
 
   const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
   if (!storedKey) {
