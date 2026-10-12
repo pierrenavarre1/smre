@@ -112,7 +112,8 @@ export async function fetchMLSGridPage(
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
     '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and StandardStatus in ('Active','Pending')",
     ...(expandMedia ? { '$expand': 'Media' } : {}),
-    '$top': expandMedia ? '100' : '5000'
+    // MLS Grid allows up to 1,000 records when Media is expanded.
+    '$top': expandMedia ? '1000' : '5000'
   }).toString();
 
   const response = await fetch(endpoint, {
@@ -131,12 +132,12 @@ export async function fetchMLSGridPage(
   return response.json();
 }
 
-async function fetchAllPropertyRecords(source: string) {
+async function fetchAllPropertyRecords(source: string, expandMedia = false) {
   const records: MlsGridRecord[] = [];
   let url: string | undefined;
 
   do {
-    const page = await fetchMLSGridPage(source, url, false);
+    const page = await fetchMLSGridPage(source, url, expandMedia);
     records.push(...(page.value || []));
     url = page['@odata.nextLink'];
   } while (url);
@@ -324,9 +325,25 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
   if (cached && cached.expiresAt > Date.now()) return cached.media;
 
-  // Individual listing pages use the full photo set already saved by MLS sync.
-  // Avoid one MLS Grid API call every time a listing detail is opened.
-  if (listing.Media.length) {
+  // Older cached records may contain only the preview key from the exhausted
+  // Blob store. Replace that one-image placeholder with the current full MLS gallery.
+  const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
+  if (hasBlobPlaceholder) {
+    try {
+      const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
+      if (freshListing?.Media.length) {
+        freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: freshListing.Media });
+        const preferred = freshListing.Media.find(photo => photo.PreferredPhoto) || freshListing.Media[0];
+        freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
+        return freshListing.Media;
+      }
+    } catch (error) {
+      console.error('Refreshing listing gallery media failed:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  // Reuse media already available from the live feed or a healthy local cache.
+  if (listing.Media.length && !hasBlobPlaceholder) {
     freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: listing.Media });
     const preferred = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
     freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
@@ -344,12 +361,10 @@ export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
   for (const source of sourceKeys()) {
     if (!sourceToken(source)) continue;
     try {
-      const records = await fetchAllPropertyRecords(source);
-      const serviceAreaRecords = records.filter(isInServiceArea);
-      // Media must be fetched explicitly. The lightweight property response
-      // does not include photos, which is why cards went blank during fallback.
-      const recordsWithMedia = await fetchMediaForRecords(source, serviceAreaRecords);
-      for (const record of recordsWithMedia) {
+      // Fetch Media in the same paged request as listing metadata. A second
+      // round of 100-listing media lookups made a cold page load take 10+ seconds.
+      const records = await fetchAllPropertyRecords(source, true);
+      for (const record of records.filter(isInServiceArea)) {
         all.push(normalizeMLSGridProperty(record, source));
       }
     } catch (error) {
