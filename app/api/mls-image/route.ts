@@ -8,27 +8,14 @@ function allowedMediaHost(hostname: string) {
   return host === 'media.mlsgrid.com' || host.endsWith('.mlsgrid.com') || host === 's3.amazonaws.com' || host.endsWith('.s3.amazonaws.com') || host.endsWith('.amazonaws.com');
 }
 
-let mediaQueue: Promise<void> = Promise.resolve();
-let lastMediaDownloadAt = 0;
-const MEDIA_MIN_INTERVAL_MS = 650;
 const inFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string }>>();
-
-function queueMediaDownload(task: () => Promise<{ bytes: ArrayBuffer; contentType: string }>) {
-  const run = mediaQueue.then(async () => {
-    const wait = Math.max(0, MEDIA_MIN_INTERVAL_MS - (Date.now() - lastMediaDownloadAt));
-    if (wait) await new Promise(resolve => setTimeout(resolve, wait));
-    lastMediaDownloadAt = Date.now();
-    return task();
-  });
-  mediaQueue = run.then(() => undefined, () => undefined);
-  return run;
-}
+let blobUnavailableUntil = 0;
 
 async function downloadMedia(rawUrl: string) {
   const existing = inFlight.get(rawUrl);
   if (existing) return existing;
 
-  const promise = queueMediaDownload(async () => {
+  const promise = (async () => {
     const token = process.env.MLSGRID_ACCESS_TOKEN;
     if (!token) throw new Error('MLS Grid access token is not configured.');
 
@@ -58,7 +45,7 @@ async function downloadMedia(rawUrl: string) {
     } finally {
       clearTimeout(timeout);
     }
-  });
+  })();
 
   inFlight.set(rawUrl, promise);
   try {
@@ -86,23 +73,36 @@ export async function GET(request: NextRequest) {
   const key = storedKey || createHash('sha256').update(rawUrl).digest('hex');
   const pathname = 'mls/images/' + key + '.image';
 
-  try {
-    const cached = await get(pathname, { access: 'private', useCache: true });
-    if (cached?.statusCode === 200 && cached.stream) {
-      return new Response(cached.stream, {
-        headers: {
-          'Content-Type': cached.blob.contentType || 'image/jpeg',
-          'Cache-Control': 'public, max-age=31536000, immutable',
-          'X-Content-Type-Options': 'nosniff'
-        }
-      });
+  if (Date.now() >= blobUnavailableUntil) {
+    try {
+      const cached = await get(pathname, { access: 'private', useCache: true });
+      if (cached?.statusCode === 200 && cached.stream) {
+        return new Response(cached.stream, {
+          headers: {
+            'Content-Type': cached.blob.contentType || 'image/jpeg',
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'X-Content-Type-Options': 'nosniff'
+          }
+        });
+      }
+      if (cached?.statusCode === 403) blobUnavailableUntil = Date.now() + 5 * 60_000;
+    } catch {
+      // Avoid repeating a failing Blob lookup for every image in the same warm instance.
+      blobUnavailableUntil = Date.now() + 5 * 60_000;
     }
-  } catch {}
-
-  if (storedKey) return new Response('Stored image not found.', { status: 404 });
+  }
 
   try {
     let imageUrl = rawUrl;
+    if (storedKey) {
+      // A stored key cannot be resolved while Blob is unavailable. Ask MLS Grid
+      // for a fresh, signed URL for this exact gallery photo instead.
+      if (!listingId) return new Response('Stored image unavailable.', { status: 404 });
+      const freshListing = await fetchMLSGridLiveListing(listingId);
+      const freshPhoto = freshListing?.Media?.[mediaIndex];
+      if (!freshPhoto?.MediaURL) return new Response('Stored image unavailable.', { status: 404 });
+      imageUrl = freshPhoto.MediaURL;
+    }
     let image: { bytes: ArrayBuffer; contentType: string };
 
     try {
