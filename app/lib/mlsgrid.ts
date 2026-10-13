@@ -95,7 +95,7 @@ const MIN_REQUEST_INTERVAL_MS = 800;
 let lastRequestAt = 0;
 let mlsGridRequestQueue: Promise<void> = Promise.resolve();
 
-async function waitForMLSGridSlot() {
+export async function waitForMLSGridSlot() {
   const slot = mlsGridRequestQueue.then(async () => {
     const wait = Math.max(0, MIN_REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt));
     if (wait) await new Promise(resolve => setTimeout(resolve, wait));
