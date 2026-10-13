@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { fetchMLSGridListings } from '../../lib/mlsgrid';
 import { writeMLSCache } from '../../lib/mls-store';
 
-export const maxDuration = 300;
+// Pro supports longer functions, but media downloads remain rate-limited and deduplicated.
+export const maxDuration = 800;
 
 function authorized(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
