@@ -62,7 +62,7 @@ async function releaseSyncLock(owner: string) {
   }
 }
 const DAILY_INTERVAL_MS = 23 * 60 * 60 * 1000;
-const RECORDS_PER_INVOCATION = 50;
+const RECORDS_PER_INVOCATION = 10;
 const SERVICE_CITIES = new Set([
   'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka',
   'st george', 'saint george', 'rossville', 'silver lake', 'auburn', 'willard',
@@ -150,7 +150,7 @@ function photos(record: MlsGridRecord): RESOMedia[] {
     .filter((item: any) => item?.MediaURL && (!item.MediaCategory || String(item.MediaCategory).toLowerCase() === 'photo'))
     .map((item: any, index: number) => ({
       MediaKey: String(item.MediaKey || `${record.ListingKey || record.ListingId || 'media'}-${index}`),
-      MediaURL: String(item.MediaURL).replace(/^http:/i, 'https:'),
+      MediaURL: String(item.MediaURL),
       MediaCategory: 'Photo' as const,
       ShortDescription: typeof item.ShortDescription === 'string' ? item.ShortDescription : undefined,
       PreferredPhoto: item.PreferredPhoto === true || item.PreferredPhotoYN === true || String(item.PreferredPhotoYN).toLowerCase() === 'true',
@@ -165,52 +165,78 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     record.Media = [];
     return;
   }
-  const token = process.env.MLSGRID_ACCESS_TOKEN;
-  if (!token) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
+  if (!process.env.MLSGRID_ACCESS_TOKEN) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
+
   const key = storageKey(source, preview.MediaKey);
-  for (let attempt = 0; attempt < 5; attempt++) {
-    try {
-      await waitForMLSGridSlot();
-      const response = await fetch(preview.MediaURL, {
-        headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
-        redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(15000)
-      });
-      if (response.status === 429) {
-        const retryAfter = Number(response.headers.get('retry-after') || '');
-        let detail = '';
-        try { detail = (await response.text()).slice(0, 500); } catch {}
-        const retryAfterMs = Number.isFinite(retryAfter) && retryAfter > 0
-          ? retryAfter * 1000
-          : RATE_LIMIT_COOLDOWN_MS;
-        throw new MLSGridRateLimitError(retryAfterMs, detail);
-      }
-      if (!response.ok || !response.body) throw new Error('MLS image download failed: ' + response.status + ' ' + response.statusText);
-      const contentType = response.headers.get('content-type') || 'image/jpeg';
-      if (!contentType.toLowerCase().startsWith('image/')) throw new Error('MLS media URL returned non-image content.');
-      await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
-        access: 'private', allowOverwrite: true, cacheControlMaxAge: 31536000, contentType
-      });
-      record.Media = [{ ...preview, MediaURL: 'smre-blob:' + key }];
-      return;
-    } catch (error) {
-      // A 429 must escape this retry loop so the batch handler can persist a
-      // cooldown and stop the entire sync. Retrying here was swallowing the
-      // rate-limit signal and allowing the worker to advance without photos.
-      if (error instanceof MLSGridRateLimitError) {
-        console.error('MLS preview download received HTTP 429', {
-          source,
-          listingId: String(record.ListingId || record.ListingKey || ''),
-          detail: error.detail
-        });
-        throw error;
-      }
-      if (attempt === 2) {
-        console.error('MLS preview image failed for ' + source + ':' + String(record.ListingId || record.ListingKey || ''), error instanceof Error ? error.message : error);
-        record.Media = [];
-        return;
-      }
-      await new Promise(resolve => setTimeout(resolve, Math.min(2_000 * Math.pow(2, attempt), 15_000)));
+  try {
+    // MLS Grid media URLs are signed, single-use URLs. Use the exact URL returned
+    // by the API and never retry it: even a failed/expired URL may not be reused.
+    await waitForMLSGridSlot();
+    const response = await fetch(preview.MediaURL, {
+      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*' },
+      redirect: 'follow',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(15000)
+    });
+
+    if (response.status === 429) {
+      const retryAfter = Number(response.headers.get('retry-after') || '');
+      let detail = '';
+      try { detail = (await response.text()).slice(0, 500); } catch {}
+      const retryAfterMs = Number.isFinite(retryAfter) && retryAfter > 0
+        ? retryAfter * 1000
+        : RATE_LIMIT_COOLDOWN_MS;
+      throw new MLSGridRateLimitError(retryAfterMs, detail);
     }
+
+    if (!response.ok || !response.body) {
+      let detail = '';
+      try { detail = (await response.text()).slice(0, 300); } catch {}
+      console.error('MLS preview image rejected', {
+        source,
+        listingId: String(record.ListingId || record.ListingKey || ''),
+        status: response.status,
+        host: (() => { try { return new URL(preview.MediaURL).hostname; } catch { return 'invalid-url'; } })(),
+        detail
+      });
+      // Do not retry this signed URL. A later sync must request a fresh URL.
+      record.Media = [];
+      return;
+    }
+
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    if (!contentType.toLowerCase().startsWith('image/')) {
+      console.error('MLS preview URL returned non-image content', {
+        source,
+        listingId: String(record.ListingId || record.ListingKey || ''),
+        contentType
+      });
+      record.Media = [];
+      return;
+    }
+
+    await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
+      access: 'private',
+      allowOverwrite: true,
+      cacheControlMaxAge: 31536000,
+      contentType
+    });
+    record.Media = [{ ...preview, MediaURL: 'smre-blob:' + key }];
+  } catch (error) {
+    if (error instanceof MLSGridRateLimitError) {
+      console.error('MLS preview download received HTTP 429', {
+        source,
+        listingId: String(record.ListingId || record.ListingKey || ''),
+        detail: error.detail
+      });
+      throw error;
+    }
+    console.error('MLS preview image/storage failed', {
+      source,
+      listingId: String(record.ListingId || record.ListingKey || ''),
+      error: error instanceof Error ? error.message : String(error)
+    });
+    record.Media = [];
   }
 }
 async function fetchMediaForChangedRecords(source: string, records: MlsGridRecord[]) {
