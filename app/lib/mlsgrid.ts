@@ -46,7 +46,7 @@ function media(record: MlsGridRecord) {
     .filter((m: any) => m?.MediaURL && (!m.MediaCategory || String(m.MediaCategory).toLowerCase() === 'photo'))
     .map((m: any, index: number) => ({
       MediaKey: String(m.MediaKey || `${record.ListingKey || record.ListingId || 'media'}-${index}`),
-      MediaURL: String(m.MediaURL).replace(/^http:/i, 'https:'),
+      MediaURL: String(m.MediaURL),
       MediaCategory: 'Photo' as const,
       ShortDescription: firstString(m.ShortDescription),
       PreferredPhoto: m.PreferredPhoto === true || m.PreferredPhotoYN === true || String(m.PreferredPhotoYN).toLowerCase() === 'true',
