@@ -1,5 +1,5 @@
 import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
-import { put } from '@vercel/blob';
+import { get, put } from '@vercel/blob';
 import { readMLSCache } from './mls-store';
 
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
@@ -226,8 +226,19 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], e
     // Preserve a previously downloaded local image when the MLS MediaKey is unchanged.
     // This prevents daily syncs from downloading and rewriting the same preview again.
     if (oldPreview?.MediaURL?.startsWith('smre-blob:') && oldPreview.MediaKey === preview.MediaKey) {
-      record.Media = [{ ...preview, MediaURL: oldPreview.MediaURL }];
-      continue;
+      const oldKey = oldPreview.MediaURL.slice('smre-blob:'.length);
+      try {
+        // Verify the referenced local image still exists. A previous interrupted
+        // cleanup may have removed image blobs while leaving the listing JSON intact.
+        const stored = await get('mls/images/' + oldKey + '.image', { access: 'private', useCache: false });
+        if (stored?.statusCode === 200 && stored.stream) {
+          await stored.stream.cancel();
+          record.Media = [{ ...preview, MediaURL: oldPreview.MediaURL }];
+          continue;
+        }
+      } catch {
+        // Missing cache entry: refresh it from MLS Grid below.
+      }
     }
 
     jobs.push({ record, photo: preview as RESOMedia });
