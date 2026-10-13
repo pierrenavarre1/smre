@@ -1,5 +1,6 @@
 import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
-import { del, list, put } from '@vercel/blob';
+import { put } from '@vercel/blob';
+import { readMLSCache } from './mls-store';
 
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
 const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
@@ -204,18 +205,7 @@ function mediaStorageKey(value: string) {
   return (a >>> 0).toString(16).padStart(8, '0') + (b >>> 0).toString(16).padStart(8, '0');
 }
 
-async function clearStoredMLSImages() {
-  let cursor: string | undefined;
-  do {
-    const page = await list({ prefix: 'mls/images/', limit: 1000, ...(cursor ? { cursor } : {}) });
-    if (page.blobs.length) {
-      await del(page.blobs.map(blob => blob.url));
-    }
-    cursor = page.hasMore ? page.cursor : undefined;
-  } while (cursor);
-}
-
-async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
+async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], existingById: Map<string, RESOProperty>) {
   const token = sourceToken(source);
   if (!token) return;
 
@@ -225,8 +215,22 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
   for (const record of records) {
     const photos = media(record);
     const preview = photos.find(photo => photo.PreferredPhoto) || photos[0];
+    if (!preview) {
+      record.Media = [];
+      continue;
+    }
+
+    const originalId = String(record.ListingId || record.ListingKey || '');
+    const existing = existingById.get(source + ':' + originalId);
+    const oldPreview = existing?.Media?.find(photo => photo.PreferredPhoto) || existing?.Media?.[0];
+    // Preserve a previously downloaded local image when the MLS MediaKey is unchanged.
+    // This prevents daily syncs from downloading and rewriting the same preview again.
+    if (oldPreview?.MediaURL?.startsWith('smre-blob:') && oldPreview.MediaKey === preview.MediaKey) {
+      record.Media = [{ ...preview, MediaURL: oldPreview.MediaURL }];
+      continue;
+    }
+
     jobs.push({ record, photo: preview as RESOMedia });
-    if (!preview) record.Media = [];
   }
   const validJobs = jobs.filter(job => Boolean(job.photo));
   let cursor = 0;
@@ -234,6 +238,8 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[]) {
   async function downloadWithRetry(photo: RESOMedia) {
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
+        // Share the same serialized 800 ms request gate across API and media requests.
+        await waitForMLSGridSlot();
         const response = await fetch(photo.MediaURL, {
           headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token! },
           redirect: 'follow',
@@ -389,6 +395,8 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
 }
 
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
+  const existingListings = await readMLSCache();
+  const existingById = new Map(existingListings.map(listing => [listing.ListingId, listing]));
   const sourceRecords: Array<{ source: string; records: MlsGridRecord[] }> = [];
 
   for (const source of sourceKeys()) {
@@ -407,19 +415,9 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
     }
   }
 
-  // Clear the old full-size image cache only after metadata retrieval succeeds.
-  // The previous all-photo cache exceeded the Hobby plan's 1 GB storage limit.
-  if (sourceRecords.length) {
-    try {
-      await clearStoredMLSImages();
-    } catch (error) {
-      console.error('MLS image cache cleanup failed:', error instanceof Error ? error.message : error);
-    }
-  }
-
   const all: RESOProperty[] = [];
   for (const { source, records } of sourceRecords) {
-    await downloadAndStoreMedia(source, records);
+    await downloadAndStoreMedia(source, records, existingById);
     for (const record of records) {
       all.push(normalizeMLSGridProperty(record, source));
     }
