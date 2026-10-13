@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchMLSGridListings } from '../../lib/mlsgrid';
-import { writeMLSCache } from '../../lib/mls-store';
+import { runIncrementalMLSGridSync } from '../../lib/mls-sync-incremental';
 
-// Pro supports longer functions, but media downloads remain rate-limited and deduplicated.
+// Pro supports longer functions, but the normal daily sync should now finish
+// quickly because unchanged listings and their images are reused.
 export const maxDuration = 800;
 
 function authorized(request: NextRequest) {
@@ -16,9 +16,8 @@ export async function GET(request: NextRequest) {
   if (!process.env.MLSGRID_ACCESS_TOKEN) return NextResponse.json({ error: 'MLS Grid access token is not configured.' }, { status: 503 });
 
   try {
-    const listings = await fetchMLSGridListings();
-    await writeMLSCache(listings);
-    return NextResponse.json({ ok: true, count: listings.length, updatedAt: new Date().toISOString() });
+    const result = await runIncrementalMLSGridSync();
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     console.error('MLS sync failed:', error);
     return NextResponse.json({ error: 'MLS sync failed.' }, { status: 500 });
