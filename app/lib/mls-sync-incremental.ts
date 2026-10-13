@@ -22,7 +22,7 @@ type SyncState = {
 const STATE_PATH = 'mls/sync-state.json';
 const STAGING_ROOT = 'mls/sync-staging';
 const DAILY_INTERVAL_MS = 23 * 60 * 60 * 1000;
-const RECORDS_PER_INVOCATION = 30;
+const RECORDS_PER_INVOCATION = 15;
 const SERVICE_CITIES = new Set([
   'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka',
   'st george', 'saint george', 'rossville', 'silver lake', 'auburn', 'willard',
@@ -120,15 +120,20 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
   const token = process.env.MLSGRID_ACCESS_TOKEN;
   if (!token) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
   const key = storageKey(source, preview.MediaKey);
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 5; attempt++) {
     try {
       await waitForMLSGridSlot();
       const response = await fetch(preview.MediaURL, {
         headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
         redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(15000)
       });
-      if (response.status === 429 && attempt < 2) {
-        await new Promise(resolve => setTimeout(resolve, 1500 * (attempt + 1)));
+      if (response.status === 429 && attempt < 4) {
+        const retryAfter = Number(response.headers.get('retry-after') || '');
+        const backoffMs = Number.isFinite(retryAfter) && retryAfter > 0
+          ? Math.min(retryAfter * 1000, 30_000)
+          : Math.min(5_000 * Math.pow(2, attempt), 30_000);
+        console.warn('MLS media rate limited; backing off', { source, listingId: record.ListingId, backoffMs, attempt: attempt + 1 });
+        await new Promise(resolve => setTimeout(resolve, backoffMs));
         continue;
       }
       if (!response.ok || !response.body) throw new Error('MLS image download failed: ' + response.status + ' ' + response.statusText);
@@ -145,7 +150,7 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
         record.Media = [];
         return;
       }
-      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+      await new Promise(resolve => setTimeout(resolve, Math.min(2_000 * Math.pow(2, attempt), 15_000)));
     }
   }
 }
@@ -240,6 +245,13 @@ export async function runIncrementalMLSGridSync() {
       state.nextUrl = undefined;
     }
     await writeJson(STATE_PATH, state);
+    console.log('MLS sync metadata page saved', {
+      runId: state.runId,
+      source,
+      records: stagedRecords.length,
+      pagesSaved: state.pagePaths.length,
+      hasNextPage: Boolean(state.nextUrl)
+    });
     return { ok: true, status: 'metadata-page-saved', source, records: stagedRecords.length, pagesSaved: state.pagePaths.length };
   }
 
@@ -267,12 +279,26 @@ export async function runIncrementalMLSGridSync() {
     if (!page) throw new Error('MLS sync staging page is missing: ' + path);
     const end = Math.min(page.records.length, state.recordIndex + RECORDS_PER_INVOCATION);
     const batch = page.records.slice(state.recordIndex, end);
+    console.log('MLS sync media batch starting', {
+      runId: state.runId,
+      page: state.pageIndex + 1,
+      pages: state.pagePaths.length,
+      start: state.recordIndex,
+      count: batch.length
+    });
     const processed = await processBatch(batch, existingById);
     for (let i = 0; i < processed.length; i++) page.processed[state.recordIndex + i] = processed[i];
     await writeJson(path, page);
     state.recordIndex = end;
     if (state.recordIndex >= page.records.length) { state.pageIndex++; state.recordIndex = 0; }
     await writeJson(STATE_PATH, state);
+    console.log('MLS sync media batch saved', {
+      runId: state.runId,
+      processed: processed.length,
+      nextPage: state.pageIndex + 1,
+      pages: state.pagePaths.length,
+      complete: state.pageIndex >= state.pagePaths.length
+    });
     return { ok: true, status: 'media-batch-saved', processed: processed.length, page: state.pageIndex + 1, pages: state.pagePaths.length, complete: state.pageIndex >= state.pagePaths.length };
   }
   return { ok: true, status: state.phase };
