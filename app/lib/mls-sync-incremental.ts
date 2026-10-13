@@ -26,7 +26,8 @@ const STATE_PATH = 'mls/sync-state.json';
 const LOCK_PATH = 'mls/sync-lock.json';
 const STAGING_ROOT = 'mls/sync-staging';
 const LOCK_TTL_MS = 10 * 60 * 1000;
-const RATE_LIMIT_COOLDOWN_MS = 60 * 60 * 1000;
+// A media-download 429 can be a short burst limit, not a full account suspension.
+const RATE_LIMIT_COOLDOWN_MS = 5 * 60 * 1000;
 
 class MLSGridRateLimitError extends Error {
   constructor(public retryAfterMs: number, public detail: string) {
@@ -276,6 +277,14 @@ export async function runIncrementalMLSGridSync() {
   try {
   let state = await loadState();
   if (state?.blockedUntil && Date.parse(state.blockedUntil) > Date.now()) {
+    // Older versions persisted a one-hour pause even when MLS Grid reports the
+    // subscription is in good standing. Shorten that legacy pause once so the
+    // sync can retry cautiously, without repeatedly hitting the service.
+    const remainingMs = Date.parse(state.blockedUntil) - Date.now();
+    if (remainingMs > RATE_LIMIT_COOLDOWN_MS) {
+      state.blockedUntil = new Date(Date.now() + RATE_LIMIT_COOLDOWN_MS).toISOString();
+      await writeJson(STATE_PATH, state);
+    }
     return { ok: true, status: 'rate-limited', retryAt: state.blockedUntil };
   }
   if (state?.blockedUntil && Date.parse(state.blockedUntil) <= Date.now()) {
