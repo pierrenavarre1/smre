@@ -182,6 +182,17 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
       record.Media = [{ ...preview, MediaURL: 'smre-blob:' + key }];
       return;
     } catch (error) {
+      // A 429 must escape this retry loop so the batch handler can persist a
+      // cooldown and stop the entire sync. Retrying here was swallowing the
+      // rate-limit signal and allowing the worker to advance without photos.
+      if (error instanceof MLSGridRateLimitError) {
+        console.error('MLS preview download received HTTP 429', {
+          source,
+          listingId: String(record.ListingId || record.ListingKey || ''),
+          detail: error.detail
+        });
+        throw error;
+      }
       if (attempt === 2) {
         console.error('MLS preview image failed for ' + source + ':' + String(record.ListingId || record.ListingKey || ''), error instanceof Error ? error.message : error);
         record.Media = [];
