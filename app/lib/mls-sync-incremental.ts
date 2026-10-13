@@ -257,7 +257,7 @@ export async function runIncrementalMLSGridSync() {
       await writeJson(STATE_PATH, {
         ...state, phase: 'idle', lastCompletedAt: completedAt, pagePaths: [], pageIndex: 0, recordIndex: 0
       } satisfies SyncState);
-      try { await del(pathsToDelete, { access: 'private' }); }
+      try { await del(pathsToDelete); }
       catch (error) { console.warn('Could not clean MLS staging files:', error instanceof Error ? error.message : error); }
       console.log('MLS incremental sync completed', { listings: listings.length, durationMs: Date.now() - Date.parse(state.startedAt) });
       return { ok: true, status: 'completed', listings: listings.length, updatedAt: completedAt };
