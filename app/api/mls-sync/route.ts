@@ -7,8 +7,7 @@ export const maxDuration = 300;
 
 function authorized(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret && request.headers.get('authorization') === 'Bearer ' + cronSecret) return true;
-  return request.headers.get('user-agent')?.startsWith('vercel-cron/') === true;
+  return Boolean(cronSecret && request.headers.get('authorization') === 'Bearer ' + cronSecret);
 }
 
 export async function GET(request: NextRequest) {
