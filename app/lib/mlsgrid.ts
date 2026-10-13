@@ -91,7 +91,7 @@ export function isMLSGridConfigured() {
   return sourceKeys().some(source => Boolean(sourceToken(source)));
 }
 
-const MIN_REQUEST_INTERVAL_MS = 800;
+const MIN_REQUEST_INTERVAL_MS = 1500;
 let lastRequestAt = 0;
 let mlsGridRequestQueue: Promise<void> = Promise.resolve();
 
@@ -249,7 +249,7 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], e
   async function downloadWithRetry(photo: RESOMedia) {
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
-        // Share the same serialized 800 ms request gate across API and media requests.
+        // Share a serialized 1.5-second request gate across API and media requests.
         await waitForMLSGridSlot();
         const response = await fetch(photo.MediaURL, {
           headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token! },
@@ -290,8 +290,9 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], e
     return '';
   }
 
-  // Two workers avoids the request burst caused by the previous 16-worker pool.
-  const workers = Array.from({ length: 2 }, async () => {
+  // One worker is intentional: the subscription's published limit is 1 request per second.
+  // Keep media downloads strictly serialized with API calls to avoid 429 cooldowns.
+  const workers = Array.from({ length: 1 }, async () => {
     while (cursor < validJobs.length) {
       const job = validJobs[cursor++];
       const key = await downloadWithRetry(job.photo);
