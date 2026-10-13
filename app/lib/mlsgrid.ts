@@ -46,7 +46,7 @@ function media(record: MlsGridRecord) {
     .filter((m: any) => m?.MediaURL && (!m.MediaCategory || String(m.MediaCategory).toLowerCase() === 'photo'))
     .map((m: any, index: number) => ({
       MediaKey: String(m.MediaKey || `${record.ListingKey || record.ListingId || 'media'}-${index}`),
-      MediaURL: String(m.MediaURL).replace(/^http:/i, 'https:'),
+      MediaURL: String(m.MediaURL),
       MediaCategory: 'Photo' as const,
       ShortDescription: firstString(m.ShortDescription),
       PreferredPhoto: m.PreferredPhoto === true || m.PreferredPhotoYN === true || String(m.PreferredPhotoYN).toLowerCase() === 'true',
@@ -132,7 +132,15 @@ export async function fetchMLSGridPage(
   });
 
   if (!response.ok) {
-    throw new Error('MLS Grid request failed for ' + source + ': ' + response.status + ' ' + response.statusText);
+    let detail = '';
+    if (response.status === 429) {
+      try { detail = (await response.text()).slice(0, 500); } catch {}
+    }
+    const error = new Error('MLS Grid request failed for ' + source + ': ' + response.status + ' ' + response.statusText + (detail ? ' - ' + detail : '')) as Error & { status?: number; retryAfterMs?: number };
+    error.status = response.status;
+    const retryAfter = Number(response.headers.get('retry-after') || '');
+    error.retryAfterMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : undefined;
+    throw error;
   }
 
   return response.json();

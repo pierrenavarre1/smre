@@ -27,7 +27,7 @@ const LOCK_PATH = 'mls/sync-lock.json';
 const STAGING_ROOT = 'mls/sync-staging';
 const LOCK_TTL_MS = 10 * 60 * 1000;
 // A media-download 429 can be a short burst limit, not a full account suspension.
-const RATE_LIMIT_COOLDOWN_MS = 5 * 60 * 1000;
+const RATE_LIMIT_COOLDOWN_MS = 15 * 60 * 1000;
 
 class MLSGridRateLimitError extends Error {
   constructor(public retryAfterMs: number, public detail: string) {
@@ -62,7 +62,7 @@ async function releaseSyncLock(owner: string) {
   }
 }
 const DAILY_INTERVAL_MS = 23 * 60 * 60 * 1000;
-const RECORDS_PER_INVOCATION = 50;
+const RECORDS_PER_INVOCATION = 10;
 const SERVICE_CITIES = new Set([
   'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka',
   'st george', 'saint george', 'rossville', 'silver lake', 'auburn', 'willard',
@@ -150,7 +150,7 @@ function photos(record: MlsGridRecord): RESOMedia[] {
     .filter((item: any) => item?.MediaURL && (!item.MediaCategory || String(item.MediaCategory).toLowerCase() === 'photo'))
     .map((item: any, index: number) => ({
       MediaKey: String(item.MediaKey || `${record.ListingKey || record.ListingId || 'media'}-${index}`),
-      MediaURL: String(item.MediaURL).replace(/^http:/i, 'https:'),
+      MediaURL: String(item.MediaURL),
       MediaCategory: 'Photo' as const,
       ShortDescription: typeof item.ShortDescription === 'string' ? item.ShortDescription : undefined,
       PreferredPhoto: item.PreferredPhoto === true || item.PreferredPhotoYN === true || String(item.PreferredPhotoYN).toLowerCase() === 'true',
@@ -165,75 +165,110 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     record.Media = [];
     return;
   }
-  const token = process.env.MLSGRID_ACCESS_TOKEN;
-  if (!token) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
+  if (!process.env.MLSGRID_ACCESS_TOKEN) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
+
   const key = storageKey(source, preview.MediaKey);
-  for (let attempt = 0; attempt < 5; attempt++) {
-    try {
-      await waitForMLSGridSlot();
-      const response = await fetch(preview.MediaURL, {
-        headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
-        redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(15000)
-      });
-      if (response.status === 429) {
-        const retryAfter = Number(response.headers.get('retry-after') || '');
-        let detail = '';
-        try { detail = (await response.text()).slice(0, 500); } catch {}
-        const retryAfterMs = Number.isFinite(retryAfter) && retryAfter > 0
-          ? retryAfter * 1000
-          : RATE_LIMIT_COOLDOWN_MS;
-        throw new MLSGridRateLimitError(retryAfterMs, detail);
-      }
-      if (!response.ok || !response.body) throw new Error('MLS image download failed: ' + response.status + ' ' + response.statusText);
-      const contentType = response.headers.get('content-type') || 'image/jpeg';
-      if (!contentType.toLowerCase().startsWith('image/')) throw new Error('MLS media URL returned non-image content.');
-      await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
-        access: 'private', allowOverwrite: true, cacheControlMaxAge: 31536000, contentType
-      });
-      record.Media = [{ ...preview, MediaURL: 'smre-blob:' + key }];
-      return;
-    } catch (error) {
-      // A 429 must escape this retry loop so the batch handler can persist a
-      // cooldown and stop the entire sync. Retrying here was swallowing the
-      // rate-limit signal and allowing the worker to advance without photos.
-      if (error instanceof MLSGridRateLimitError) {
-        console.error('MLS preview download received HTTP 429', {
-          source,
-          listingId: String(record.ListingId || record.ListingKey || ''),
-          detail: error.detail
-        });
-        throw error;
-      }
-      if (attempt === 2) {
-        console.error('MLS preview image failed for ' + source + ':' + String(record.ListingId || record.ListingKey || ''), error instanceof Error ? error.message : error);
-        record.Media = [];
-        return;
-      }
-      await new Promise(resolve => setTimeout(resolve, Math.min(2_000 * Math.pow(2, attempt), 15_000)));
+  try {
+    // MLS Grid media URLs are signed, single-use URLs. Use the exact URL returned
+    // by the API and never retry it: even a failed/expired URL may not be reused.
+    await waitForMLSGridSlot();
+    const response = await fetch(preview.MediaURL, {
+      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': process.env.MLSGRID_ACCESS_TOKEN! },
+      redirect: 'follow',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(15000)
+    });
+
+    if (response.status === 429) {
+      const retryAfter = Number(response.headers.get('retry-after') || '');
+      let detail = '';
+      try { detail = (await response.text()).slice(0, 500); } catch {}
+      const retryAfterMs = Number.isFinite(retryAfter) && retryAfter > 0
+        ? retryAfter * 1000
+        : RATE_LIMIT_COOLDOWN_MS;
+      throw new MLSGridRateLimitError(retryAfterMs, detail);
     }
+
+    if (!response.ok || !response.body) {
+      let detail = '';
+      try { detail = (await response.text()).slice(0, 300); } catch {}
+      console.error('MLS preview image rejected', {
+        source,
+        listingId: String(record.ListingId || record.ListingKey || ''),
+        status: response.status,
+        host: (() => { try { return new URL(preview.MediaURL).hostname; } catch { return 'invalid-url'; } })(),
+        detail
+      });
+      // Do not retry this signed URL. A later sync must request a fresh URL.
+      record.Media = [];
+      return;
+    }
+
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    if (!contentType.toLowerCase().startsWith('image/')) {
+      console.error('MLS preview URL returned non-image content', {
+        source,
+        listingId: String(record.ListingId || record.ListingKey || ''),
+        contentType
+      });
+      record.Media = [];
+      return;
+    }
+
+    await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
+      access: 'private',
+      allowOverwrite: true,
+      cacheControlMaxAge: 31536000,
+      contentType
+    });
+    record.Media = [{ ...preview, MediaURL: 'smre-blob:' + key }];
+  } catch (error) {
+    if (error instanceof MLSGridRateLimitError) {
+      console.error('MLS preview download received HTTP 429', {
+        source,
+        listingId: String(record.ListingId || record.ListingKey || ''),
+        detail: error.detail
+      });
+      throw error;
+    }
+    console.error('MLS preview image/storage failed', {
+      source,
+      listingId: String(record.ListingId || record.ListingKey || ''),
+      error: error instanceof Error ? error.message : String(error)
+    });
+    record.Media = [];
   }
 }
-async function fetchMediaForChangedRecords(source: string, records: MlsGridRecord[]) {
-  if (!records.length) return;
-  const ids = records.map(record => String(record.ListingId || record.ListingKey || '')).filter(Boolean);
-  if (!ids.length) return;
-  const values = ids.map(id => "'" + id.replace(/'/g, "''") + "'").join(',');
-  const filter = "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and ListingId in (" + values + ")";
-  const page = await fetchMLSGridPage(source, 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
-    '$filter': filter, '$expand': 'Media', '$top': String(Math.max(100, ids.length))
-  }).toString(), true);
-  const mediaById = new Map<string, any[]>();
-  for (const item of page.value || []) {
-    const id = String(item.ListingId || item.ListingKey || '');
-    if (id) mediaById.set(id, Array.isArray(item.Media) ? item.Media : []);
+async function fetchMediaForRecord(source: string, record: MlsGridRecord) {
+  const id = String(record.ListingId || record.ListingKey || '');
+  if (!id) { record.Media = []; return; }
+  const filter = "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and ListingId eq '" + id.replace(/'/g, "''") + "'";
+  let page;
+  try {
+    // Fetch a URL for only this listing, then download it immediately. MLS Grid
+    // URLs are signed and single-use, so batching many URLs before downloading
+    // risks consuming/expiring them before their turn.
+    page = await fetchMLSGridPage(source, 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
+      '$filter': filter, '$expand': 'Media', '$top': '1'
+    }).toString(), true);
+  } catch (error) {
+    const e = error as Error & { status?: number; retryAfterMs?: number };
+    if (e.status === 429 || /: 429\b/.test(e.message || '')) {
+      throw new MLSGridRateLimitError(e.retryAfterMs || RATE_LIMIT_COOLDOWN_MS, e.message || 'MLS Grid returned HTTP 429');
+    }
+    throw error;
   }
-  for (const record of records) {
-    const id = String(record.ListingId || record.ListingKey || '');
-    record.Media = mediaById.get(id) || [];
-  }
+  const match = (page.value || []).find((item: MlsGridRecord) => String(item.ListingId || item.ListingKey || '') === id);
+  record.Media = match && Array.isArray(match.Media) ? match.Media : [];
 }
+
 async function processBatch(records: StagedRecord[], existingById: Map<string, RESOProperty>) {
-  const refreshBySource = new Map<string, MlsGridRecord[]>();
+  const output: RESOProperty[] = [];
+  let rateLimitError: MLSGridRateLimitError | undefined;
+
+  // Process and retain each completed record independently. If MLS Grid throttles
+  // the next request, already downloaded photos remain committed and won't be
+  // downloaded again with single-use URLs on the next scheduled invocation.
   for (const item of records) {
     const record = item.record;
     const id = item.source + ':' + String(record.ListingId || record.ListingKey || '');
@@ -242,33 +277,33 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
     const existingModification = String(existing?.ModificationTimestamp || '');
     const existingPreview = existing?.Media?.find(photo => photo.PreferredPhoto) || existing?.Media?.[0];
     const unchanged = Boolean(existing && modification && modification === existingModification);
+
     if (unchanged && existingPreview && await imageExists(existingPreview.MediaURL)) {
       record.Media = existing!.Media;
     } else {
-      const group = refreshBySource.get(item.source) || [];
-      group.push(record);
-      refreshBySource.set(item.source, group);
+      try {
+        await fetchMediaForRecord(item.source, record);
+        await downloadPreview(item.source, record);
+      } catch (error) {
+        if (error instanceof MLSGridRateLimitError) {
+          rateLimitError = error;
+          break;
+        }
+        throw error;
+      }
     }
-  }
-  for (const [source, changed] of refreshBySource) {
-    await fetchMediaForChangedRecords(source, changed);
-    for (const record of changed) await downloadPreview(source, record);
-  }
-  const output: RESOProperty[] = [];
-  for (const item of records) {
-    const id = item.source + ':' + String(item.record.ListingId || item.record.ListingKey || '');
-    const normalized = normalizeMLSGridProperty(item.record, item.source);
-    const existing = existingById.get(id);
+
+    const normalized = normalizeMLSGridProperty(record, item.source);
     if (!normalized.Media.length && existing?.Media.length) {
       const preview = existing.Media.find(photo => photo.PreferredPhoto) || existing.Media[0];
-      // Keep the prior preview as a fallback only if the listing metadata is unchanged
-      // and the stored image is still present.
-      if (String(existing.ModificationTimestamp || '') === String(item.record.ModificationTimestamp || '') &&
-          preview && await imageExists(preview.MediaURL)) normalized.Media = [preview];
+      if (modification === existingModification && preview && await imageExists(preview.MediaURL)) {
+        normalized.Media = [preview];
+      }
     }
     output.push(normalized);
   }
-  return output;
+
+  return { processed: output, rateLimitError };
 }
 export async function runIncrementalMLSGridSync() {
   if (!tokenConfigured()) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
@@ -415,33 +450,30 @@ export async function runIncrementalMLSGridSync() {
       start: state.recordIndex,
       count: batch.length
     });
-    let processed: RESOProperty[];
-    try {
-      processed = await processBatch(batch, existingById);
-    } catch (error) {
-      if (error instanceof MLSGridRateLimitError) {
-        state.blockedUntil = new Date(Date.now() + Math.max(error.retryAfterMs, RATE_LIMIT_COOLDOWN_MS)).toISOString();
-        await writeJson(STATE_PATH, state);
-        console.error('MLS Grid returned HTTP 429; pausing sync', {
-          retryAt: state.blockedUntil,
-          detail: error.detail
-        });
-        return { ok: true, status: 'rate-limited', retryAt: state.blockedUntil };
-      }
-      throw error;
-    }
+    const batchResult = await processBatch(batch, existingById);
+    const processed = batchResult.processed;
     for (let i = 0; i < processed.length; i++) page.processed[state.recordIndex + i] = processed[i];
     await writeJson(path, page);
 
-    // Publish each completed batch immediately so listing cards start showing
-    // stored previews without waiting for every MLS metadata page to finish.
+    // Publish completed records immediately, including partial batches. This is
+    // essential when a later media request hits a rate limit.
     for (const listing of processed) publishedById.set(listing.ListingId, listing);
     if (processed.length) {
       await writeMLSCache(dedupeListings([...publishedById.values()]));
     }
 
-    state.recordIndex = end;
+    state.recordIndex += processed.length;
     if (state.recordIndex >= page.records.length) { state.pageIndex++; state.recordIndex = 0; }
+    if (batchResult.rateLimitError) {
+      state.blockedUntil = new Date(Date.now() + Math.max(batchResult.rateLimitError.retryAfterMs, RATE_LIMIT_COOLDOWN_MS)).toISOString();
+      await writeJson(STATE_PATH, state);
+      console.error('MLS Grid returned HTTP 429; saved partial progress and paused sync', {
+        retryAt: state.blockedUntil,
+        processedBeforeLimit: processed.length,
+        detail: batchResult.rateLimitError.detail
+      });
+      return { ok: true, status: 'rate-limited', processed: processed.length, retryAt: state.blockedUntil };
+    }
     await writeJson(STATE_PATH, state);
     console.log('MLS sync media batch saved', {
       runId: state.runId,

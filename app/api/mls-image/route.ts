@@ -9,7 +9,29 @@ function allowedMediaHost(hostname: string) {
 
 const inFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string }>>();
 let blobUnavailableUntil = 0;
-const BLOB_FAILURE_COOLDOWN_MS = 30 * 60_000;
+const BLOB_FAILURE_COOLDOWN_MS = 5 * 60_000;
+
+// Deduplicate simultaneous reads for the same private Blob object.
+const blobReadInFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string } | null>>();
+
+async function readStoredImage(pathname: string) {
+  const existing = blobReadInFlight.get(pathname);
+  if (existing) return existing;
+  const promise = (async () => {
+    const result = await get(pathname, { access: 'private', useCache: true });
+    if (!result || result.statusCode !== 200 || !result.stream) return null;
+    return {
+      bytes: await new Response(result.stream).arrayBuffer(),
+      contentType: result.blob.contentType || 'image/jpeg'
+    };
+  })();
+  blobReadInFlight.set(pathname, promise);
+  try {
+    return await promise;
+  } finally {
+    blobReadInFlight.delete(pathname);
+  }
+}
 
 async function downloadMedia(rawUrl: string) {
   const existing = inFlight.get(rawUrl);
@@ -62,11 +84,30 @@ function unavailableResponse() {
   });
 }
 
+function imageResponse(bytes: ArrayBuffer, contentType: string) {
+  return new Response(bytes, {
+    headers: {
+      'Content-Type': contentType,
+      // Keep photos at the edge so each page view does not query private Blob storage.
+      'Cache-Control': 'public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000',
+      'Vercel-CDN-Cache-Control': 'public, max-age=604800, stale-while-revalidate=2592000',
+      'CDN-Cache-Control': 'public, max-age=604800, stale-while-revalidate=2592000',
+      'X-Content-Type-Options': 'nosniff'
+    }
+  });
+}
+
 export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get('url');
   if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
 
   const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
+  if (storedKey && !/^[a-zA-Z0-9_-]{8,128}$/.test(storedKey)) {
+    return new Response('Invalid stored image key.', { status: 400 });
+  }
+
+  // MLS Grid signed URLs are single-use and expire after one hour. Public page requests must only serve locally stored image copies; stale raw URLs must be refreshed by the sync job.
+  if (!storedKey) return unavailableResponse();
   if (!storedKey) {
     let url: URL;
     try { url = new URL(rawUrl); } catch { return new Response('Invalid image URL.', { status: 400 }); }
@@ -75,61 +116,42 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Once Blob has failed, do not keep consuming single-use MLS media URLs on
-  // every image request when the downloaded copy cannot be saved permanently.
-  if (Date.now() < blobUnavailableUntil) return unavailableResponse();
-
   const key = storedKey || createHash('sha256').update(rawUrl).digest('hex');
   const pathname = 'mls/images/' + key + '.image';
 
+  // Try existing stored bytes first, including during a storage-write cooldown.
   try {
-    const cached = await get(pathname, { access: 'private', useCache: true });
-    if (cached?.statusCode === 200 && cached.stream) {
-      return new Response(cached.stream, {
-        headers: {
-          'Content-Type': cached.blob.contentType || 'image/jpeg',
-          'Cache-Control': 'public, max-age=31536000, immutable',
-          'X-Content-Type-Options': 'nosniff'
-        }
-      });
-    }
-    if (storedKey) {
-      blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
-      return unavailableResponse();
-    }
+    const cached = await readStoredImage(pathname);
+    if (cached) return imageResponse(cached.bytes, cached.contentType);
+    if (storedKey) return unavailableResponse();
   } catch (error) {
     blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
     console.error('MLS image storage read failed:', error instanceof Error ? error.message : error);
     return unavailableResponse();
   }
 
+  // Don't keep retrying signed single-use MLS URLs when storage is failing.
+  if (Date.now() < blobUnavailableUntil) return unavailableResponse();
+
   try {
-    // MLS Grid media URLs are single-use and time-limited. Download only when
-    // storage is healthy so the image can be retained as a local copy.
     const image = await downloadMedia(rawUrl);
     try {
       await put(pathname, image.bytes, {
         access: 'private',
         allowOverwrite: true,
-        cacheControlMaxAge: 31536000,
+        cacheControlMaxAge: 86400,
         contentType: image.contentType
       });
     } catch (error) {
       blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
       console.error('MLS image cache write failed:', error instanceof Error ? error.message : error);
-      return unavailableResponse();
+      // Return the photo to the current visitor even if persistent caching is temporarily down.
+      return imageResponse(image.bytes, image.contentType);
     }
 
-    return new Response(image.bytes, {
-      headers: {
-        'Content-Type': image.contentType,
-        'Cache-Control': 'public, max-age=31536000, immutable',
-        'Vercel-CDN-Cache-Control': 'public, max-age=31536000, immutable',
-        'X-Content-Type-Options': 'nosniff'
-      }
-    });
+    return imageResponse(image.bytes, image.contentType);
   } catch (error) {
     console.error('MLS image fetch failed:', error instanceof Error ? error.message : error);
-    return new Response('Unable to retrieve image.', { status: 502 });
+    return new Response('Unable to retrieve image.', { status: 502, headers: { 'Cache-Control': 'no-store' } });
   }
 }
