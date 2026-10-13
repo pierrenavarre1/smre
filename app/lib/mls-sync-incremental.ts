@@ -173,7 +173,7 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     // by the API and never retry it: even a failed/expired URL may not be reused.
     await waitForMLSGridSlot();
     const response = await fetch(preview.MediaURL, {
-      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*' },
+      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': process.env.MLSGRID_ACCESS_TOKEN! },
       redirect: 'follow',
       cache: 'no-store',
       signal: AbortSignal.timeout(15000)
