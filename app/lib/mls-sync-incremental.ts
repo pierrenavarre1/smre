@@ -18,6 +18,7 @@ type SyncState = {
   lastCompletedAt?: string;
   blockedUntil?: string;
   cacheSeeded?: boolean;
+  prioritySorted?: boolean;
   startedAt: string;
 };
 
@@ -60,7 +61,7 @@ async function releaseSyncLock(owner: string) {
   }
 }
 const DAILY_INTERVAL_MS = 23 * 60 * 60 * 1000;
-const RECORDS_PER_INVOCATION = 15;
+const RECORDS_PER_INVOCATION = 50;
 const SERVICE_CITIES = new Set([
   'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka',
   'st george', 'saint george', 'rossville', 'silver lake', 'auburn', 'willard',
@@ -77,6 +78,14 @@ function normalizeCity(value: unknown) {
 }
 function inServiceArea(record: MlsGridRecord) {
   return SERVICE_CITIES.has(normalizeCity(record.City));
+}
+function syncPriority(record: MlsGridRecord) {
+  const office = String(record.ListOfficeName || '').toLowerCase();
+  const city = normalizeCity(record.City);
+  const localOffice = /st\.?\s*mary['’]?s\s*real\s*estate/.test(office);
+  const localCity = ['st marys', 'saint marys', 'wamego'].includes(city);
+  const date = Date.parse(String(record.OriginalEntryTimestamp || record.OnMarketDate || record.ModificationTimestamp || '')) || 0;
+  return { localOffice, localCity, date };
 }
 function sourceKeys() {
   const configured = (process.env.MLSGRID_ORIGINATING_SYSTEMS || '')
@@ -316,6 +325,33 @@ export async function runIncrementalMLSGridSync() {
   }
 
   if (state.phase === 'media') {
+    // Sort staged records so the site's most relevant local listings receive
+    // working preview images first. Preserve each processed result with its record.
+    if (!state.prioritySorted) {
+      for (const stagedPath of state.pagePaths) {
+        const stagedPage = await readJson<StagePage>(stagedPath);
+        if (!stagedPage) continue;
+        const paired = stagedPage.records.map((record, index) => ({
+          record,
+          processed: stagedPage.processed[index] || null
+        }));
+        paired.sort((a, b) => {
+          const ap = syncPriority(a.record.record);
+          const bp = syncPriority(b.record.record);
+          if (ap.localOffice !== bp.localOffice) return ap.localOffice ? -1 : 1;
+          if (ap.localCity !== bp.localCity) return ap.localCity ? -1 : 1;
+          return bp.date - ap.date;
+        });
+        stagedPage.records = paired.map(item => item.record);
+        stagedPage.processed = paired.map(item => item.processed);
+        await writeJson(stagedPath, stagedPage);
+      }
+      state.pageIndex = 0;
+      state.recordIndex = 0;
+      state.prioritySorted = true;
+      await writeJson(STATE_PATH, state);
+      console.log('MLS sync prioritized local listings for preview images', { pages: state.pagePaths.length });
+    }
     // Publish any batches completed by an earlier deployment before starting
     // another batch. Previously, the public listing cache stayed stale until
     // the entire multi-hour initial scan completed, leaving expired MLS media
