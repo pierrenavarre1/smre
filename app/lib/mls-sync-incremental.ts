@@ -16,11 +16,48 @@ type SyncState = {
   pageIndex: number;
   recordIndex: number;
   lastCompletedAt?: string;
+  blockedUntil?: string;
   startedAt: string;
 };
 
 const STATE_PATH = 'mls/sync-state.json';
+const LOCK_PATH = 'mls/sync-lock.json';
 const STAGING_ROOT = 'mls/sync-staging';
+const LOCK_TTL_MS = 10 * 60 * 1000;
+const RATE_LIMIT_COOLDOWN_MS = 60 * 60 * 1000;
+
+class MLSGridRateLimitError extends Error {
+  constructor(public retryAfterMs: number, public detail: string) {
+    super('MLS Grid returned HTTP 429. Sync paused to avoid further requests.');
+    this.name = 'MLSGridRateLimitError';
+  }
+}
+
+async function acquireSyncLock() {
+  const owner = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  const now = Date.now();
+  const existing = await readJson<{ owner: string; expiresAt: number }>(LOCK_PATH);
+  if (existing && existing.expiresAt > now) return null;
+  if (existing) {
+    try { await del(LOCK_PATH); } catch { return null; }
+  }
+  try {
+    await put(LOCK_PATH, JSON.stringify({ owner, expiresAt: now + LOCK_TTL_MS }), {
+      access: 'private', allowOverwrite: false, cacheControlMaxAge: 0, contentType: 'application/json'
+    });
+    const verified = await readJson<{ owner: string; expiresAt: number }>(LOCK_PATH);
+    return verified?.owner === owner ? owner : null;
+  } catch {
+    return null;
+  }
+}
+
+async function releaseSyncLock(owner: string) {
+  const current = await readJson<{ owner: string; expiresAt: number }>(LOCK_PATH);
+  if (current?.owner === owner) {
+    try { await del(LOCK_PATH); } catch {}
+  }
+}
 const DAILY_INTERVAL_MS = 23 * 60 * 60 * 1000;
 const RECORDS_PER_INVOCATION = 15;
 const SERVICE_CITIES = new Set([
@@ -127,14 +164,14 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
         headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
         redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(15000)
       });
-      if (response.status === 429 && attempt < 4) {
+      if (response.status === 429) {
         const retryAfter = Number(response.headers.get('retry-after') || '');
-        const backoffMs = Number.isFinite(retryAfter) && retryAfter > 0
-          ? Math.min(retryAfter * 1000, 30_000)
-          : Math.min(5_000 * Math.pow(2, attempt), 30_000);
-        console.warn('MLS media rate limited; backing off', { source, listingId: record.ListingId, backoffMs, attempt: attempt + 1 });
-        await new Promise(resolve => setTimeout(resolve, backoffMs));
-        continue;
+        let detail = '';
+        try { detail = (await response.text()).slice(0, 500); } catch {}
+        const retryAfterMs = Number.isFinite(retryAfter) && retryAfter > 0
+          ? retryAfter * 1000
+          : RATE_LIMIT_COOLDOWN_MS;
+        throw new MLSGridRateLimitError(retryAfterMs, detail);
       }
       if (!response.ok || !response.body) throw new Error('MLS image download failed: ' + response.status + ' ' + response.statusText);
       const contentType = response.headers.get('content-type') || 'image/jpeg';
@@ -213,7 +250,17 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
 }
 export async function runIncrementalMLSGridSync() {
   if (!tokenConfigured()) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
+  const lockOwner = await acquireSyncLock();
+  if (!lockOwner) return { ok: true, status: 'busy', message: 'Another MLS sync invocation holds the lock.' };
+  try {
   let state = await loadState();
+  if (state?.blockedUntil && Date.parse(state.blockedUntil) > Date.now()) {
+    return { ok: true, status: 'rate-limited', retryAt: state.blockedUntil };
+  }
+  if (state?.blockedUntil && Date.parse(state.blockedUntil) <= Date.now()) {
+    delete state.blockedUntil;
+    await writeJson(STATE_PATH, state);
+  }
   if (state?.phase === 'idle' && state.lastCompletedAt && Date.now() - Date.parse(state.lastCompletedAt) < DAILY_INTERVAL_MS) {
     return { ok: true, status: 'idle', nextRunAfter: new Date(Date.parse(state.lastCompletedAt) + DAILY_INTERVAL_MS).toISOString() };
   }
@@ -286,7 +333,21 @@ export async function runIncrementalMLSGridSync() {
       start: state.recordIndex,
       count: batch.length
     });
-    const processed = await processBatch(batch, existingById);
+    let processed: RESOProperty[];
+    try {
+      processed = await processBatch(batch, existingById);
+    } catch (error) {
+      if (error instanceof MLSGridRateLimitError) {
+        state.blockedUntil = new Date(Date.now() + Math.max(error.retryAfterMs, RATE_LIMIT_COOLDOWN_MS)).toISOString();
+        await writeJson(STATE_PATH, state);
+        console.error('MLS Grid returned HTTP 429; pausing sync', {
+          retryAt: state.blockedUntil,
+          detail: error.detail
+        });
+        return { ok: true, status: 'rate-limited', retryAt: state.blockedUntil };
+      }
+      throw error;
+    }
     for (let i = 0; i < processed.length; i++) page.processed[state.recordIndex + i] = processed[i];
     await writeJson(path, page);
     state.recordIndex = end;
@@ -302,4 +363,7 @@ export async function runIncrementalMLSGridSync() {
     return { ok: true, status: 'media-batch-saved', processed: processed.length, page: state.pageIndex + 1, pages: state.pagePaths.length, complete: state.pageIndex >= state.pagePaths.length };
   }
   return { ok: true, status: state.phase };
+  } finally {
+    await releaseSyncLock(lockOwner);
+  }
 }
