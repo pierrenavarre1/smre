@@ -190,7 +190,8 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
     await fetchMediaForChangedRecords(source, changed);
     for (const record of changed) await downloadPreview(source, record);
   }
-  return records.map(item => {
+  const output: RESOProperty[] = [];
+  for (const item of records) {
     const id = item.source + ':' + String(item.record.ListingId || item.record.ListingKey || '');
     const normalized = normalizeMLSGridProperty(item.record, item.source);
     const existing = existingById.get(id);
@@ -201,8 +202,9 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
       if (String(existing.ModificationTimestamp || '') === String(item.record.ModificationTimestamp || '') &&
           preview && await imageExists(preview.MediaURL)) normalized.Media = [preview];
     }
-    return normalized;
-  });
+    output.push(normalized);
+  }
+  return output;
 }
 export async function runIncrementalMLSGridSync() {
   if (!tokenConfigured()) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
