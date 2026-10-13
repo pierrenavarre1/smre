@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await runIncrementalMLSGridSync();
-    return NextResponse.json({ ok: true, ...result });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('MLS sync failed:', error);
     return NextResponse.json({ error: 'MLS sync failed.' }, { status: 500 });
