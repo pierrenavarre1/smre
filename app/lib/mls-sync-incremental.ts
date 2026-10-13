@@ -17,6 +17,7 @@ type SyncState = {
   recordIndex: number;
   lastCompletedAt?: string;
   blockedUntil?: string;
+  cacheSeeded?: boolean;
   startedAt: string;
 };
 
@@ -282,6 +283,7 @@ export async function runIncrementalMLSGridSync() {
   const sources = sourceKeys();
   const existingListings = await readMLSCache();
   const existingById = new Map(existingListings.map(listing => [listing.ListingId, listing]));
+  const publishedById = new Map(existingById);
 
   if (state.phase === 'metadata') {
     if (state.sourceIndex >= sources.length) {
@@ -314,6 +316,30 @@ export async function runIncrementalMLSGridSync() {
   }
 
   if (state.phase === 'media') {
+    // Publish any batches completed by an earlier deployment before starting
+    // another batch. Previously, the public listing cache stayed stale until
+    // the entire multi-hour initial scan completed, leaving expired MLS media
+    // URLs in use even when newer preview images had already been downloaded.
+    if (!state.cacheSeeded) {
+      let seededCount = 0;
+      for (const stagedPath of state.pagePaths) {
+        const stagedPage = await readJson<StagePage>(stagedPath);
+        if (!stagedPage) continue;
+        for (const listing of stagedPage.processed) {
+          if (listing) {
+            publishedById.set(listing.ListingId, listing);
+            seededCount++;
+          }
+        }
+      }
+      if (seededCount > 0) {
+        await writeMLSCache(dedupeListings([...publishedById.values()]));
+      }
+      state.cacheSeeded = true;
+      await writeJson(STATE_PATH, state);
+      console.log('MLS sync published previously processed preview batches', { seededCount });
+    }
+
     if (state.pageIndex >= state.pagePaths.length) {
       const allListings: RESOProperty[] = [];
       for (const path of state.pagePaths) {
@@ -361,6 +387,14 @@ export async function runIncrementalMLSGridSync() {
     }
     for (let i = 0; i < processed.length; i++) page.processed[state.recordIndex + i] = processed[i];
     await writeJson(path, page);
+
+    // Publish each completed batch immediately so listing cards start showing
+    // stored previews without waiting for every MLS metadata page to finish.
+    for (const listing of processed) publishedById.set(listing.ListingId, listing);
+    if (processed.length) {
+      await writeMLSCache(dedupeListings([...publishedById.values()]));
+    }
+
     state.recordIndex = end;
     if (state.recordIndex >= page.records.length) { state.pageIndex++; state.recordIndex = 0; }
     await writeJson(STATE_PATH, state);
