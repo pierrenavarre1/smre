@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runIncrementalMLSGridSync } from '../../lib/mls-sync-incremental';
 
-// Pro supports longer functions, but the normal daily sync should now finish
-// quickly because unchanged listings and their images are reused.
-export const maxDuration = 800;
+// Each invocation performs one bounded sync step. Progress is persisted in Blob,
+// so a timeout or deployment does not force a full restart.
+export const maxDuration = 300;
 
 function authorized(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
