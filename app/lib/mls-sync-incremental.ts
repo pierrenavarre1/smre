@@ -95,7 +95,7 @@ function sourceKeys() {
   return configured.length ? configured : ['sunflower', 'flinthills'];
 }
 function tokenConfigured() {
-  return Boolean(process.env.MLSGRID_ACCESS_TOKEN);
+  return Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN);
 }
 function storageKey(source: string, mediaKey: string) {
   let a = 0x811c9dc5;
@@ -165,7 +165,17 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     record.Media = [];
     return;
   }
-  if (!process.env.MLSGRID_ACCESS_TOKEN) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
+  const accessToken = process.env.MLSGRID_DEMO_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN;
+  if (!accessToken) throw new Error('No MLS Grid access token is configured.');
+
+  // MLS Grid's CDN is explicitly designed for direct image delivery. Preserve
+  // the CDN URL rather than downloading it or storing a smre-blob placeholder.
+  try {
+    if (new URL(preview.MediaURL).hostname === 'cdn-stmarys.mlsgrid.com') {
+      record.Media = [preview];
+      return;
+    }
+  } catch {}
 
   const key = storageKey(source, preview.MediaKey);
   try {
@@ -173,7 +183,7 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     // by the API and never retry it: even a failed/expired URL may not be reused.
     await waitForMLSGridSlot();
     const response = await fetch(preview.MediaURL, {
-      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': process.env.MLSGRID_ACCESS_TOKEN! },
+      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': accessToken },
       redirect: 'follow',
       cache: 'no-store',
       signal: AbortSignal.timeout(15000)
