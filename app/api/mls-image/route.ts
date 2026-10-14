@@ -1,10 +1,13 @@
-import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { get, put } from '@vercel/blob';
 
-function allowedMediaHost(hostname: string) {
-  const host = hostname.toLowerCase();
-  return host === 'media.mlsgrid.com' || host.endsWith('.mlsgrid.com') || host === 's3.amazonaws.com' || host.endsWith('.s3.amazonaws.com') || host.endsWith('.amazonaws.com');
+function isMLSGridCdnUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
+  } catch {
+    return false;
+  }
 }
 
 const inFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string }>>();
@@ -101,22 +104,41 @@ export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get('url');
   if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
 
+  // MLS Grid's CDN URLs are stable and intended for direct delivery. Fetch only
+  // this exact allowlisted host; never use this route as a general URL proxy.
+  if (isMLSGridCdnUrl(rawUrl)) {
+    try {
+      const response = await fetch(rawUrl, {
+        headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*' },
+        cache: 'no-store',
+        signal: AbortSignal.timeout(10000)
+      });
+      if (!response.ok || !response.body) {
+        console.error('MLS Grid CDN image request failed', { status: response.status });
+        return new Response('Unable to retrieve listing image.', { status: 502, headers: { 'Cache-Control': 'no-store' } });
+      }
+      const contentType = response.headers.get('content-type') || 'image/jpeg';
+      if (!contentType.toLowerCase().startsWith('image/')) {
+        return new Response('Invalid image content.', { status: 502, headers: { 'Cache-Control': 'no-store' } });
+      }
+      return imageResponse(await response.arrayBuffer(), contentType);
+    } catch (error) {
+      console.error('MLS Grid CDN image fetch failed', error instanceof Error ? error.message : error);
+      return new Response('Unable to retrieve listing image.', { status: 502, headers: { 'Cache-Control': 'no-store' } });
+    }
+  }
+
   const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
   if (storedKey && !/^[a-zA-Z0-9_-]{8,128}$/.test(storedKey)) {
     return new Response('Invalid stored image key.', { status: 400 });
   }
 
   // MLS Grid signed URLs are single-use and expire after one hour. Public page requests must only serve locally stored image copies; stale raw URLs must be refreshed by the sync job.
+  // Signed MLS media URLs must never be fetched on page render. The sync job
+  // stores those bytes and pages use the smre-blob key; CDN URLs are handled above.
   if (!storedKey) return unavailableResponse();
-  if (!storedKey) {
-    let url: URL;
-    try { url = new URL(rawUrl); } catch { return new Response('Invalid image URL.', { status: 400 }); }
-    if (url.protocol !== 'https:' || !allowedMediaHost(url.hostname)) {
-      return new Response('Image host is not allowed.', { status: 403 });
-    }
-  }
 
-  const key = storedKey || createHash('sha256').update(rawUrl).digest('hex');
+  const key = storedKey;
   const pathname = 'mls/images/' + key + '.image';
 
   // Try existing stored bytes first, including during a storage-write cooldown.
