@@ -258,7 +258,8 @@ async function fetchMediaForRecord(source: string, record: MlsGridRecord) {
     // Fetch a URL for only this listing, then download it immediately. MLS Grid
     // URLs are signed and single-use, so batching many URLs before downloading
     // risks consuming/expiring them before their turn.
-    page = await fetchMLSGridPage(source, 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
+    const apiBase = process.env.MLSGRID_API_BASE_URL || (process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'https://api-demo.mlsgrid.com/v2' : 'https://api.mlsgrid.com/v2');
+    page = await fetchMLSGridPage(source, apiBase + '/Property?' + new URLSearchParams({
       '$filter': filter, '$expand': 'Media', '$top': '1'
     }).toString(), true);
   } catch (error) {
