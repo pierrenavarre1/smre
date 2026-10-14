@@ -15,7 +15,7 @@ function authorized(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!process.env.MLSGRID_ACCESS_TOKEN) return NextResponse.json({ error: 'MLS Grid access token is not configured.' }, { status: 503 });
+  if (!process.env.MLSGRID_DEMO_ACCESS_TOKEN && !process.env.MLSGRID_ACCESS_TOKEN) return NextResponse.json({ error: 'MLS Grid access token is not configured.' }, { status: 503 });
 
   console.log('MLS sync request received', { userAgent: request.headers.get('user-agent') || '' });
   try {
