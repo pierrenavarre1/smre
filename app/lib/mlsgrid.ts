@@ -2,7 +2,7 @@ import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-pr
 import { get, put } from '@vercel/blob';
 import { readMLSCache } from './mls-store';
 
-const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
+const API_BASE = process.env.MLSGRID_API_BASE_URL || (process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'https://api-demo.mlsgrid.com/v2' : 'https://api.mlsgrid.com/v2');
 const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
 const SOURCE_CONFIG: Record<string, { label: MLSSource }> = {
   sunflower: { label: 'Sunflower MLS' },
@@ -84,7 +84,9 @@ function sourceLabel(source: string): MLSSource {
 
 // MLS Grid provides one access token for the subscription. Both MLS sources use it.
 function sourceToken(_source: string) {
-  return process.env.MLSGRID_ACCESS_TOKEN;
+  // Preview deployments can test the MLS Grid demo subscription independently
+  // of the production subscription. Never prefer demo credentials unless set.
+  return process.env.MLSGRID_DEMO_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN;
 }
 
 export function isMLSGridConfigured() {
@@ -202,6 +204,10 @@ const FRESH_MEDIA_CACHE_MS = 10 * 60_000;
 // MLS Grid media URLs are signed, single-use download URLs. Persist the actual
 // image bytes and expose only a stable internal key to the website. Keep this
 // helper browser-compatible because this module is also imported by client code.
+function isMLSGridCdnUrl(value: string) {
+  try { return new URL(value).hostname === 'cdn-stmarys.mlsgrid.com'; } catch { return false; }
+}
+
 function mediaStorageKey(value: string) {
   let a = 0x811c9dc5;
   let b = 0x9e3779b9;
@@ -249,6 +255,11 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], e
       }
     }
 
+    // CDN media is intended to be served directly; don't download it into Blob.
+    if (isMLSGridCdnUrl(preview.MediaURL)) {
+      record.Media = [{ ...preview, MediaURL: preview.MediaURL }];
+      continue;
+    }
     jobs.push({ record, photo: preview as RESOMedia });
   }
   const validJobs = jobs.filter(job => Boolean(job.photo));
