@@ -62,7 +62,7 @@ async function getListingsUncached(): Promise<RESOProperty[]> {
 // entire listing set on every request.
 const getListingsCached = unstable_cache(
   getListingsUncached,
-  ['smre-listings-index-v2', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production'],
+  ['smre-listings-index-v3', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production'],
   { revalidate: 60 }
 );
 
@@ -101,12 +101,6 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
 
 export type ListingFilters = { minPrice?:number; maxPrice?:number; beds?:number; propertyType?:string; source?:string; status?:string; sort?:string; };
 
-const localCities = new Set(['st marys', 'saint marys', 'wamego']);
-
-function normalizeCity(value: string) {
-  return value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
 function listingTimestamp(p: RESOProperty) {
   const listingTime = p.ListingDate ? Date.parse(p.ListingDate) : NaN;
   if (Number.isFinite(listingTime)) return listingTime;
@@ -122,10 +116,6 @@ export function compareListingPriority(a: RESOProperty, b: RESOProperty) {
   const aSMRE = isSMRE(a);
   const bSMRE = isSMRE(b);
   if (aSMRE !== bSMRE) return aSMRE ? -1 : 1;
-
-  const aLocal = localCities.has(normalizeCity(a.City));
-  const bLocal = localCities.has(normalizeCity(b.City));
-  if (aLocal !== bLocal) return aLocal ? -1 : 1;
 
   return listingTimestamp(b) - listingTimestamp(a);
 }
