@@ -22,9 +22,11 @@ type SyncState = {
   startedAt: string;
 };
 
-const STATE_PATH = 'mls/sync-state.json';
-const LOCK_PATH = 'mls/sync-lock.json';
-const STAGING_ROOT = 'mls/sync-staging';
+const DEMO_MODE = Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN);
+const storagePath = (path: string) => DEMO_MODE ? path.replace(/^mls\//, 'mls/demo/') : path;
+const STATE_PATH = storagePath('mls/sync-state.json');
+const LOCK_PATH = storagePath('mls/sync-lock.json');
+const STAGING_ROOT = storagePath('mls/sync-staging');
 const LOCK_TTL_MS = 10 * 60 * 1000;
 // A media-download 429 can be a short burst limit, not a full account suspension.
 const RATE_LIMIT_COOLDOWN_MS = 15 * 60 * 1000;
@@ -81,12 +83,11 @@ function inServiceArea(record: MlsGridRecord) {
   return SERVICE_CITIES.has(normalizeCity(record.City));
 }
 function syncPriority(record: MlsGridRecord) {
-  const office = String(record.ListOfficeName || '').toLowerCase();
-  const city = normalizeCity(record.City);
-  const localOffice = /st\.?\s*mary['’]?s\s*real\s*estate/.test(office);
-  const localCity = ['st marys', 'saint marys', 'wamego'].includes(city);
-  const date = Date.parse(String(record.OriginalEntryTimestamp || record.OnMarketDate || record.ModificationTimestamp || '')) || 0;
-  return { localOffice, localCity, date };
+  const officeName = String(record.ListOfficeName || record.ListOffice?.OfficeName || '').toLowerCase();
+  const officeId = String(record.ListOfficeMlsId || record.ListOfficeKey || record.ListOffice?.OfficeMlsId || '').trim();
+  const localOffice = /st\.?\s*mary['’]?s\s*real\s*estate/.test(officeName) || /saint mary['’]?s real estate/.test(officeName) || ['SMRE', 'STMARYSRE'].includes(officeId.toUpperCase());
+  const date = Date.parse(String(record.OriginalEntryTimestamp || record.OnMarketDate || record.ListingContractDate || record.ModificationTimestamp || '')) || 0;
+  return { localOffice, date };
 }
 function sourceKeys() {
   const configured = (process.env.MLSGRID_ORIGINATING_SYSTEMS || '')
@@ -95,7 +96,7 @@ function sourceKeys() {
   return configured.length ? configured : ['sunflower', 'flinthills'];
 }
 function tokenConfigured() {
-  return Boolean(process.env.MLSGRID_ACCESS_TOKEN);
+  return Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN);
 }
 function storageKey(source: string, mediaKey: string) {
   let a = 0x811c9dc5;
@@ -133,10 +134,11 @@ async function loadState(): Promise<SyncState | null> {
   return state?.version === 1 ? state : null;
 }
 async function imageExists(mediaUrl: string) {
-  if (!mediaUrl.startsWith('smre-blob:')) return false;
-  const key = mediaUrl.slice('smre-blob:'.length);
+  const prefix = DEMO_MODE ? 'smre-demo-blob:' : 'smre-blob:';
+  if (!mediaUrl.startsWith(prefix)) return false;
+  const key = mediaUrl.slice(prefix.length);
   try {
-    const stored = await get('mls/images/' + key + '.image', { access: 'private', useCache: false });
+    const stored = await get(storagePath('mls/images/' + key + '.image'), { access: 'private', useCache: false });
     if (!stored || stored.statusCode !== 200 || !stored.stream) return false;
     await stored.stream.cancel();
     return true;
@@ -165,7 +167,17 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     record.Media = [];
     return;
   }
-  if (!process.env.MLSGRID_ACCESS_TOKEN) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
+  const accessToken = process.env.MLSGRID_DEMO_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN;
+  if (!accessToken) throw new Error('No MLS Grid access token is configured.');
+
+  // MLS Grid's CDN is explicitly designed for direct image delivery. Preserve
+  // the CDN URL rather than downloading it or storing a smre-blob placeholder.
+  try {
+    if (new URL(preview.MediaURL).hostname === 'cdn-stmarys.mlsgrid.com') {
+      record.Media = [preview];
+      return;
+    }
+  } catch {}
 
   const key = storageKey(source, preview.MediaKey);
   try {
@@ -173,7 +185,7 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     // by the API and never retry it: even a failed/expired URL may not be reused.
     await waitForMLSGridSlot();
     const response = await fetch(preview.MediaURL, {
-      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': process.env.MLSGRID_ACCESS_TOKEN! },
+      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': accessToken },
       redirect: 'follow',
       cache: 'no-store',
       signal: AbortSignal.timeout(15000)
@@ -215,13 +227,13 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
       return;
     }
 
-    await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
+    await put(storagePath(storagePath('mls/images/' + key + '.image')), await response.arrayBuffer(), {
       access: 'private',
       allowOverwrite: true,
       cacheControlMaxAge: 31536000,
       contentType
     });
-    record.Media = [{ ...preview, MediaURL: 'smre-blob:' + key }];
+    record.Media = [{ ...preview, MediaURL: (DEMO_MODE ? 'smre-demo-blob:' : 'smre-blob:') + key }];
   } catch (error) {
     if (error instanceof MLSGridRateLimitError) {
       console.error('MLS preview download received HTTP 429', {
@@ -248,7 +260,8 @@ async function fetchMediaForRecord(source: string, record: MlsGridRecord) {
     // Fetch a URL for only this listing, then download it immediately. MLS Grid
     // URLs are signed and single-use, so batching many URLs before downloading
     // risks consuming/expiring them before their turn.
-    page = await fetchMLSGridPage(source, 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
+    const apiBase = process.env.MLSGRID_API_BASE_URL || (process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'https://api-demo.mlsgrid.com/v2' : 'https://api.mlsgrid.com/v2');
+    page = await fetchMLSGridPage(source, apiBase + '/Property?' + new URLSearchParams({
       '$filter': filter, '$expand': 'Media', '$top': '1'
     }).toString(), true);
   } catch (error) {
@@ -383,7 +396,6 @@ export async function runIncrementalMLSGridSync() {
           const ap = syncPriority(a.record.record);
           const bp = syncPriority(b.record.record);
           if (ap.localOffice !== bp.localOffice) return ap.localOffice ? -1 : 1;
-          if (ap.localCity !== bp.localCity) return ap.localCity ? -1 : 1;
           return bp.date - ap.date;
         });
         stagedPage.records = paired.map(item => item.record);

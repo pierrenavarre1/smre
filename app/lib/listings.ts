@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
-import { dedupeListings, fetchFreshMediaForListing, fetchFreshPreviewMedia, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, isMLSGridConfigured } from './mlsgrid';
+import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, isMLSGridConfigured } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
   return {
@@ -37,21 +37,22 @@ function toListingSummary(listing: RESOProperty): RESOProperty {
 }
 
 async function getListingsUncached(): Promise<RESOProperty[]> {
-  const listings = dedupeListings(await readMLSSummaryCache());
-  if (listings.length && isMLSGridConfigured()) {
-    const previews = await fetchFreshPreviewMedia(listings);
-    return listings.map(listing => toListingSummary({
-      ...listing,
-      Media: previews.get(listing.ListingId) || listing.Media.slice(0, 1)
-    }));
-  }
-  if (listings.length) return listings.map(toListingSummary);
+  const listings = sortListingsByPriority(dedupeListings(await readMLSSummaryCache()));
+  // Listing-card requests must be cache-only. Fetching fresh MLS media URLs
+  // for every listing during index revalidation creates a burst of upstream
+  // requests, slows the page, and can trigger MLS Grid throttling. The sync
+  // pipeline stores CDN URLs (or durable cached image references) in this
+  // lightweight summary, so serve those directly and refresh media in sync.
+  if (listings.length) return listings.map(listing => toListingSummary({
+    ...listing,
+    Media: listing.Media.slice(0, 1)
+  }));
 
   // Vercel Blob can be temporarily unavailable. In that case, use the MLS Grid
   // metadata directly so the public listings page does not go blank.
   if (isMLSGridConfigured()) {
     const liveListings = await fetchMLSGridLiveIndex();
-    return liveListings.map(toListingSummary);
+    return sortListingsByPriority(liveListings).map(toListingSummary);
   }
 
   return process.env.NODE_ENV === 'development' ? mockProperties : [];
@@ -62,7 +63,7 @@ async function getListingsUncached(): Promise<RESOProperty[]> {
 // entire listing set on every request.
 const getListingsCached = unstable_cache(
   getListingsUncached,
-  ['smre-listings-index'],
+  ['smre-listings-index-v4', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production'],
   { revalidate: 60 }
 );
 
@@ -93,19 +94,13 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
   const decodedId = decodeURIComponent(id);
   const cached = unstable_cache(
     () => getListingUncached(decodedId),
-    ['smre-listing-detail', decodedId],
+    ['smre-listing-detail-v2', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production', decodedId],
     { revalidate: 300 }
   );
   return cached();
 }
 
 export type ListingFilters = { minPrice?:number; maxPrice?:number; beds?:number; propertyType?:string; source?:string; status?:string; sort?:string; };
-
-const localCities = new Set(['st marys', 'saint marys', 'wamego']);
-
-function normalizeCity(value: string) {
-  return value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\s+/g, ' ').trim();
-}
 
 function listingTimestamp(p: RESOProperty) {
   const listingTime = p.ListingDate ? Date.parse(p.ListingDate) : NaN;
@@ -122,10 +117,6 @@ export function compareListingPriority(a: RESOProperty, b: RESOProperty) {
   const aSMRE = isSMRE(a);
   const bSMRE = isSMRE(b);
   if (aSMRE !== bSMRE) return aSMRE ? -1 : 1;
-
-  const aLocal = localCities.has(normalizeCity(a.City));
-  const bLocal = localCities.has(normalizeCity(b.City));
-  if (aLocal !== bLocal) return aLocal ? -1 : 1;
 
   return listingTimestamp(b) - listingTimestamp(a);
 }
