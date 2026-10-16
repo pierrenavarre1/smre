@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
-import { dedupeListings, fetchFreshMediaForListing, fetchFreshPreviewMedia, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, isMLSGridConfigured } from './mlsgrid';
+import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, isMLSGridConfigured } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
   return {
@@ -38,14 +38,15 @@ function toListingSummary(listing: RESOProperty): RESOProperty {
 
 async function getListingsUncached(): Promise<RESOProperty[]> {
   const listings = sortListingsByPriority(dedupeListings(await readMLSSummaryCache()));
-  if (listings.length && isMLSGridConfigured()) {
-    const previews = await fetchFreshPreviewMedia(listings);
-    return listings.map(listing => toListingSummary({
-      ...listing,
-      Media: previews.get(listing.ListingId) || listing.Media.slice(0, 1)
-    }));
-  }
-  if (listings.length) return listings.map(toListingSummary);
+  // Listing-card requests must be cache-only. Fetching fresh MLS media URLs
+  // for every listing during index revalidation creates a burst of upstream
+  // requests, slows the page, and can trigger MLS Grid throttling. The sync
+  // pipeline stores CDN URLs (or durable cached image references) in this
+  // lightweight summary, so serve those directly and refresh media in sync.
+  if (listings.length) return listings.map(listing => toListingSummary({
+    ...listing,
+    Media: listing.Media.slice(0, 1)
+  }));
 
   // Vercel Blob can be temporarily unavailable. In that case, use the MLS Grid
   // metadata directly so the public listings page does not go blank.
