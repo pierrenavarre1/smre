@@ -10,6 +10,7 @@ function isMLSGridCdnUrl(value: string) {
   }
 }
 
+const DEMO_MODE = Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN);
 const inFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string }>>();
 let blobUnavailableUntil = 0;
 const BLOB_FAILURE_COOLDOWN_MS = 5 * 60_000;
@@ -128,7 +129,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
+  const storedPrefix = DEMO_MODE ? 'smre-demo-blob:' : 'smre-blob:';
+  const storedKey = rawUrl.startsWith(storedPrefix) ? rawUrl.slice(storedPrefix.length) : '';
   if (storedKey && !/^[a-zA-Z0-9_-]{8,128}$/.test(storedKey)) {
     return new Response('Invalid stored image key.', { status: 400 });
   }
@@ -139,7 +141,7 @@ export async function GET(request: NextRequest) {
   if (!storedKey) return unavailableResponse();
 
   const key = storedKey;
-  const pathname = 'mls/images/' + key + '.image';
+  const pathname = (DEMO_MODE ? 'mls/demo/images/' : 'mls/images/') + key + '.image';
 
   // Try existing stored bytes first, including during a storage-write cooldown.
   try {
