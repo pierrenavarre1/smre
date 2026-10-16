@@ -37,7 +37,7 @@ function toListingSummary(listing: RESOProperty): RESOProperty {
 }
 
 async function getListingsUncached(): Promise<RESOProperty[]> {
-  const listings = dedupeListings(await readMLSSummaryCache());
+  const listings = sortListingsByPriority(dedupeListings(await readMLSSummaryCache()));
   if (listings.length && isMLSGridConfigured()) {
     const previews = await fetchFreshPreviewMedia(listings);
     return listings.map(listing => toListingSummary({
@@ -51,7 +51,7 @@ async function getListingsUncached(): Promise<RESOProperty[]> {
   // metadata directly so the public listings page does not go blank.
   if (isMLSGridConfigured()) {
     const liveListings = await fetchMLSGridLiveIndex();
-    return liveListings.map(toListingSummary);
+    return sortListingsByPriority(liveListings).map(toListingSummary);
   }
 
   return process.env.NODE_ENV === 'development' ? mockProperties : [];
