@@ -24,31 +24,43 @@ export async function GET() {
     const errors: string[] = [];
     for (const source of SOURCES) {
       try {
-        const apiUrl = 'https://api-demo.mlsgrid.com/v2/Property?' + new URLSearchParams({
+        let nextUrl: string | undefined = 'https://api-demo.mlsgrid.com/v2/Property?' + new URLSearchParams({
           '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and StandardStatus in ('Active','Pending')",
           '$expand': 'Media',
-          '$top': '100'
+          '$top': '100',
+          '$orderby': 'ListingId'
         }).toString();
-        const response = await fetch(apiUrl, {
-          headers: { Authorization: 'Bearer ' + process.env.MLSGRID_DEMO_ACCESS_TOKEN, Accept: 'application/json' },
-          cache: 'no-store',
-          signal: AbortSignal.timeout(20000)
-        });
-        if (!response.ok) {
-          errors.push(source + ': API returned HTTP ' + response.status);
-          continue;
+        let pageCount = 0;
+        while (nextUrl && pageCount < 30) {
+          const response = await fetch(nextUrl, {
+            headers: { Authorization: 'Bearer ' + process.env.MLSGRID_DEMO_ACCESS_TOKEN, Accept: 'application/json' },
+            cache: 'no-store',
+            signal: AbortSignal.timeout(20000)
+          });
+          if (!response.ok) {
+            errors.push(source + ': API returned HTTP ' + response.status);
+            break;
+          }
+          const payload = await response.json();
+          const records = Array.isArray(payload?.value) ? payload.value : [];
+          for (const record of records) {
+            const photos = (Array.isArray(record.Media) ? record.Media : []).filter((m: any) =>
+              typeof m?.MediaURL === 'string' && m.MediaURL &&
+              (() => { try { const u = new URL(m.MediaURL); return u.protocol === 'https:' && u.hostname === 'cdn-stmarys.mlsgrid.com'; } catch { return false; } })()
+            ).sort((a: any, b: any) => {
+              const ao = Number.isFinite(Number(a.MediaOrder)) ? Number(a.MediaOrder) : Number.MAX_SAFE_INTEGER;
+              const bo = Number.isFinite(Number(b.MediaOrder)) ? Number(b.MediaOrder) : Number.MAX_SAFE_INTEGER;
+              return ao - bo;
+            });
+            const preferred = photos.find((m: any) => m.PreferredPhoto === true || String(m.PreferredPhotoYN).toLowerCase() === 'true');
+            const lead = preferred || photos[0];
+            record.Media = lead ? [{ ...lead, PreferredPhoto: true }] : [];
+            all.push(normalizeMLSGridProperty(record, source));
+          }
+          nextUrl = typeof payload?.['@odata.nextLink'] === 'string' ? payload['@odata.nextLink'] : undefined;
+          pageCount++;
         }
-        const payload = await response.json();
-        const records = Array.isArray(payload?.value) ? payload.value : [];
-        for (const record of records) {
-          const photos = Array.isArray(record.Media) ? record.Media.filter((m: any) =>
-            typeof m?.MediaURL === 'string' && m.MediaURL &&
-            (() => { try { const u = new URL(m.MediaURL); return u.protocol === 'https:' && u.hostname === 'cdn-stmarys.mlsgrid.com'; } catch { return false; } })()
-          ) : [];
-          const preferred = photos.find((m: any) => m.PreferredPhoto === true || String(m.PreferredPhotoYN).toLowerCase() === 'true') || photos[0];
-          record.Media = preferred ? [preferred] : [];
-          all.push(normalizeMLSGridProperty(record, source));
-        }
+        if (nextUrl) errors.push(source + ': pagination safety limit reached after 30 pages');
       } catch (error) {
         errors.push(source + ': ' + (error instanceof Error ? error.message : 'request failed'));
       }
