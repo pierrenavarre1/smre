@@ -62,7 +62,7 @@ async function getListingsUncached(): Promise<RESOProperty[]> {
 // entire listing set on every request.
 const getListingsCached = unstable_cache(
   getListingsUncached,
-  ['smre-listings-index', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production'],
+  ['smre-listings-index-v2', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production'],
   { revalidate: 60 }
 );
 
@@ -93,7 +93,7 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
   const decodedId = decodeURIComponent(id);
   const cached = unstable_cache(
     () => getListingUncached(decodedId),
-    ['smre-listing-detail', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production', decodedId],
+    ['smre-listing-detail-v2', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production', decodedId],
     { revalidate: 300 }
   );
   return cached();
