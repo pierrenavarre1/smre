@@ -11,7 +11,7 @@ export async function GET() {
 
   try {
     const apiUrl = 'https://api-demo.mlsgrid.com/v2/Property?' + new URLSearchParams({
-      '$filter': "MlgCanView eq true and StandardStatus eq 'Active'",
+      '$filter': "OriginatingSystemName eq 'sunflower' and MlgCanView eq true and StandardStatus in ('Active','Pending')",
       '$expand': 'Media',
       '$top': '1'
     }).toString();
@@ -21,9 +21,15 @@ export async function GET() {
       signal: AbortSignal.timeout(15000)
     });
     if (!apiResponse.ok) {
+      let detail = '';
+      try {
+        // Return only a short API error explanation; never echo request headers or credentials.
+        detail = (await apiResponse.text()).replace(/Bearer\\s+[^\\s"']+/gi, 'Bearer [redacted]').slice(0, 300);
+      } catch {}
       return NextResponse.json({
         ok: false, stage: 'demo-api', status: apiResponse.status,
-        message: 'The Demo API request failed. The access token is not returned.'
+        detail,
+        message: 'The Demo API request failed. No access token is included in this report.'
       }, { status: 502 });
     }
 
