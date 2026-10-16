@@ -22,9 +22,11 @@ type SyncState = {
   startedAt: string;
 };
 
-const STATE_PATH = 'mls/sync-state.json';
-const LOCK_PATH = 'mls/sync-lock.json';
-const STAGING_ROOT = 'mls/sync-staging';
+const DEMO_MODE = Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN);
+const storagePath = (path: string) => DEMO_MODE ? path.replace(/^mls\//, 'mls/demo/') : path;
+const STATE_PATH = storagePath('mls/sync-state.json');
+const LOCK_PATH = storagePath('mls/sync-lock.json');
+const STAGING_ROOT = storagePath('mls/sync-staging');
 const LOCK_TTL_MS = 10 * 60 * 1000;
 // A media-download 429 can be a short burst limit, not a full account suspension.
 const RATE_LIMIT_COOLDOWN_MS = 15 * 60 * 1000;
@@ -133,10 +135,11 @@ async function loadState(): Promise<SyncState | null> {
   return state?.version === 1 ? state : null;
 }
 async function imageExists(mediaUrl: string) {
-  if (!mediaUrl.startsWith('smre-blob:')) return false;
-  const key = mediaUrl.slice('smre-blob:'.length);
+  const prefix = DEMO_MODE ? 'smre-demo-blob:' : 'smre-blob:';
+  if (!mediaUrl.startsWith(prefix)) return false;
+  const key = mediaUrl.slice(prefix.length);
   try {
-    const stored = await get('mls/images/' + key + '.image', { access: 'private', useCache: false });
+    const stored = await get(storagePath(storagePath('mls/images/' + key + '.image')), { access: 'private', useCache: false });
     if (!stored || stored.statusCode !== 200 || !stored.stream) return false;
     await stored.stream.cancel();
     return true;
@@ -225,13 +228,13 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
       return;
     }
 
-    await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
+    await put(storagePath(storagePath('mls/images/' + key + '.image')), await response.arrayBuffer(), {
       access: 'private',
       allowOverwrite: true,
       cacheControlMaxAge: 31536000,
       contentType
     });
-    record.Media = [{ ...preview, MediaURL: 'smre-blob:' + key }];
+    record.Media = [{ ...preview, MediaURL: (DEMO_MODE ? 'smre-demo-blob:' : 'smre-blob:') + key }];
   } catch (error) {
     if (error instanceof MLSGridRateLimitError) {
       console.error('MLS preview download received HTTP 429', {
