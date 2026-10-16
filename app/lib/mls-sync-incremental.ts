@@ -139,7 +139,7 @@ async function imageExists(mediaUrl: string) {
   if (!mediaUrl.startsWith(prefix)) return false;
   const key = mediaUrl.slice(prefix.length);
   try {
-    const stored = await get(storagePath(storagePath('mls/images/' + key + '.image')), { access: 'private', useCache: false });
+    const stored = await get(storagePath('mls/images/' + key + '.image'), { access: 'private', useCache: false });
     if (!stored || stored.statusCode !== 200 || !stored.stream) return false;
     await stored.stream.cancel();
     return true;
