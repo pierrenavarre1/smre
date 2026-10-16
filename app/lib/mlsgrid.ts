@@ -367,22 +367,35 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
   if (cached && cached.expiresAt > Date.now()) return cached.media;
 
-  // A stored image key cannot be repaired by querying MLS Grid during a page
-  // request. Doing so once per image/gallery creates an RPS burst and reuses
-  // single-use media URLs. Wait for storage/scheduled sync to repair the cache.
   const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
   if (hasBlobPlaceholder) return [];
 
-  // Reuse media already available from the live feed or a healthy local cache.
-  if (listing.Media.length && !hasBlobPlaceholder) {
+  // Listing detail pages need the complete gallery, not just the card preview.
+  // Request fresh CDN URLs for this one listing; keep the result cached briefly
+  // so normal navigation does not repeatedly hit MLS Grid.
+  const sourceAndId = listingSourceAndId(listing);
+  if (sourceAndId && (listing.Media.length <= 1 || listing.Media.some(photo => isMLSGridCdnUrl(photo.MediaURL)))) {
+    try {
+      const fresh = await fetchFreshMediaBatch(sourceAndId.source, [sourceAndId.listingId]);
+      const mediaItems = fresh.get(sourceAndId.listingId) || [];
+      if (mediaItems.length) {
+        freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: mediaItems });
+        const preferred = mediaItems.find(photo => photo.PreferredPhoto) || mediaItems[0];
+        freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
+        return mediaItems;
+      }
+    } catch (error) {
+      console.error('MLS gallery media refresh failed:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  if (listing.Media.length) {
     freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: listing.Media });
     const preferred = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
     freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
     return listing.Media;
   }
 
-  // Do not fall back to live API requests during page rendering. The next
-  // scheduled sync will refresh the saved media set.
   return [];
 }
 
