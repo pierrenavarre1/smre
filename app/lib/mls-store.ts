@@ -1,8 +1,10 @@
 import { get, put } from '@vercel/blob';
 import type { RESOProperty } from './mock-properties';
 
-const LISTINGS_PATH = 'mls/listings.json';
-const LISTINGS_SUMMARY_PATH = 'mls/listings-summary.json';
+const DEMO_MODE = Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN);
+const storagePath = (path: string) => DEMO_MODE ? path.replace(/^mls\//, 'mls/demo/') : path;
+const LISTINGS_PATH = storagePath('mls/listings.json');
+const LISTINGS_SUMMARY_PATH = storagePath('mls/listings-summary.json');
 
 let memoryCache: { listings: RESOProperty[]; expiresAt: number } | null = null;
 let memorySummaryCache: { listings: RESOProperty[]; expiresAt: number } | null = null;
