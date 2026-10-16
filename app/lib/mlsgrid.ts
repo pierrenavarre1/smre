@@ -355,7 +355,7 @@ export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
 
     // Page rendering must never trigger live MLS Grid requests. Use the media
     // saved by the scheduled sync, and let the next sync refresh missing media.
-    const localPreview = listing.Media.find(photo => photo.PreferredPhoto);
+    const localPreview = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
     const preview = localPreview ? [localPreview] : [];
     result.set(listing.ListingId, preview);
     freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preview });
@@ -380,7 +380,7 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
       const mediaItems = fresh.get(sourceAndId.listingId) || [];
       if (mediaItems.length) {
         freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: mediaItems });
-        const preferred = mediaItems.find(photo => photo.PreferredPhoto);
+        const preferred = mediaItems.find(photo => photo.PreferredPhoto) || mediaItems[0];
         freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
         return mediaItems;
       }
@@ -391,7 +391,7 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
 
   if (listing.Media.length) {
     freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: listing.Media });
-    const preferred = listing.Media.find(photo => photo.PreferredPhoto);
+    const preferred = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
     freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
     return listing.Media;
   }
