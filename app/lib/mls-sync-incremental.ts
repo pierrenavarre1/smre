@@ -229,7 +229,11 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
         listingId: String(record.ListingId || record.ListingKey || ''),
         detail: error.detail
       });
-      throw error;
+      // A single signed image URL returning 429 must not halt the entire MLS
+      // inventory sync. The URL is single-use; skip this preview for this record
+      // and continue processing later listings. The next sync can request a fresh URL.
+      record.Media = [];
+      return;
     }
     console.error('MLS preview image/storage failed', {
       source,
