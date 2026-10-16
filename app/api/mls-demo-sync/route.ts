@@ -53,7 +53,7 @@ export async function GET() {
               return ao - bo;
             });
             const preferred = photos.find((m: any) => m.PreferredPhoto === true || String(m.PreferredPhotoYN).toLowerCase() === 'true');
-            const lead = preferred || photos[0];
+            const lead = preferred;
             record.Media = lead ? [{ ...lead, PreferredPhoto: true }] : [];
             all.push(normalizeMLSGridProperty(record, source));
           }
