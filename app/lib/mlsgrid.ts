@@ -52,7 +52,7 @@ function media(record: MlsGridRecord) {
       PreferredPhoto: m.PreferredPhoto === true || m.PreferredPhotoYN === true || String(m.PreferredPhotoYN).toLowerCase() === 'true',
       MediaOrder: Number.isFinite(Number(m.MediaOrder)) ? Number(m.MediaOrder) : (Number.isFinite(Number(m.Order)) ? Number(m.Order) : index)
     }))
-    .sort((a, b) => a.MediaOrder - b.MediaOrder);
+    .sort((a, b) => Number(b.PreferredPhoto) - Number(a.PreferredPhoto) || a.MediaOrder - b.MediaOrder);
 }
 
 function normalizeCity(value: unknown) {
