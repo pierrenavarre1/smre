@@ -32,7 +32,7 @@ export async function GET() {
         }).toString();
         let pageCount = 0;
         while (nextUrl && pageCount < 30) {
-          const response = await fetch(nextUrl, {
+          const response: Response = await fetch(String(nextUrl), {
             headers: { Authorization: 'Bearer ' + process.env.MLSGRID_DEMO_ACCESS_TOKEN, Accept: 'application/json' },
             cache: 'no-store',
             signal: AbortSignal.timeout(20000)
