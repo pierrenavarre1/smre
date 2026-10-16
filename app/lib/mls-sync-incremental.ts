@@ -83,12 +83,11 @@ function inServiceArea(record: MlsGridRecord) {
   return SERVICE_CITIES.has(normalizeCity(record.City));
 }
 function syncPriority(record: MlsGridRecord) {
-  const office = String(record.ListOfficeName || '').toLowerCase();
-  const city = normalizeCity(record.City);
-  const localOffice = /st\.?\s*mary['’]?s\s*real\s*estate/.test(office);
-  const localCity = ['st marys', 'saint marys', 'wamego'].includes(city);
-  const date = Date.parse(String(record.OriginalEntryTimestamp || record.OnMarketDate || record.ModificationTimestamp || '')) || 0;
-  return { localOffice, localCity, date };
+  const officeName = String(record.ListOfficeName || record.ListOffice?.OfficeName || '').toLowerCase();
+  const officeId = String(record.ListOfficeMlsId || record.ListOfficeKey || record.ListOffice?.OfficeMlsId || '').trim();
+  const localOffice = /st\.?\s*mary['’]?s\s*real\s*estate/.test(officeName) || /saint mary['’]?s real estate/.test(officeName) || ['SMRE', 'STMARYSRE'].includes(officeId.toUpperCase());
+  const date = Date.parse(String(record.OriginalEntryTimestamp || record.OnMarketDate || record.ListingContractDate || record.ModificationTimestamp || '')) || 0;
+  return { localOffice, date };
 }
 function sourceKeys() {
   const configured = (process.env.MLSGRID_ORIGINATING_SYSTEMS || '')
@@ -397,7 +396,6 @@ export async function runIncrementalMLSGridSync() {
           const ap = syncPriority(a.record.record);
           const bp = syncPriority(b.record.record);
           if (ap.localOffice !== bp.localOffice) return ap.localOffice ? -1 : 1;
-          if (ap.localCity !== bp.localCity) return ap.localCity ? -1 : 1;
           return bp.date - ap.date;
         });
         stagedPage.records = paired.map(item => item.record);
