@@ -6,8 +6,6 @@ import { ListingGallery } from '../../components/ListingGallery';
 import { ListingLeadButton } from '../../components/ListingLeadButton';
 import { ListingMap } from '../../components/ListingMap';
 
-// Listing detail pages need fresh MLS Grid signed media URLs on every request.
-export const dynamic = 'force-dynamic';
 
 const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const number = new Intl.NumberFormat('en-US');
