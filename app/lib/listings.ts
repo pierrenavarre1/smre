@@ -28,6 +28,8 @@ function toListingSummary(listing: RESOProperty): RESOProperty {
     ListAgentFullName: '',
     ListAgentMlsId: '',
     ListOfficeName: listing.ListOfficeName,
+    ListOfficeMlsId: listing.ListOfficeMlsId,
+    ListOfficeKey: listing.ListOfficeKey,
     MlsSource: listing.MlsSource,
     Latitude: listing.Latitude,
     Longitude: listing.Longitude,
@@ -110,7 +112,17 @@ function listingTimestamp(p: RESOProperty) {
 }
 
 function isSMRE(p: RESOProperty) {
-  return /st\.?\s*mary['’]?s\s*real\s*estate/i.test(p.ListOfficeName || '');
+  const officeName = String(p.ListOfficeName || '')
+    .toLowerCase()
+    .replace(/['’]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+  const officeId = String(p.ListOfficeMlsId || p.ListOfficeKey || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+
+  return /^(st|saint) marys real estate(?: |$)/.test(officeName) ||
+    ['SMRE', 'STMARYSRE'].includes(officeId);
 }
 
 export function compareListingPriority(a: RESOProperty, b: RESOProperty) {
