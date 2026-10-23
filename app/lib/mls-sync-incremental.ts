@@ -83,17 +83,22 @@ function inServiceArea(record: MlsGridRecord) {
   return SERVICE_CITIES.has(normalizeCity(record.City));
 }
 function syncPriority(record: MlsGridRecord) {
-  const officeName = String(record.ListOfficeName || record.ListOffice?.OfficeName || '').toLowerCase();
-  const officeId = String(record.ListOfficeMlsId || record.ListOfficeKey || record.ListOffice?.OfficeMlsId || '').trim();
-  const localOffice = /st\.?\s*mary['’]?s\s*real\s*estate/.test(officeName) || /saint mary['’]?s real estate/.test(officeName) || ['SMRE', 'STMARYSRE'].includes(officeId.toUpperCase());
+  const rawOfficeName = String(record.ListOfficeName || record.ListOffice?.OfficeName || '');
+  const officeName = rawOfficeName.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  const officeId = String(record.ListOfficeMlsId || record.ListOfficeKey || record.ListOffice?.OfficeMlsId || record.ListOffice?.OfficeKey || '')
+    .toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const localOffice = /^(st|saint) marys real estate(?: |$)/.test(officeName) ||
+    ['SMRE', 'STMARYSRE'].includes(officeId);
   const date = Date.parse(String(record.OriginalEntryTimestamp || record.OnMarketDate || record.ListingContractDate || record.ModificationTimestamp || '')) || 0;
   return { localOffice, date };
 }
 function sourceKeys() {
   const configured = (process.env.MLSGRID_ORIGINATING_SYSTEMS || '')
-    .split(',').map(value => value.trim()).filter(Boolean)
+    .split(',').map(value => value.trim().toLowerCase())
     .filter(source => source === 'sunflower' || source === 'flinthills');
-  return configured.length ? configured : ['sunflower', 'flinthills'];
+  // This site is intended to publish both authorized MLS feeds. Do not let a
+  // stale one-source environment value silently omit the other MLS inventory.
+  return [...new Set(['sunflower', 'flinthills', ...configured])];
 }
 function tokenConfigured() {
   return Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN);
