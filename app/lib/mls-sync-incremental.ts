@@ -24,9 +24,12 @@ type SyncState = {
 
 const DEMO_MODE = Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN);
 const storagePath = (path: string) => DEMO_MODE ? path.replace(/^mls\//, 'mls/demo/') : path;
-const STATE_PATH = storagePath('mls/sync-state.json');
-const LOCK_PATH = storagePath('mls/sync-lock.json');
-const STAGING_ROOT = storagePath('mls/sync-staging');
+// Versioned sync state intentionally starts a clean inventory pass after
+// the listing-identity/deduplication fix. Existing cache remains visible while
+// metadata and media are refreshed in bounded batches.
+const STATE_PATH = storagePath('mls/sync-state-v2.json');
+const LOCK_PATH = storagePath('mls/sync-lock-v2.json');
+const STAGING_ROOT = storagePath('mls/sync-staging-v2');
 const LOCK_TTL_MS = 10 * 60 * 1000;
 // A media-download 429 can be a short burst limit, not a full account suspension.
 const RATE_LIMIT_COOLDOWN_MS = 15 * 60 * 1000;
