@@ -128,11 +128,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
     console.error('MLS image storage read failed:', error instanceof Error ? error.message : error);
-    return unavailableResponse();
+    // A raw, freshly issued MLS URL can still be served even if Blob storage is
+    // unavailable. Only a stored key lacks a source URL to fall back to.
+    if (storedKey) return unavailableResponse();
   }
-
-  // Don't keep retrying signed single-use MLS URLs when storage is failing.
-  if (Date.now() < blobUnavailableUntil) return unavailableResponse();
 
   try {
     const image = await downloadMedia(rawUrl);
