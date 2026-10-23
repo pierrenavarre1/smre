@@ -356,11 +356,27 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
   if (cached && cached.expiresAt > Date.now()) return cached.media;
 
-  // A stored image key cannot be repaired by querying MLS Grid during a page
-  // request. Doing so once per image/gallery creates an RPS burst and reuses
-  // single-use media URLs. Wait for storage/scheduled sync to repair the cache.
   const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
-  if (hasBlobPlaceholder) return [];
+  if (hasBlobPlaceholder) {
+    // The scheduled sync stores only one preview to control Blob usage. When a
+    // visitor opens a detail page, request this listing's full media manifest
+    // once, then let the image endpoint cache each photo as it is viewed.
+    if (isMLSGridConfigured()) {
+      try {
+        const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
+        const freshMedia = freshListing?.Media || [];
+        if (freshMedia.length) {
+          freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: freshMedia });
+          const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
+          freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
+          return freshMedia;
+        }
+      } catch (error) {
+        console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
+      }
+    }
+    return [];
+  }
 
   // Reuse media already available from the live feed or a healthy local cache.
   if (listing.Media.length && !hasBlobPlaceholder) {
