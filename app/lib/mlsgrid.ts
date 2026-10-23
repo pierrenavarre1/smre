@@ -82,8 +82,11 @@ function sourceLabel(source: string): MLSSource {
   return SOURCE_CONFIG[source]?.label || 'Sunflower MLS';
 }
 
-// MLS Grid provides one access token for the subscription. Both MLS sources use it.
+// Temporary diagnostic: use the demo subscription only on Vercel Preview.
 function sourceToken(_source: string) {
+  if (process.env.VERCEL_ENV === 'preview') {
+    return process.env.MLSGRID_DEMO_ACCESS_TOKEN;
+  }
   return process.env.MLSGRID_ACCESS_TOKEN;
 }
 
@@ -368,6 +371,16 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
         const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
         const freshMedia = freshListing?.Media || [];
         if (freshMedia.length) {
+          // Temporary diagnostic: log hostnames only, never signed URLs or query strings.
+          const mediaHosts = [...new Set(freshMedia.map(photo => {
+            try { return new URL(photo.MediaURL).hostname; } catch { return 'invalid-url'; }
+          }))];
+          console.info('MLS Grid demo media diagnostic:', JSON.stringify({
+            environment: process.env.VERCEL_ENV,
+            listingId: listing.ListingId,
+            photoCount: freshMedia.length,
+            mediaHosts
+          }));
           // Do not cache these signed URLs; each page view must get fresh media URLs.
           const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
           freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
