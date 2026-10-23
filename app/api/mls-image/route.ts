@@ -106,8 +106,9 @@ export async function GET(request: NextRequest) {
     return new Response('Invalid stored image key.', { status: 400 });
   }
 
-  // MLS Grid signed URLs are single-use and expire after one hour. Public page requests must only serve locally stored image copies; stale raw URLs must be refreshed by the sync job.
-  if (!storedKey) return unavailableResponse();
+  // Detail pages can supply freshly issued MLS media URLs. Accept only HTTPS
+  // URLs from known MLS/CDN hosts, then cache the downloaded bytes by URL hash.
+  // Stored smre-blob keys never trigger a live download if their Blob is missing.
   if (!storedKey) {
     let url: URL;
     try { url = new URL(rawUrl); } catch { return new Response('Invalid image URL.', { status: 400 }); }
