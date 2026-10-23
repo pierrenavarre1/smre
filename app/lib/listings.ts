@@ -89,9 +89,13 @@ async function getListingUncached(id: string): Promise<RESOProperty | undefined>
 }
 
 export async function getListing(id: string): Promise<RESOProperty | undefined> {
-  // Do not cache listing-detail results: MLS Grid photo URLs are signed and
-  // expire. Reusing a cached detail response can leave the gallery with dead URLs.
-  return getListingUncached(decodeURIComponent(id));
+  const decodedId = decodeURIComponent(id);
+  const cached = unstable_cache(
+    () => getListingUncached(decodedId),
+    ['smre-listing-detail-v3', decodedId],
+    { revalidate: 60 }
+  );
+  return cached();
 }
 
 export type ListingFilters = { minPrice?:number; maxPrice?:number; beds?:number; propertyType?:string; source?:string; status?:string; sort?:string; };
