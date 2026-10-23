@@ -70,12 +70,12 @@ function isInServiceArea(record: MlsGridRecord) {
 function sourceKeys() {
   const configured = (process.env.MLSGRID_ORIGINATING_SYSTEMS || '')
     .split(',')
-    .map(v => v.trim())
-    .filter(Boolean);
+    .map(v => v.trim().toLowerCase())
+    .filter(source => source === 'sunflower' || source === 'flinthills');
 
-  return configured.length
-    ? configured.filter(source => source === 'sunflower' || source === 'flinthills')
-    : [...DEFAULT_SOURCES];
+  // This site is intended to publish both authorized MLS feeds. Include both
+  // even if an older Vercel environment variable lists only one source.
+  return [...new Set([...DEFAULT_SOURCES, ...configured])];
 }
 
 function sourceLabel(source: string): MLSSource {
@@ -467,79 +467,29 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
   return dedupeListings(all);
 }
 
-function normalizeAddressPart(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/\b(north|south|east|west)\b/g, (m) => ({ north: 'n', south: 's', east: 'e', west: 'w' } as Record<string, string>)[m])
-    .replace(/\b(street|avenue|road|drive|lane|court|circle|boulevard|highway|parkway|place|terrace|trail|way)\b/g, (m) => ({
-      street: 'st', avenue: 'ave', road: 'rd', drive: 'dr', lane: 'ln', court: 'ct',
-      circle: 'cir', boulevard: 'blvd', highway: 'hwy', parkway: 'pkwy', place: 'pl',
-      terrace: 'ter', trail: 'trl', way: 'way'
-    } as Record<string, string>)[m])
-    .replace(/[^a-z0-9]/g, '');
-}
-
-function listingAddressKey(listing: RESOProperty) {
-  return [
-    listing.StreetNumber,
-    listing.StreetName,
-    listing.City,
-    listing.StateOrProvince,
-    listing.PostalCode
-  ].map(normalizeAddressPart).join('|');
-}
-
-function sameApproximateLocation(a: RESOProperty, b: RESOProperty) {
-  if (!a.Latitude || !a.Longitude || !b.Latitude || !b.Longitude) return false;
-  if (normalizeCity(a.City) !== normalizeCity(b.City)) return false;
-  if (a.PostalCode && b.PostalCode && a.PostalCode !== b.PostalCode) return false;
-  return Math.abs(a.Latitude - b.Latitude) < 0.00035 &&
-    Math.abs(a.Longitude - b.Longitude) < 0.00035;
-}
-
-function isSMREListing(listing: RESOProperty) {
-  return /st\.?\s*mary['’]?s\s*real\s*estate/i.test(listing.ListOfficeName || '');
-}
-
 function listingDateValue(listing: RESOProperty) {
-  const value = Date.parse(listing.ListingDate || listing.ModificationTimestamp || '');
+  const value = Date.parse(listing.ModificationTimestamp || listing.ListingDate || '');
   return Number.isFinite(value) ? value : 0;
 }
 
-function preferListing(a: RESOProperty, b: RESOProperty) {
-  const aSMRE = isSMREListing(a);
-  const bSMRE = isSMREListing(b);
-  if (aSMRE !== bSMRE) return aSMRE ? a : b;
-
+function preferDuplicateRecord(a: RESOProperty, b: RESOProperty) {
   if (a.Media.length !== b.Media.length) return a.Media.length > b.Media.length ? a : b;
-
   return listingDateValue(a) >= listingDateValue(b) ? a : b;
 }
 
+// MLS source + ListingId is the stable identity. Address/proximity-based
+// deduplication can hide valid separate listings (multi-unit properties,
+// adjacent parcels, land listings, and the same address represented by two MLSs).
+// Keep every distinct MLS record; collapse only repeated copies of the same ID.
 export function dedupeListings(listings: RESOProperty[]) {
-  const result: RESOProperty[] = [];
-  const byAddress = new Map<string, number>();
-
+  const byId = new Map<string, RESOProperty>();
   for (const listing of listings) {
-    const addressKey = listingAddressKey(listing);
-    const exactIndex = addressKey ? byAddress.get(addressKey) : undefined;
-
-    if (exactIndex !== undefined) {
-      result[exactIndex] = preferListing(result[exactIndex], listing);
-      continue;
-    }
-
-    const nearbyIndex = result.findIndex(existing => sameApproximateLocation(existing, listing));
-    if (nearbyIndex >= 0) {
-      result[nearbyIndex] = preferListing(result[nearbyIndex], listing);
-      continue;
-    }
-
-    if (addressKey) byAddress.set(addressKey, result.length);
-    result.push(listing);
+    const id = String(listing.ListingId || '').trim();
+    if (!id) continue;
+    const existing = byId.get(id);
+    byId.set(id, existing ? preferDuplicateRecord(existing, listing) : listing);
   }
-
-  return result;
+  return [...byId.values()];
 }
 
 export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflower'): RESOProperty {
@@ -578,6 +528,8 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
     ListAgentFullName: firstString(record.ListAgentFullName) || '',
     ListAgentMlsId: firstString(record.ListAgentMlsId) || '',
     ListOfficeName: firstString(record.ListOfficeName) || '',
+    ListOfficeMlsId: firstString(record.ListOfficeMlsId, record.ListOffice?.OfficeMlsId) || '',
+    ListOfficeKey: firstString(record.ListOfficeKey, record.ListOffice?.OfficeKey) || '',
     MlsSource: sourceLabel(source),
     Latitude: asNumber(record.Latitude),
     Longitude: asNumber(record.Longitude),
