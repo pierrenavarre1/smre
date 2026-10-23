@@ -1093,3 +1093,36 @@
     bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Homepage search: keep the address field full-width above all mobile filters. */
+@media (max-width: 600px) {
+  .home-search {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 10px;
+    row-gap: 10px;
+    padding: 12px;
+  }
+  .home-search-location {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .home-search-location > input {
+    width: 100%;
+    min-width: 0;
+  }
+  .home-search > select {
+    grid-column: auto;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 12px 34px 12px 12px;
+  }
+  .home-search > select:nth-of-type(3) {
+    grid-column: 1 / -1;
+  }
+  .home-search > .button {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 0;
+  }
+}
