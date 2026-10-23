@@ -11,6 +11,22 @@ const inFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: stri
 let blobUnavailableUntil = 0;
 const BLOB_FAILURE_COOLDOWN_MS = 5 * 60_000;
 
+// MLS Grid throttles photo downloads when gallery images request concurrently.
+// Serialize downloads within each function instance and back off on HTTP 429.
+const MIN_MEDIA_REQUEST_INTERVAL_MS = 1500;
+let lastMediaRequestAt = 0;
+let mediaRequestQueue: Promise<void> = Promise.resolve();
+
+async function waitForMediaRequestSlot() {
+  const slot = mediaRequestQueue.then(async () => {
+    const wait = Math.max(0, MIN_MEDIA_REQUEST_INTERVAL_MS - (Date.now() - lastMediaRequestAt));
+    if (wait) await new Promise(resolve => setTimeout(resolve, wait));
+    lastMediaRequestAt = Date.now();
+  });
+  mediaRequestQueue = slot.catch(() => undefined);
+  await slot;
+}
+
 // Deduplicate simultaneous reads for the same private Blob object.
 const blobReadInFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string } | null>>();
 
@@ -41,32 +57,45 @@ async function downloadMedia(rawUrl: string) {
     const token = process.env.MLSGRID_ACCESS_TOKEN;
     if (!token) throw new Error('MLS Grid access token is not configured.');
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    try {
-      const response = await fetch(rawUrl, {
-        headers: {
-          Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*',
-          'User-Agent': token
-        },
-        redirect: 'follow',
-        cache: 'no-store',
-        signal: controller.signal
-      });
+    for (let attempt = 0; attempt < 4; attempt++) {
+      await waitForMediaRequestSlot();
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      try {
+        const response = await fetch(rawUrl, {
+          headers: {
+            Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*',
+            'User-Agent': token
+          },
+          redirect: 'follow',
+          cache: 'no-store',
+          signal: controller.signal
+        });
 
-      if (!response.ok || !response.body) {
-        throw new Error('MLS image source returned ' + response.status + ' ' + response.statusText);
+        if (response.status === 429 && attempt < 3) {
+          const retryAfter = Number(response.headers.get('retry-after') || '');
+          const backoffMs = Number.isFinite(retryAfter) && retryAfter > 0
+            ? retryAfter * 1000
+            : 2000 * (attempt + 1);
+          await response.body?.cancel().catch(() => undefined);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+          continue;
+        }
+        if (!response.ok || !response.body) {
+          throw new Error('MLS image source returned ' + response.status + ' ' + response.statusText);
+        }
+
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+        if (!contentType.toLowerCase().startsWith('image/')) {
+          throw new Error('MLS media URL returned non-image content.');
+        }
+
+        return { bytes: await response.arrayBuffer(), contentType };
+      } finally {
+        clearTimeout(timeout);
       }
-
-      const contentType = response.headers.get('content-type') || 'image/jpeg';
-      if (!contentType.toLowerCase().startsWith('image/')) {
-        throw new Error('MLS media URL returned non-image content.');
-      }
-
-      return { bytes: await response.arrayBuffer(), contentType };
-    } finally {
-      clearTimeout(timeout);
     }
+    throw new Error('MLS image source remained rate-limited after retries.');
   })();
 
   inFlight.set(rawUrl, promise);
