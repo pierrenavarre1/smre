@@ -367,9 +367,6 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
   if (cached && cached.expiresAt > Date.now()) return cached.media;
 
-  const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
-  if (hasBlobPlaceholder) return [];
-
   // Listing detail pages need the complete gallery, not just the card preview.
   // Request fresh CDN URLs for this one listing; keep the result cached briefly
   // so normal navigation does not repeatedly hit MLS Grid.
