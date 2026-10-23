@@ -65,7 +65,7 @@ async function getListingsUncached(): Promise<RESOProperty[]> {
 // entire listing set on every request.
 const getListingsCached = unstable_cache(
   getListingsUncached,
-  ['smre-listings-index-v4', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production'],
+  ['smre-listings-index-v5', process.env.MLSGRID_DEMO_ACCESS_TOKEN ? 'demo' : 'production'],
   { revalidate: 60 }
 );
 
