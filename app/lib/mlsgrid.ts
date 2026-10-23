@@ -354,7 +354,9 @@ export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
 
 export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
-  if (cached && cached.expiresAt > Date.now()) return cached.media;
+  // Only reuse locally stored keys. Raw MLS Grid media URLs are signed and can
+  // expire, so never serve them from this in-memory cache on a later page view.
+  if (cached && cached.expiresAt > Date.now() && cached.media.every(photo => photo.MediaURL.startsWith('smre-blob:'))) return cached.media;
 
   const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
   if (hasBlobPlaceholder) {
@@ -366,7 +368,7 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
         const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
         const freshMedia = freshListing?.Media || [];
         if (freshMedia.length) {
-          freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: freshMedia });
+          // Do not cache these signed URLs; each page view must get fresh media URLs.
           const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
           freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
           return freshMedia;
