@@ -357,55 +357,47 @@ export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
 
 export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
-  // Only reuse locally stored keys. Raw MLS Grid media URLs are signed and can
-  // expire, so never serve them from this in-memory cache on a later page view.
-  if (cached && cached.expiresAt > Date.now() && cached.media.every(photo => photo.MediaURL.startsWith('smre-blob:'))) return cached.media;
+  // The scheduled sync intentionally stores only one thumbnail. Only reuse a
+  // cached full manifest, never mistake that thumbnail for the complete gallery.
+  if (
+    cached &&
+    cached.expiresAt > Date.now() &&
+    cached.media.length > 1 &&
+    cached.media.every(photo => !photo.MediaURL.startsWith('smre-blob:'))
+  ) {
+    return cached.media;
+  }
 
-  const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
-  const hasNoUsableMedia = listing.Media.length === 0;
-  if (hasBlobPlaceholder || hasNoUsableMedia) {
-    // The scheduled sync stores only one preview to control Blob usage. If that
-    // preview failed to download during sync, the cached listing can have no
-    // media at all. On a detail-page request, fetch a fresh manifest in either
-    // case, then let the image endpoint cache each photo as it is viewed.
-    if (isMLSGridConfigured()) {
-      try {
-        const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
-        const freshMedia = freshListing?.Media || [];
-        if (freshMedia.length) {
-          // Temporary diagnostic: log hostnames only, never signed URLs or query strings.
-          const mediaHosts = [...new Set(freshMedia.map(photo => {
-            try { return new URL(photo.MediaURL).hostname; } catch { return 'invalid-url'; }
-          }))];
-          console.info('MLS Grid demo media diagnostic:', JSON.stringify({
-            environment: process.env.VERCEL_ENV,
-            listingId: listing.ListingId,
-            photoCount: freshMedia.length,
-            mediaHosts
-          }));
-          // Do not cache these signed URLs; each page view must get fresh media URLs.
-          const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
-          freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
-          return freshMedia;
-        }
-      } catch (error) {
-        console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
-      }
+  if (!isMLSGridConfigured()) return listing.Media.filter(photo => !photo.MediaURL.startsWith('smre-blob:'));
+
+  try {
+    const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
+    const freshMedia = freshListing?.Media || [];
+    // Cache only the complete current manifest briefly. Signed URLs are short-lived,
+    // so keep the TTL short and never cache the sync's single Blob thumbnail here.
+    if (freshMedia.length > 1) {
+      freshMediaCache.set(listing.ListingId, {
+        expiresAt: Date.now() + 60_000,
+        media: freshMedia
+      });
+      const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
+      freshPreviewCache.set(listing.ListingId, {
+        expiresAt: Date.now() + 60_000,
+        media: preferred ? [preferred] : []
+      });
+      return freshMedia;
     }
-    return [];
+
+    // A genuine zero-photo MLS record is different from a failed request.
+    // Preserve a usable cached non-Blob photo only when MLS returned no media.
+    if (freshListing && freshMedia.length === 0) return [];
+  } catch (error) {
+    console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
   }
 
-  // Reuse media already available from the live feed or a healthy local cache.
-  if (listing.Media.length && !hasBlobPlaceholder) {
-    freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: listing.Media });
-    const preferred = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
-    freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
-    return listing.Media;
-  }
-
-  // If media exists but is already in a usable format, the earlier branch
-  // returns it. Empty media is handled by the live-manifest refresh above.
-  return [];
+  // If the live manifest is temporarily unavailable, use any non-Blob media
+  // already on the listing instead of returning expired internal Blob keys.
+  return listing.Media.filter(photo => !photo.MediaURL.startsWith('smre-blob:'));
 }
 
 export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
