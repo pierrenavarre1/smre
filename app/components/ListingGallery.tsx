@@ -27,7 +27,6 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
     };
   }, [open, photos.length]);
 
-  if (!photos.length) return null;
   const photoUrl = (index: number) => {
     const mediaUrl = photos[index].MediaURL;
     // MLS Grid's CDN issues browser-loadable image URLs. Use them directly
@@ -41,6 +40,32 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
     } catch {}
     return `/api/mls-image?url=${encodeURIComponent(mediaUrl)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
   };
+
+  useEffect(() => {
+    if (open === null || photos.length < 2) return;
+    // Warm the adjacent images while the current photo is displayed so swiping
+    // usually changes photos without waiting for a fresh network request.
+    const adjacent = [
+      (open - 1 + photos.length) % photos.length,
+      (open + 1) % photos.length
+    ];
+    adjacent.forEach((index) => {
+      const image = new Image();
+      image.decoding = 'async';
+      image.src = photoUrl(index);
+    });
+  }, [open, photos.length, listingId]);
+
+  if (!photos.length) {
+    return (
+      <div className="gallery gallery-empty" role="img" aria-label={`Photos currently unavailable for ${address}`}>
+        <div className="gallery-empty-message">
+          <strong>Photos currently unavailable</strong>
+          <span>Listing photos may not be available from the MLS feed right now.</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -80,7 +105,7 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
               if (Math.abs(delta) > 50) delta < 0 ? next() : previous();
             }}
           >
-            <img src={photoUrl(open)} alt={`${address} property photo ${open + 1}`} />
+            <img src={photoUrl(open)} alt={`${address} property photo ${open + 1}`} loading="eager" decoding="async" />
           </div>
           <button type="button" className="photo-lightbox-arrow photo-lightbox-next" onClick={(event) => { event.stopPropagation(); next(); }} aria-label="Next photo">›</button>
           <div className="photo-lightbox-count">{open + 1} / {photos.length}</div>
