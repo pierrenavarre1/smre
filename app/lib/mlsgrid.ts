@@ -2,7 +2,7 @@ import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-pr
 import { get, put } from '@vercel/blob';
 import { readMLSCache } from './mls-store';
 
-const API_BASE = process.env.MLSGRID_API_BASE_URL || (process.env.VERCEL_ENV === 'preview' ? 'https://api-demo.mlsgrid.com/v2' : 'https://api.mlsgrid.com/v2');
+const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
 const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
 const SOURCE_CONFIG: Record<string, { label: MLSSource }> = {
   sunflower: { label: 'Sunflower MLS' },
@@ -82,11 +82,10 @@ function sourceLabel(source: string): MLSSource {
   return SOURCE_CONFIG[source]?.label || 'Sunflower MLS';
 }
 
-// Temporary diagnostic: use the demo subscription only on Vercel Preview.
+// Use the authorized live MLS Grid feed in Preview and Production so Preview
+// can validate actual listing IDs and their complete photo galleries. Credentials
+// remain server-side and are never exposed to client components.
 function sourceToken(_source: string) {
-  if (process.env.VERCEL_ENV === 'preview') {
-    return process.env.MLSGRID_DEMO_ACCESS_TOKEN;
-  }
   return process.env.MLSGRID_ACCESS_TOKEN;
 }
 
