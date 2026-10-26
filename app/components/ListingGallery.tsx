@@ -28,17 +28,10 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
   }, [open, photos.length]);
 
   const photoUrl = (index: number) => {
-    const mediaUrl = photos[index].MediaURL;
-    // MLS Grid's CDN issues browser-loadable image URLs. Use them directly
-    // in the detail gallery instead of proxying every photo through our
-    // server/Blob cache, which was producing rate-limit failures.
-    try {
-      const parsed = new URL(mediaUrl);
-      if (parsed.protocol === 'https:' && (parsed.hostname === 'media.mlsgrid.com' || parsed.hostname.endsWith('.mlsgrid.com'))) {
-        return mediaUrl;
-      }
-    } catch {}
-    return `/api/mls-image?url=${encodeURIComponent(mediaUrl)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
+    // Resolve the current MLS media URL on the server. MLS Grid URLs can be
+    // temporary signed links, so embedding them directly makes images break
+    // after the manifest/page cache has been around for a while.
+    return `/api/mls-image?listingId=${encodeURIComponent(listingId)}&index=${index}&url=${encodeURIComponent(photos[index].MediaURL)}`;
   };
 
   useEffect(() => {
