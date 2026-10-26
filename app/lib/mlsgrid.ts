@@ -367,7 +367,11 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
     return cached.media;
   }
 
-  if (!isMLSGridConfigured()) return listing.Media.filter(photo => !photo.MediaURL.startsWith('smre-blob:'));
+  // If live media cannot be refreshed, keep the locally stored preview instead
+  // of returning an empty gallery. The image endpoint resolves smre-blob keys to
+  // persistent Blob objects; filtering these keys here made otherwise valid
+  // listings render an empty gallery whenever MLS Grid was rate-limited.
+  if (!isMLSGridConfigured()) return listing.Media;
 
   try {
     const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
@@ -395,9 +399,10 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
     console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
   }
 
-  // If the live manifest is temporarily unavailable, use any non-Blob media
-  // already on the listing instead of returning expired internal Blob keys.
-  return listing.Media.filter(photo => !photo.MediaURL.startsWith('smre-blob:'));
+  // Preserve the stored preview if the live manifest request fails or is
+  // rate-limited. Stored smre-blob references are valid inputs to /api/mls-image;
+  // dropping them here turns a transient upstream problem into a blank gallery.
+  return listing.Media;
 }
 
 export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
