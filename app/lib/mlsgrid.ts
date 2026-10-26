@@ -375,11 +375,13 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
     const freshMedia = freshListing?.Media || [];
     // Cache only the complete current manifest briefly. Signed URLs are short-lived,
     // so keep the TTL short and never cache the sync's single Blob thumbnail here.
-    if (freshMedia.length > 1) {
-      freshMediaCache.set(listing.ListingId, {
-        expiresAt: Date.now() + 60_000,
-        media: freshMedia
-      });
+    if (freshMedia.length > 0) {
+      if (freshMedia.length > 1) {
+        freshMediaCache.set(listing.ListingId, {
+          expiresAt: Date.now() + 60_000,
+          media: freshMedia
+        });
+      }
       const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
       freshPreviewCache.set(listing.ListingId, {
         expiresAt: Date.now() + 60_000,
@@ -389,7 +391,6 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
     }
 
     // A genuine zero-photo MLS record is different from a failed request.
-    // Preserve a usable cached non-Blob photo only when MLS returned no media.
     if (freshListing && freshMedia.length === 0) return [];
   } catch (error) {
     console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
