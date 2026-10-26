@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { get, put } from '@vercel/blob';
+import { getListing } from '../../lib/listings';
 
 function allowedMediaHost(hostname: string) {
   const host = hostname.toLowerCase();
@@ -127,7 +128,25 @@ function imageResponse(bytes: ArrayBuffer, contentType: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const rawUrl = request.nextUrl.searchParams.get('url');
+  const listingId = request.nextUrl.searchParams.get('listingId');
+  const requestedIndex = Number(request.nextUrl.searchParams.get('index') || '0');
+  let rawUrl = request.nextUrl.searchParams.get('url') || '';
+
+  // MLS Grid MediaURL values are temporary signed URLs. Refresh the listing's
+  // manifest server-side so galleries don't break when a URL expires in a page
+  // cache or browser tab. getListing uses the shared server cache to avoid one
+  // MLS request per photo during normal gallery navigation.
+  if (listingId && Number.isInteger(requestedIndex) && requestedIndex >= 0) {
+    try {
+      const listing = await getListing(listingId);
+      const photos = listing?.Media?.filter(photo => photo.MediaCategory === 'Photo' && photo.MediaURL) || [];
+      const current = photos[requestedIndex];
+      if (current?.MediaURL && !current.MediaURL.startsWith('smre-blob:')) rawUrl = current.MediaURL;
+      else if (current?.MediaURL?.startsWith('smre-blob:')) rawUrl = current.MediaURL;
+    } catch (error) {
+      console.error('Unable to refresh MLS photo URL:', error instanceof Error ? error.message : error);
+    }
+  }
   if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
 
   const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
