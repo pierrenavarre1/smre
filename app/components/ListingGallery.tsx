@@ -27,18 +27,10 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
     };
   }, [open, photos.length]);
 
-  const photoUrl = (index: number) => {
-    const mediaUrl = photos[index].MediaURL;
-    try {
-      const parsed = new URL(mediaUrl);
-      // Let the browser fetch MLS Grid CDN images directly. Proxying each image
-      // makes Vercel re-download the same photo repeatedly and trips MLS 429s.
-      if (parsed.protocol === 'https:' && (parsed.hostname === 'media.mlsgrid.com' || parsed.hostname.endsWith('.mlsgrid.com'))) {
-        return mediaUrl;
-      }
-    } catch {}
-    return `/api/mls-image?url=${encodeURIComponent(mediaUrl)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
-  };
+  // MLS Grid MediaURL values are temporary, single-use download URLs, not
+  // website image URLs. Always go through our stable cached image endpoint.
+  const photoUrl = (index: number) =>
+    `/api/mls-image?url=${encodeURIComponent(photos[index].MediaURL)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
 
   useEffect(() => {
     if (open === null || photos.length < 2) return;
