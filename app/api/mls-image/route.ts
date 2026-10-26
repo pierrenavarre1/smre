@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
   // Prefer a stable cache key for each listing/photo. MLS Grid URLs can be
   // short-lived and signed, so caching by URL alone causes repeat downloads
   // when the signature changes and can trigger upstream 429 responses.
-  if (listingId && Number.isInteger(requestedIndex) && requestedIndex >= 0) {
+  if (!rawUrl && listingId && Number.isInteger(requestedIndex) && requestedIndex >= 0) {
     try {
       const listing = await getListing(listingId);
       const photos = listing?.Media?.filter(photo => photo.MediaCategory === 'Photo' && photo.MediaURL) || [];
