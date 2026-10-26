@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchMLSGridPage, fetchMLSGridLiveListing } from '@/app/lib/mlsgrid';
+import { fetchMLSGridPage, fetchMLSGridLiveListing } from '../../lib/mlsgrid';
 
 export const dynamic = 'force-dynamic';
 
