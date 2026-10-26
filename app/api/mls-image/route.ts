@@ -131,32 +131,41 @@ export async function GET(request: NextRequest) {
   const listingId = request.nextUrl.searchParams.get('listingId');
   const requestedIndex = Number(request.nextUrl.searchParams.get('index') || '0');
   let rawUrl = request.nextUrl.searchParams.get('url') || '';
+  let stablePathname = '';
 
-  // MLS Grid MediaURL values are temporary signed URLs. Refresh the listing's
-  // manifest server-side so galleries don't break when a URL expires in a page
-  // cache or browser tab. getListing uses the shared server cache to avoid one
-  // MLS request per photo during normal gallery navigation.
+  // Prefer a stable cache key for each listing/photo. MLS Grid URLs can be
+  // short-lived and signed, so caching by URL alone causes repeat downloads
+  // when the signature changes and can trigger upstream 429 responses.
   if (listingId && Number.isInteger(requestedIndex) && requestedIndex >= 0) {
     try {
       const listing = await getListing(listingId);
       const photos = listing?.Media?.filter(photo => photo.MediaCategory === 'Photo' && photo.MediaURL) || [];
       const current = photos[requestedIndex];
-      if (current?.MediaURL && !current.MediaURL.startsWith('smre-blob:')) rawUrl = current.MediaURL;
-      else if (current?.MediaURL?.startsWith('smre-blob:')) rawUrl = current.MediaURL;
+      if (current) {
+        if (current.MediaURL) rawUrl = current.MediaURL;
+        const stableKey = createHash('sha256').update(listingId + ':' + current.MediaKey).digest('hex');
+        stablePathname = 'mls/images/' + stableKey + '.image';
+
+        // Stored photos are independent of the temporary signed URL. Return the
+        // stable cached copy first, avoiding an upstream media request entirely.
+        try {
+          const cached = await readStoredImage(stablePathname);
+          if (cached) return imageResponse(cached.bytes, cached.contentType);
+        } catch (error) {
+          console.error('MLS stable image cache read failed:', error instanceof Error ? error.message : error);
+        }
+      }
     } catch (error) {
-      console.error('Unable to refresh MLS photo URL:', error instanceof Error ? error.message : error);
+      console.error('Unable to resolve current MLS photo:', error instanceof Error ? error.message : error);
     }
   }
-  if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
 
+  if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
   const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
   if (storedKey && !/^[a-zA-Z0-9_-]{8,128}$/.test(storedKey)) {
     return new Response('Invalid stored image key.', { status: 400 });
   }
 
-  // Detail pages can supply freshly issued MLS media URLs. Accept only HTTPS
-  // URLs from known MLS/CDN hosts, then cache the downloaded bytes by URL hash.
-  // Stored smre-blob keys never trigger a live download if their Blob is missing.
   if (!storedKey) {
     let url: URL;
     try { url = new URL(rawUrl); } catch { return new Response('Invalid image URL.', { status: 400 }); }
@@ -165,10 +174,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const key = storedKey || createHash('sha256').update(rawUrl).digest('hex');
+  // For old sync-generated Blob keys, keep the existing stable-key behavior.
+  const key = storedKey || (stablePathname
+    ? stablePathname.slice('mls/images/'.length, -'.image'.length)
+    : createHash('sha256').update(rawUrl).digest('hex'));
   const pathname = 'mls/images/' + key + '.image';
 
-  // Try existing stored bytes first, including during a storage-write cooldown.
   try {
     const cached = await readStoredImage(pathname);
     if (cached) return imageResponse(cached.bytes, cached.contentType);
@@ -176,8 +187,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
     console.error('MLS image storage read failed:', error instanceof Error ? error.message : error);
-    // A raw, freshly issued MLS URL can still be served even if Blob storage is
-    // unavailable. Only a stored key lacks a source URL to fall back to.
     if (storedKey) return unavailableResponse();
   }
 
@@ -187,16 +196,14 @@ export async function GET(request: NextRequest) {
       await put(pathname, image.bytes, {
         access: 'private',
         allowOverwrite: true,
-        cacheControlMaxAge: 86400,
+        cacheControlMaxAge: 31536000,
         contentType: image.contentType
       });
     } catch (error) {
       blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
       console.error('MLS image cache write failed:', error instanceof Error ? error.message : error);
-      // Return the photo to the current visitor even if persistent caching is temporarily down.
       return imageResponse(image.bytes, image.contentType);
     }
-
     return imageResponse(image.bytes, image.contentType);
   } catch (error) {
     console.error('MLS image fetch failed:', error instanceof Error ? error.message : error);
