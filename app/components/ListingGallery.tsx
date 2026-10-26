@@ -28,7 +28,19 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
   }, [open, photos.length]);
 
   if (!photos.length) return null;
-  const photoUrl = (index: number) => `/api/mls-image?url=${encodeURIComponent(photos[index].MediaURL)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
+  const photoUrl = (index: number) => {
+    const mediaUrl = photos[index].MediaURL;
+    // MLS Grid's CDN issues browser-loadable image URLs. Use them directly
+    // in the detail gallery instead of proxying every photo through our
+    // server/Blob cache, which was producing rate-limit failures.
+    try {
+      const parsed = new URL(mediaUrl);
+      if (parsed.protocol === 'https:' && (parsed.hostname === 'media.mlsgrid.com' || parsed.hostname.endsWith('.mlsgrid.com'))) {
+        return mediaUrl;
+      }
+    } catch {}
+    return `/api/mls-image?url=${encodeURIComponent(mediaUrl)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
+  };
 
   return (
     <>
