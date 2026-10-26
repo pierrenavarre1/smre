@@ -27,10 +27,19 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
     };
   }, [open, photos.length]);
 
-  // MLS Grid MediaURL values are temporary, single-use download URLs, not
-  // website image URLs. Always go through our stable cached image endpoint.
-  const photoUrl = (index: number) =>
-    `/api/mls-image?url=${encodeURIComponent(photos[index].MediaURL)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
+  // MLS Grid's configured CDN returns browser-loadable, signed media URLs.
+  // Use those URLs directly so each photo does not invoke our server route or
+  // consume another MLS Grid request. Keep local Blob previews on our proxy.
+  const photoUrl = (index: number) => {
+    const mediaUrl = photos[index].MediaURL;
+    try {
+      const parsed = new URL(mediaUrl);
+      if (parsed.protocol === 'https:' && (parsed.hostname === 'media.mlsgrid.com' || parsed.hostname.endsWith('.mlsgrid.com'))) {
+        return mediaUrl;
+      }
+    } catch {}
+    return `/api/mls-image?url=${encodeURIComponent(mediaUrl)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
+  };
 
   useEffect(() => {
     if (open === null || photos.length < 2) return;
