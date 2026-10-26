@@ -362,10 +362,12 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   if (cached && cached.expiresAt > Date.now() && cached.media.every(photo => photo.MediaURL.startsWith('smre-blob:'))) return cached.media;
 
   const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
-  if (hasBlobPlaceholder) {
-    // The scheduled sync stores only one preview to control Blob usage. When a
-    // visitor opens a detail page, request this listing's full media manifest
-    // once, then let the image endpoint cache each photo as it is viewed.
+  const hasNoUsableMedia = listing.Media.length === 0;
+  if (hasBlobPlaceholder || hasNoUsableMedia) {
+    // The scheduled sync stores only one preview to control Blob usage. If that
+    // preview failed to download during sync, the cached listing can have no
+    // media at all. On a detail-page request, fetch a fresh manifest in either
+    // case, then let the image endpoint cache each photo as it is viewed.
     if (isMLSGridConfigured()) {
       try {
         const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
@@ -401,8 +403,8 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
     return listing.Media;
   }
 
-  // Do not fall back to live API requests during page rendering. The next
-  // scheduled sync will refresh the saved media set.
+  // If media exists but is already in a usable format, the earlier branch
+  // returns it. Empty media is handled by the live-manifest refresh above.
   return [];
 }
 
