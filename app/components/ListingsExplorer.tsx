@@ -327,7 +327,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
               <select aria-label="Acreage" value={filters.acreage} onChange={(e) => update('acreage', e.target.value)}><option value="">Acreage</option><option value="0.25">¼+ acre</option><option value="0.5">½+ acre</option><option value="1">1+ acre</option><option value="2">2+ acres</option><option value="5">5+ acres</option><option value="10">10+ acres</option><option value="20">20+ acres</option><option value="40">40+ acres</option></select>
               <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}><option value="Active">Active</option><option value="">All statuses</option><option value="Pending">Pending</option></select>
             </div>
-            <div className="listings-mobile-filter-actions"><button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button><button type="button" className="button button-dark" onClick={() => setMobileFiltersOpen(false)}>View {shown.length} {shown.length === 1 ? 'home' : 'homes'}</button></div>
+            <div className="listings-mobile-filter-actions"><button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button><button type="button" className="button button-dark" onClick={() => setMobileFiltersOpen(false)}>View homes</button></div>
           </div>
         </div>
       )}
@@ -340,9 +340,8 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
 
           <div className="listings-results-column">
             <div className="listings-results-toolbar">
-              <div>
-                <strong>{shown.length} {shown.length === 1 ? 'home' : 'homes'}</strong>
-                <span> for sale</span>
+              <div aria-label="Listing results">
+                <strong>Homes for sale</strong>
               </div>
               <label>
                 <span>Sort</span>
