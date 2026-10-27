@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { get, put } from '@vercel/blob';
 import { getListing } from '../../lib/listings';
+import { fetchMLSGridLiveListing } from '../../lib/mlsgrid';
 
 function allowedMediaHost(hostname: string) {
   const host = hostname.toLowerCase();
@@ -201,7 +202,22 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const image = await downloadMedia(rawUrl);
+    let image: { bytes: ArrayBuffer; contentType: string };
+    try {
+      image = await downloadMedia(rawUrl);
+    } catch (initialError) {
+      // Listing detail HTML can be cached longer than a single-use MLS Grid
+      // media URL remains valid. If that URL fails, refresh the listing's
+      // media manifest directly and retry once with a newly issued URL for
+      // the same MediaKey. The stable Blob key means future views won't need
+      // another MLS Grid request for this photo.
+      if (!listingId || !mediaKey) throw initialError;
+      const freshListing = await fetchMLSGridLiveListing(listingId);
+      const freshPhoto = freshListing?.Media.find(photo => photo.MediaKey === mediaKey);
+      if (!freshPhoto?.MediaURL || freshPhoto.MediaURL === rawUrl) throw initialError;
+      image = await downloadMedia(freshPhoto.MediaURL);
+    }
+
     try {
       await put(pathname, image.bytes, {
         access: 'private',
