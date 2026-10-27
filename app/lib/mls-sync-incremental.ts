@@ -308,7 +308,24 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
     }
 
     const normalized = normalizeMLSGridProperty(record, item.source);
-    if (!normalized.Media.length && existing?.Media.length) {
+
+    // The incremental sync deliberately stores only a downloaded primary-photo
+    // blob. Do not let that preview-only representation overwrite a full,
+    // provisioned MLS Grid CDN gallery already stored for the listing.
+    // The incremental endpoint's signed Media URLs are single-use and cannot
+    // safely replace the durable CDN URLs in the saved gallery manifest.
+    const existingFullGallery = existing?.Media?.length && existing.Media.length > 1 &&
+      existing.Media.every(photo => {
+        try {
+          const url = new URL(photo.MediaURL);
+          return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
+        } catch {
+          return false;
+        }
+      });
+    if (existingFullGallery && normalized.Media.length <= 1) {
+      normalized.Media = existing!.Media;
+    } else if (!normalized.Media.length && existing?.Media.length) {
       const preview = existing.Media.find(photo => photo.PreferredPhoto) || existing.Media[0];
       if (modification === existingModification && preview && await imageExists(preview.MediaURL)) {
         normalized.Media = [preview];
