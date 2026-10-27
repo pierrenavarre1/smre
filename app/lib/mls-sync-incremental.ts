@@ -174,8 +174,14 @@ function isProvisionedCdnUrl(value: string) {
   }
 }
 
-function isProvisionedCdnGallery(items: RESOMedia[] | undefined): items is RESOMedia[] {
+function hasOnlyProvisionedCdnUrls(items: RESOMedia[] | undefined): items is RESOMedia[] {
   return Boolean(items?.length && items.every(photo => isProvisionedCdnUrl(photo.MediaURL)));
+}
+
+// A single stored CDN thumbnail does not prove that the complete media manifest
+// was saved. Existing data is considered a known full gallery only with 2+ photos.
+function isStoredFullCdnGallery(items: RESOMedia[] | undefined): items is RESOMedia[] {
+  return Boolean(items && items.length > 1 && hasOnlyProvisionedCdnUrls(items));
 }
 async function downloadPreview(source: string, record: MlsGridRecord) {
   const availablePhotos = photos(record);
@@ -304,7 +310,7 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
     const modification = String(record.ModificationTimestamp || '');
     const existingModification = String(existing?.ModificationTimestamp || '');
     const unchanged = Boolean(existing && modification && modification === existingModification);
-    const existingFullCdnGallery = isProvisionedCdnGallery(existing?.Media);
+    const existingFullCdnGallery = isStoredFullCdnGallery(existing?.Media);
 
     if (unchanged && existingFullCdnGallery) {
       // Avoid needless API/image requests for an unchanged, already durable gallery.
@@ -314,7 +320,7 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
         await fetchMediaForRecord(item.source, record);
         const fetchedMedia = photos(record);
 
-        if (isProvisionedCdnGallery(fetchedMedia)) {
+        if (hasOnlyProvisionedCdnUrls(fetchedMedia)) {
           // Critical: do not replace the CDN gallery with downloadPreview's
           // one-photo Blob representation. Preserve every photo and its MediaKey.
           record.Media = fetchedMedia;
