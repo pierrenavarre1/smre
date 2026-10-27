@@ -27,18 +27,20 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
     };
   }, [open, photos.length]);
 
-  // MLS Grid's configured CDN returns browser-loadable, signed media URLs.
-  // Use those URLs directly so each photo does not invoke our server route or
-  // consume another MLS Grid request. Keep local Blob previews on our proxy.
+  // Only the specifically provisioned MLS Grid CDN host is suitable for direct
+  // browser display. Standard media.mlsgrid.com URLs are single-use download
+  // URLs, so route those through the server-side cache instead.
   const photoUrl = (index: number) => {
     const mediaUrl = photos[index].MediaURL;
     try {
       const parsed = new URL(mediaUrl);
-      if (parsed.protocol === 'https:' && (parsed.hostname === 'media.mlsgrid.com' || parsed.hostname.endsWith('.mlsgrid.com'))) {
+      if (parsed.protocol === 'https:' && parsed.hostname === 'cdn-stmarys.mlsgrid.com') {
         return mediaUrl;
       }
     } catch {}
-    return `/api/mls-image?url=${encodeURIComponent(mediaUrl)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
+    // Resolve the current photo by listing and index server-side. Avoid using a
+    // temporary signed URL as the image proxy's cache key.
+    return `/api/mls-image?listingId=${encodeURIComponent(listingId)}&index=${index}`;
   };
 
   useEffect(() => {
