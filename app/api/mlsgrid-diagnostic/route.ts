@@ -21,14 +21,24 @@ export async function GET() {
       });
       const page = await fetchMLSGridPage(source, 'https://api-demo.mlsgrid.com/v2/Property?' + query.toString(), true);
       const records = page.value || [];
-      const hosts = [...new Set(records.flatMap((record: any) =>
-        (Array.isArray(record.Media) ? record.Media : [])
-          .map((media: any) => {
-            try { return new URL(String(media.MediaURL || '')).hostname; } catch { return ''; }
-          })
-          .filter(Boolean)
-      ))];
-      results.push({ source, ok: true, recordsReturned: records.length, mediaHostnames: hosts });
+      const mediaItems = records.flatMap((record: any) => Array.isArray(record.Media) ? record.Media : []);
+      const hosts = [...new Set(mediaItems
+        .map((item: any) => {
+          try { return new URL(String(item.MediaURL || '')).hostname; } catch { return ''; }
+        })
+        .filter(Boolean)
+      )];
+      const sampleUrl = mediaItems.find((item: any) => item.MediaURL)?.MediaURL;
+      let imageCheck: { status: number; contentType: string } | null = null;
+      if (sampleUrl) {
+        const imageResponse = await fetch(sampleUrl, { signal: AbortSignal.timeout(10000) });
+        imageCheck = {
+          status: imageResponse.status,
+          contentType: imageResponse.headers.get('content-type') || ''
+        };
+        await imageResponse.body?.cancel().catch(() => undefined);
+      }
+      results.push({ source, ok: true, recordsReturned: records.length, mediaHostnames: hosts, imageCheck });
     } catch (error) {
       results.push({ source, ok: false, error: error instanceof Error ? error.message.slice(0, 180) : 'Unknown error' });
     }
