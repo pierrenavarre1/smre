@@ -94,8 +94,14 @@ function sourceKeys() {
     .filter(source => source === 'sunflower' || source === 'flinthills');
   return configured.length ? configured : ['sunflower', 'flinthills'];
 }
+function syncAccessToken() {
+  if (process.env.VERCEL_ENV === 'production') return process.env.MLSGRID_ACCESS_TOKEN;
+  if (process.env.MLSGRID_DEMO_ACCESS_TOKEN) return process.env.MLSGRID_DEMO_ACCESS_TOKEN;
+  if (process.env.VERCEL_ENV === 'preview') return undefined;
+  return process.env.MLSGRID_ACCESS_TOKEN;
+}
 function tokenConfigured() {
-  return Boolean(process.env.MLSGRID_ACCESS_TOKEN);
+  return Boolean(syncAccessToken());
 }
 function storageKey(source: string, mediaKey: string) {
   let a = 0x811c9dc5;
@@ -165,7 +171,8 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     record.Media = [];
     return;
   }
-  if (!process.env.MLSGRID_ACCESS_TOKEN) throw new Error('MLSGRID_ACCESS_TOKEN is not configured.');
+  const token = syncAccessToken();
+  if (!token) throw new Error('No MLS Grid access token is configured for this environment.');
 
   const key = storageKey(source, preview.MediaKey);
   try {
@@ -173,7 +180,7 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     // by the API and never retry it: even a failed/expired URL may not be reused.
     await waitForMLSGridSlot();
     const response = await fetch(preview.MediaURL, {
-      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': process.env.MLSGRID_ACCESS_TOKEN! },
+      headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token },
       redirect: 'follow',
       cache: 'no-store',
       signal: AbortSignal.timeout(15000)
@@ -252,7 +259,10 @@ async function fetchMediaForRecord(source: string, record: MlsGridRecord) {
     // Fetch a URL for only this listing, then download it immediately. MLS Grid
     // URLs are signed and single-use, so batching many URLs before downloading
     // risks consuming/expiring them before their turn.
-    page = await fetchMLSGridPage(source, 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
+    const apiBase = process.env.VERCEL_ENV !== 'production' && process.env.MLSGRID_DEMO_ACCESS_TOKEN
+      ? 'https://api-demo.mlsgrid.com/v2'
+      : (process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2');
+    page = await fetchMLSGridPage(source, apiBase + '/Property?' + new URLSearchParams({
       '$filter': filter, '$expand': 'Media', '$top': '1'
     }).toString(), true);
   } catch (error) {
