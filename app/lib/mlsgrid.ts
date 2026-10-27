@@ -1,5 +1,4 @@
 import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
-import { readMLSCache } from './mls-store';
 
 const IS_PRODUCTION = process.env.VERCEL_ENV === 'production';
 const DEMO_API_BASE = 'https://api-demo.mlsgrid.com/v2';
@@ -352,8 +351,6 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
 }
 
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
-  const existingListings = await readMLSCache();
-  const existingById = new Map(existingListings.map(listing => [listing.ListingId, listing]));
   const sourceRecords: Array<{ source: string; records: MlsGridRecord[] }> = [];
 
   for (const source of sourceKeys()) {
