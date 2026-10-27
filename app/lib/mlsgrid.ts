@@ -319,6 +319,21 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   try {
     const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
     const freshMedia = freshListing?.Media || [];
+    if (listing.Media.length <= 1) {
+      const mediaHosts = (items: RESOMedia[]) => [...new Set(items.map(photo => {
+        try { return new URL(photo.MediaURL).hostname; } catch { return photo.MediaURL.startsWith('smre-blob:') ? 'smre-blob' : 'invalid-url'; }
+      }))];
+      console.info('MLS gallery diagnostic', {
+        environment: process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown',
+        apiBase: API_BASE,
+        listingId: listing.ListingId,
+        storedMediaCount: listing.Media.length,
+        storedMediaHosts: mediaHosts(listing.Media),
+        liveListingFound: Boolean(freshListing),
+        liveMediaCount: freshMedia.length,
+        liveMediaHosts: mediaHosts(freshMedia)
+      });
+    }
     // Cache only the complete current manifest briefly. Signed URLs are short-lived,
     // so keep the TTL short and never cache the sync's single Blob thumbnail here.
     if (freshMedia.length > 0) {
