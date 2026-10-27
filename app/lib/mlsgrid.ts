@@ -193,10 +193,12 @@ async function fetchMediaForRecords(source: string, records: MlsGridRecord[]) {
 
   for (let i = 0; i < ids.length; i += 100) {
     const batch = ids.slice(i, i + 100);
-    const values = batch.map(id => "'" + id.replace(/'/g, "''") + "'").join(',');
+    const listingIdFilter = batch
+      .map(id => "ListingId eq '" + id.replace(/'/g, "''") + "'")
+      .join(" or ");
     const filter =
       "OriginatingSystemName eq '" + source +
-      "' and MlgCanView eq true and ListingId in (" + values + ")";
+      "' and MlgCanView eq true and (" + listingIdFilter + ")";
 
     const page = await fetchMLSGridPage(
       source,
@@ -252,8 +254,10 @@ function listingSourceAndId(listing: RESOProperty) {
 }
 
 async function fetchFreshMediaBatch(source: string, listingIds: string[]) {
-  const values = listingIds.map(id => "'" + id.replace(/'/g, "''") + "'").join(',');
-  const filter = "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and ListingId in (" + values + ")";
+  const listingIdFilter = listingIds
+    .map(id => "ListingId eq '" + id.replace(/'/g, "''") + "'")
+    .join(" or ");
+  const filter = "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and (" + listingIdFilter + ")";
   const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
     '$filter': filter, '$expand': 'Media', '$top': '100'
   }).toString(), true);
