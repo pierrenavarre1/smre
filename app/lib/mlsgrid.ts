@@ -2,7 +2,12 @@ import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-pr
 import { get, put } from '@vercel/blob';
 import { readMLSCache } from './mls-store';
 
-const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
+const IS_PRODUCTION = process.env.VERCEL_ENV === 'production';
+const DEMO_API_BASE = 'https://api-demo.mlsgrid.com/v2';
+const PRODUCTION_API_BASE = 'https://api.mlsgrid.com/v2';
+const API_BASE = IS_PRODUCTION
+  ? (process.env.MLSGRID_API_BASE_URL || PRODUCTION_API_BASE)
+  : (process.env.MLSGRID_DEMO_ACCESS_TOKEN ? DEMO_API_BASE : (process.env.MLSGRID_API_BASE_URL || PRODUCTION_API_BASE));
 const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
 const SOURCE_CONFIG: Record<string, { label: MLSSource }> = {
   sunflower: { label: 'Sunflower MLS' },
@@ -82,10 +87,13 @@ function sourceLabel(source: string): MLSSource {
   return SOURCE_CONFIG[source]?.label || 'Sunflower MLS';
 }
 
-// Use the authorized live MLS Grid feed in Preview and Production so Preview
-// can validate actual listing IDs and their complete photo galleries. Credentials
-// remain server-side and are never exposed to client components.
+// Preview must use the existing MLS Grid Demo subscription and its matching
+// endpoint. Production continues to use the production token. Never silently
+// fall back to a production token from a Preview deployment.
 function sourceToken(_source: string) {
+  if (IS_PRODUCTION) return process.env.MLSGRID_ACCESS_TOKEN;
+  if (process.env.MLSGRID_DEMO_ACCESS_TOKEN) return process.env.MLSGRID_DEMO_ACCESS_TOKEN;
+  if (process.env.VERCEL_ENV === 'preview') return undefined;
   return process.env.MLSGRID_ACCESS_TOKEN;
 }
 
