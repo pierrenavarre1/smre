@@ -92,7 +92,7 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
   const decodedId = decodeURIComponent(id);
   const cached = unstable_cache(
     () => getListingUncached(decodedId),
-    ['smre-listing-detail-v4', decodedId],
+    ['smre-listing-detail-v5', decodedId],
     { revalidate: 60 }
   );
   return cached();
