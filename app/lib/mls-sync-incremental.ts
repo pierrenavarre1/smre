@@ -164,6 +164,19 @@ function photos(record: MlsGridRecord): RESOMedia[] {
     }))
     .sort((a, b) => a.MediaOrder - b.MediaOrder);
 }
+
+function isProvisionedCdnUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
+  } catch {
+    return false;
+  }
+}
+
+function isProvisionedCdnGallery(items: RESOMedia[] | undefined): items is RESOMedia[] {
+  return Boolean(items?.length && items.every(photo => isProvisionedCdnUrl(photo.MediaURL)));
+}
 async function downloadPreview(source: string, record: MlsGridRecord) {
   const availablePhotos = photos(record);
   const preview = availablePhotos.find(photo => photo.PreferredPhoto) || availablePhotos[0];
@@ -280,24 +293,47 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
   const output: RESOProperty[] = [];
   let rateLimitError: MLSGridRateLimitError | undefined;
 
-  // Process and retain each completed record independently. If MLS Grid throttles
-  // the next request, already downloaded photos remain committed and won't be
-  // downloaded again with single-use URLs on the next scheduled invocation.
+  // Keep the complete MLS Grid CDN manifest whenever the feed supplies it.
+  // CDN URLs are durable and intended for direct display. Only fall back to
+  // downloading a local preview when the response does not contain a complete
+  // manifest on the provisioned CDN.
   for (const item of records) {
     const record = item.record;
     const id = item.source + ':' + String(record.ListingId || record.ListingKey || '');
     const existing = existingById.get(id);
     const modification = String(record.ModificationTimestamp || '');
     const existingModification = String(existing?.ModificationTimestamp || '');
-    const existingPreview = existing?.Media?.find(photo => photo.PreferredPhoto) || existing?.Media?.[0];
     const unchanged = Boolean(existing && modification && modification === existingModification);
+    const existingFullCdnGallery = isProvisionedCdnGallery(existing?.Media);
 
-    if (unchanged && existingPreview && await imageExists(existingPreview.MediaURL)) {
+    if (unchanged && existingFullCdnGallery) {
+      // Avoid needless API/image requests for an unchanged, already durable gallery.
       record.Media = existing!.Media;
     } else {
       try {
         await fetchMediaForRecord(item.source, record);
-        await downloadPreview(item.source, record);
+        const fetchedMedia = photos(record);
+
+        if (isProvisionedCdnGallery(fetchedMedia)) {
+          // Critical: do not replace the CDN gallery with downloadPreview's
+          // one-photo Blob representation. Preserve every photo and its MediaKey.
+          record.Media = fetchedMedia;
+        } else {
+          await downloadPreview(item.source, record);
+
+          // If a refresh did not return usable media, preserve a working stored
+          // preview rather than erasing it. A full CDN gallery always wins.
+          if (!record.Media.length && existing?.Media.length) {
+            if (existingFullCdnGallery) {
+              record.Media = existing!.Media;
+            } else {
+              const preview = existing!.Media.find(photo => photo.PreferredPhoto) || existing!.Media[0];
+              if (preview && (await imageExists(preview.MediaURL) || !preview.MediaURL.startsWith('smre-blob:'))) {
+                record.Media = [preview];
+              }
+            }
+          }
+        }
       } catch (error) {
         if (error instanceof MLSGridRateLimitError) {
           rateLimitError = error;
@@ -309,28 +345,11 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
 
     const normalized = normalizeMLSGridProperty(record, item.source);
 
-    // The incremental sync deliberately stores only a downloaded primary-photo
-    // blob. Do not let that preview-only representation overwrite a full,
-    // provisioned MLS Grid CDN gallery already stored for the listing.
-    // The incremental endpoint's signed Media URLs are single-use and cannot
-    // safely replace the durable CDN URLs in the saved gallery manifest.
-    const existingFullGallery = existing?.Media?.length && existing.Media.length > 1 &&
-      existing.Media.every(photo => {
-        try {
-          const url = new URL(photo.MediaURL);
-          return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
-        } catch {
-          return false;
-        }
-      });
-    if (existingFullGallery && normalized.Media.length <= 1) {
+    // Never let a degraded/partial response replace a previously stored full CDN gallery.
+    if (existingFullCdnGallery && normalized.Media.length < existing!.Media.length) {
       normalized.Media = existing!.Media;
-    } else if (!normalized.Media.length && existing?.Media.length) {
-      const preview = existing.Media.find(photo => photo.PreferredPhoto) || existing.Media[0];
-      if (modification === existingModification && preview && await imageExists(preview.MediaURL)) {
-        normalized.Media = [preview];
-      }
     }
+
     output.push(normalized);
   }
 
