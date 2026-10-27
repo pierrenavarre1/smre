@@ -1,5 +1,4 @@
 import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
-import { get, put } from '@vercel/blob';
 import { readMLSCache } from './mls-store';
 
 const IS_PRODUCTION = process.env.VERCEL_ENV === 'production';
@@ -223,106 +222,6 @@ function mediaStorageKey(value: string) {
   return (a >>> 0).toString(16).padStart(8, '0') + (b >>> 0).toString(16).padStart(8, '0');
 }
 
-async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], existingById: Map<string, RESOProperty>) {
-  const token = sourceToken(source);
-  if (!token) return;
-
-  // Listing cards need one reliable preview image per property. Keeping every
-  // original MLS photo exceeded the 1 GB Blob quota and made all images fail.
-  const jobs: Array<{ record: MlsGridRecord; photo: RESOMedia }> = [];
-  for (const record of records) {
-    const photos = media(record);
-    const preview = photos.find(photo => photo.PreferredPhoto) || photos[0];
-    if (!preview) {
-      record.Media = [];
-      continue;
-    }
-
-    const originalId = String(record.ListingId || record.ListingKey || '');
-    const existing = existingById.get(source + ':' + originalId);
-    const oldPreview = existing?.Media?.find(photo => photo.PreferredPhoto) || existing?.Media?.[0];
-    // Preserve a previously downloaded local image when the MLS MediaKey is unchanged.
-    // This prevents daily syncs from downloading and rewriting the same preview again.
-    if (oldPreview?.MediaURL?.startsWith('smre-blob:') && oldPreview.MediaKey === preview.MediaKey) {
-      const oldKey = oldPreview.MediaURL.slice('smre-blob:'.length);
-      try {
-        // Verify the referenced local image still exists. A previous interrupted
-        // cleanup may have removed image blobs while leaving the listing JSON intact.
-        const stored = await get('mls/images/' + oldKey + '.image', { access: 'private', useCache: false });
-        if (stored?.statusCode === 200 && stored.stream) {
-          await stored.stream.cancel();
-          record.Media = [{ ...preview, MediaURL: oldPreview.MediaURL }];
-          continue;
-        }
-      } catch {
-        // Missing cache entry: refresh it from MLS Grid below.
-      }
-    }
-
-    jobs.push({ record, photo: preview as RESOMedia });
-  }
-  const validJobs = jobs.filter(job => Boolean(job.photo));
-  let cursor = 0;
-
-  async function downloadWithRetry(photo: RESOMedia) {
-    for (let attempt = 0; attempt < 4; attempt++) {
-      try {
-        // Share a serialized 1.5-second request gate across API and media requests.
-        await waitForMLSGridSlot();
-        const response = await fetch(photo.MediaURL, {
-          headers: { Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*', 'User-Agent': token! },
-          redirect: 'follow',
-          cache: 'no-store',
-          signal: AbortSignal.timeout(12000)
-        });
-
-        if (response.status === 429 && attempt < 3) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1) * (attempt + 1)));
-          continue;
-        }
-        if (!response.ok || !response.body) {
-          throw new Error('MLS image download failed: ' + response.status + ' ' + response.statusText);
-        }
-
-        const contentType = response.headers.get('content-type') || 'image/jpeg';
-        if (!contentType.toLowerCase().startsWith('image/')) {
-          throw new Error('MLS media URL returned non-image content.');
-        }
-
-        const key = mediaStorageKey(source + ':' + photo.MediaKey);
-        await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
-          access: 'private',
-          allowOverwrite: true,
-          cacheControlMaxAge: 31536000,
-          contentType
-        });
-        return key;
-      } catch (error) {
-        if (attempt === 3) {
-          console.error('MLS image download/storage failed:', error instanceof Error ? error.message : error);
-          return '';
-        }
-        await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
-      }
-    }
-    return '';
-  }
-
-  // One worker is intentional: the subscription's published limit is 1 request per second.
-  // Keep media downloads strictly serialized with API calls to avoid 429 cooldowns.
-  const workers = Array.from({ length: 1 }, async () => {
-    while (cursor < validJobs.length) {
-      const job = validJobs[cursor++];
-      const key = await downloadWithRetry(job.photo);
-      job.record.Media = key
-        ? [{ ...job.photo, MediaURL: 'smre-blob:' + key }]
-        : [];
-    }
-  });
-
-  await Promise.all(workers);
-}
-
 function listingSourceAndId(listing: RESOProperty) {
   const separator = listing.ListingId.indexOf(':');
   if (separator < 0) return null;
@@ -475,8 +374,11 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
 
   const all: RESOProperty[] = [];
   for (const { source, records } of sourceRecords) {
-    await downloadAndStoreMedia(source, records, existingById);
     for (const record of records) {
+      // MLS Grid's provisioned CDN returns durable browser-loadable URLs.
+      // Store the CDN URLs in the listing cache directly. Do not download
+      // images into Vercel Blob or consume single-use standard Media URLs.
+      record.Media = media(record);
       all.push(normalizeMLSGridProperty(record, source));
     }
   }
