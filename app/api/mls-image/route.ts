@@ -132,8 +132,16 @@ function imageResponse(bytes: ArrayBuffer, contentType: string) {
 export async function GET(request: NextRequest) {
   const listingId = request.nextUrl.searchParams.get('listingId');
   const requestedIndex = Number(request.nextUrl.searchParams.get('index') || '0');
+  const mediaKey = request.nextUrl.searchParams.get('mediaKey') || '';
   let rawUrl = request.nextUrl.searchParams.get('url') || '';
   let stablePathname = '';
+
+  // Full-gallery URLs are supplied by the server-rendered listing manifest.
+  // Use listing ID + MediaKey for stable storage, not the expiring signed URL.
+  if (rawUrl && listingId && mediaKey) {
+    const stableKey = createHash('sha256').update(listingId + ':' + mediaKey).digest('hex');
+    stablePathname = 'mls/images/' + stableKey + '.image';
+  }
 
   // Prefer a stable cache key for each listing/photo. MLS Grid URLs can be
   // short-lived and signed, so caching by URL alone causes repeat downloads
