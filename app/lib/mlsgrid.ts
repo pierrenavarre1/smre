@@ -285,22 +285,25 @@ export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
 }
 
 export async function fetchFreshMediaForListing(listing: RESOProperty) {
-  // Once the scheduled sync has stored the full CDN media manifest, page views
-  // should not re-query MLS Grid just to refresh already-durable CDN URLs.
-  if (listing.Media.length > 0 && listing.Media.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
-    return listing.Media;
-  }
-
   const cached = freshMediaCache.get(listing.ListingId);
-  // The scheduled sync intentionally stores only one thumbnail. Only reuse a
-  // cached full manifest, never mistake that thumbnail for the complete gallery.
+  // This cache is populated only from a live listing response, so even a
+  // verified one-photo gallery is complete. Check it before the stored preview.
   if (
     cached &&
     cached.expiresAt > Date.now() &&
-    cached.media.length > 1 &&
     cached.media.every(photo => !photo.MediaURL.startsWith('smre-blob:'))
   ) {
     return cached.media;
+  }
+
+  // The listing cache can contain only the preferred thumbnail. A CDN URL by
+  // itself does not prove the full gallery was loaded. Skip another API request
+  // only when the stored manifest contains multiple photos.
+  if (
+    listing.Media.length > 1 &&
+    listing.Media.every(photo => isProvisionedCdnUrl(photo.MediaURL))
+  ) {
+    return listing.Media;
   }
 
   // If live media cannot be refreshed, keep the locally stored preview instead
@@ -315,12 +318,12 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
     // Cache only the complete current manifest briefly. Signed URLs are short-lived,
     // so keep the TTL short and never cache the sync's single Blob thumbnail here.
     if (freshMedia.length > 0) {
-      if (freshMedia.length > 1) {
-        freshMediaCache.set(listing.ListingId, {
-          expiresAt: Date.now() + 60_000,
-          media: freshMedia
-        });
-      }
+      // Cache the verified response even when the listing genuinely has one
+      // photo, so that such listings do not trigger repeated API calls.
+      freshMediaCache.set(listing.ListingId, {
+        expiresAt: Date.now() + 60_000,
+        media: freshMedia
+      });
       const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
       freshPreviewCache.set(listing.ListingId, {
         expiresAt: Date.now() + 60_000,
