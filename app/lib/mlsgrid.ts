@@ -376,17 +376,26 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
   const listingId = internalId.slice(separator + 1);
   if ((source !== 'sunflower' && source !== 'flinthills') || !sourceToken(source)) return undefined;
 
-  const filter = "OriginatingSystemName eq '" + source +
-    "' and MlgCanView eq true and ListingId eq '" + listingId.replace(/'/g, "''") + "'";
-  const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
-    '$filter': filter,
-    '$expand': 'Media',
-    '$top': '1'
-  }).toString(), true);
-  const record = page.value?.[0];
-  return record ? normalizeMLSGridProperty(record, source) : undefined;
-}
+  const escapedId = listingId.replace(/'/g, "''");
+  // Some public listings already in the synced inventory can be omitted by
+  // the narrower MlgCanView query. Retry the exact listing ID without that
+  // filter so the detail page can retrieve its complete media manifest.
+  const filters = [
+    "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and ListingId eq '" + escapedId + "'",
+    "OriginatingSystemName eq '" + source + "' and ListingId eq '" + escapedId + "'"
+  ];
 
+  for (const filter of filters) {
+    const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
+      '$filter': filter,
+      '$expand': 'Media',
+      '$top': '1'
+    }).toString(), true);
+    const record = page.value?.[0];
+    if (record) return normalizeMLSGridProperty(record, source);
+  }
+  return undefined;
+}
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
   const sourceRecords: Array<{ source: string; records: MlsGridRecord[] }> = [];
 
