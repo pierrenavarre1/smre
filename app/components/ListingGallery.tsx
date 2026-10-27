@@ -38,9 +38,14 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
         return mediaUrl;
       }
     } catch {}
-    // Resolve the current photo by listing and index server-side. Avoid using a
-    // temporary signed URL as the image proxy's cache key.
-    return `/api/mls-image?listingId=${encodeURIComponent(listingId)}&index=${index}`;
+    // The detail page can have a fresh full media manifest while the stored
+    // listing record intentionally contains only its thumbnail. Pass this exact
+    // photo URL and stable MediaKey so the proxy can cache each gallery image
+    // independently instead of looking up the index in the stale one-photo record.
+    if (mediaUrl.startsWith('smre-blob:')) {
+      return `/api/mls-image?listingId=${encodeURIComponent(listingId)}&index=${index}`;
+    }
+    return `/api/mls-image?listingId=${encodeURIComponent(listingId)}&mediaKey=${encodeURIComponent(photos[index].MediaKey)}&url=${encodeURIComponent(mediaUrl)}`;
   };
 
   useEffect(() => {
