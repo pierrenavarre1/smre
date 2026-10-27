@@ -55,8 +55,10 @@ async function downloadMedia(rawUrl: string) {
   if (existing) return existing;
 
   const promise = (async () => {
-    const token = process.env.MLSGRID_ACCESS_TOKEN;
-    if (!token) throw new Error('MLS Grid access token is not configured.');
+    const token = process.env.VERCEL_ENV === 'production'
+      ? process.env.MLSGRID_ACCESS_TOKEN
+      : (process.env.MLSGRID_DEMO_ACCESS_TOKEN || (process.env.VERCEL_ENV === 'preview' ? undefined : process.env.MLSGRID_ACCESS_TOKEN));
+    if (!token) throw new Error('MLS Grid access token is not configured for this environment.');
 
     for (let attempt = 0; attempt < 4; attempt++) {
       await waitForMediaRequestSlot();
