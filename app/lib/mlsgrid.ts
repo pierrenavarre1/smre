@@ -130,14 +130,31 @@ export async function fetchMLSGridPage(
     '$top': expandMedia ? '1000' : '5000'
   }).toString();
 
-  const response = await fetch(endpoint, {
-    headers: {
-      Authorization: 'Bearer ' + token,
-      Accept: 'application/json',
-      'Accept-Encoding': 'gzip'
-    },
-    cache: 'no-store'
-  });
+  let response: Response | undefined;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await waitForMLSGridSlot();
+    response = await fetch(endpoint, {
+      headers: {
+        Authorization: 'Bearer ' + token,
+        Accept: 'application/json',
+        'Accept-Encoding': 'gzip'
+      },
+      cache: 'no-store'
+    });
+
+    if (response.status !== 429 || attempt === 2) break;
+
+    // Respect Retry-After when supplied. Otherwise use bounded backoff so a
+    // temporary account throttle does not immediately fail the entire sync.
+    const retryAfter = Number(response.headers.get('retry-after') || '');
+    const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
+      ? Math.min(retryAfter * 1000, 60_000)
+      : [5_000, 15_000][attempt];
+    await response.body?.cancel().catch(() => undefined);
+    await new Promise(resolve => setTimeout(resolve, delayMs));
+  }
+
+  if (!response) throw new Error('MLS Grid request failed for ' + source + ': no response received.');
 
   if (!response.ok) {
     let detail = '';
