@@ -15,11 +15,11 @@ export function ListingCard({ p }: { p: RESOProperty }) {
   const photoSrc = photo ? (() => {
     try {
       const parsed = new URL(photo);
-      if (parsed.protocol === 'https:' && (parsed.hostname === 'media.mlsgrid.com' || parsed.hostname.endsWith('.mlsgrid.com'))) {
+      if (parsed.protocol === 'https:' && parsed.hostname === 'cdn-stmarys.mlsgrid.com') {
         return photo;
       }
     } catch {}
-    return `/api/mls-image?url=${encodeURIComponent(photo)}&listingId=${encodeURIComponent(p.ListingId)}&index=0`;
+    return `/api/mls-image?listingId=${encodeURIComponent(p.ListingId)}&index=0`;
   })() : '';
 
   return (
