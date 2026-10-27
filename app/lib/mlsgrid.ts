@@ -203,6 +203,15 @@ async function fetchMediaForRecords(source: string, records: MlsGridRecord[]) {
   return [...byId.values()];
 }
 
+function isProvisionedCdnUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
+  } catch {
+    return false;
+  }
+}
+
 const freshMediaCache = new Map<string, { expiresAt: number; media: RESOMedia[] }>();
 const freshPreviewCache = new Map<string, { expiresAt: number; media: RESOMedia[] }>();
 const FRESH_MEDIA_CACHE_MS = 10 * 60_000;
@@ -261,6 +270,12 @@ export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
 }
 
 export async function fetchFreshMediaForListing(listing: RESOProperty) {
+  // Once the scheduled sync has stored the full CDN media manifest, page views
+  // should not re-query MLS Grid just to refresh already-durable CDN URLs.
+  if (listing.Media.length > 0 && listing.Media.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
+    return listing.Media;
+  }
+
   const cached = freshMediaCache.get(listing.ListingId);
   // The scheduled sync intentionally stores only one thumbnail. Only reuse a
   // cached full manifest, never mistake that thumbnail for the complete gallery.
