@@ -121,8 +121,6 @@ export async function fetchMLSGridPage(
   const token = sourceToken(source);
   if (!token) throw new Error('No MLS Grid access token is configured for ' + source + '.');
 
-  await waitForMLSGridSlot();
-
   const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
     '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and StandardStatus in ('Active','Pending')",
     ...(expandMedia ? { '$expand': 'Media' } : {}),
