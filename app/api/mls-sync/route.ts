@@ -15,7 +15,10 @@ function authorized(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (!process.env.MLSGRID_ACCESS_TOKEN) return NextResponse.json({ error: 'MLS Grid access token is not configured.' }, { status: 503 });
+  const hasAccessToken = process.env.VERCEL_ENV === 'production'
+    ? Boolean(process.env.MLSGRID_ACCESS_TOKEN)
+    : Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN || (process.env.VERCEL_ENV !== 'preview' && process.env.MLSGRID_ACCESS_TOKEN));
+  if (!hasAccessToken) return NextResponse.json({ error: 'MLS Grid access token is not configured for this environment.' }, { status: 503 });
 
   console.log('MLS sync request received', { userAgent: request.headers.get('user-agent') || '' });
   try {
