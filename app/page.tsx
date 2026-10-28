@@ -22,6 +22,8 @@ export default async function Home(){
   const headlineKicker=headlineParts.shift()?.trim()||'REAL ESTATE,';
   const headlineMain=headlineParts.join(',').trim()||'Close to Home.';
   const areaImage=settings.localImage||fallbackAreaImage;
+  const localHeading=process.env.VERCEL_ENV==='production'?settings.localHeading:'We know this part of Kansas.';
+  const localDescription=process.env.VERCEL_ENV==='production'?settings.localDescription:'Our local agents work with buyers and sellers throughout Northeast Kansas, bringing practical market knowledge, straightforward advice, and a personal approach to every transaction. Get to know our team, how we work, and the communities we serve.';
   return <>
     <style>{`
       .home-hero-actions{display:flex;gap:10px;margin:-10px 0 30px;flex-wrap:wrap}
@@ -65,7 +67,7 @@ export default async function Home(){
     <section className="home-rural-strip">
       <div className="home-rural-grid home-rural-balanced">
         <div className="home-rural-photo"><img src={areaImage} alt="Kansas farm at sunset with a barn, fields and a country road" loading="lazy" /></div>
-        <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>{settings.localHeading}</h2><p>{settings.localDescription}</p><Link href="/about" className="button button-light">About SMRE</Link></div>
+        <div className="home-rural-copy"><p className="eyebrow">LOCAL KNOWLEDGE. PERSONAL SERVICE.</p><h2>{localHeading}</h2><p>{localDescription}</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
 
