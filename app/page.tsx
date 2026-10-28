@@ -58,8 +58,8 @@ export default async function Home(){
     </section>
 
     <section className="section container">
-      <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
-      <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
+      <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><a href="/listings" className="text-link">See all listings →</a></div>
+      <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><a href="/listings" className="button button-dark">See all listings</a></div>
       {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings}/></div>}
     </section>
 
