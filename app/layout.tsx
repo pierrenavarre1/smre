@@ -31,7 +31,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
         <Link href="/" className="brand-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
         <nav className="nav-links" aria-label="Main navigation">
           <a className="header-phone" href={`tel:${phone.replace(/\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
-          <Link href="/listings">Listings</Link>
+          <a href="/listings">Listings</a>
           <Link href="/valuation">Home Value</Link>
           <Link href="/about">About</Link>
           <Link href="/contact" className="nav-cta">Contact</Link>
@@ -55,7 +55,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
         </div>
         <div className="footer-links">
           <strong>Buying &amp; Selling</strong>
-          <Link href="/listings">Search Listings</Link>
+          <a href="/listings">Search Listings</a>
           <Link href="/valuation">Home Value</Link>
           <Link href="/contact">Contact</Link>
         </div>
