@@ -404,7 +404,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           style={{
             position: 'fixed',
             right: '20px',
-            bottom: '24px',
+            bottom: '100px',
             zIndex: 40,
             border: '1px solid rgba(255,255,255,0.25)',
             borderRadius: '999px',
