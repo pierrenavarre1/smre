@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
-import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, isMLSGridConfigured } from './mlsgrid';
+import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridListings, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, isMLSGridConfigured } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
   return {
@@ -37,6 +37,17 @@ function toListingSummary(listing: RESOProperty): RESOProperty {
 }
 
 async function getListingsUncached(): Promise<RESOProperty[]> {
+  // Preview must test the actual Demo subscription, not the production inventory
+  // stored in the shared Blob cache. Demo contains a limited sample dataset, so
+  // testing live listing IDs here incorrectly makes valid galleries look broken.
+  if (process.env.VERCEL_ENV === 'preview' && isMLSGridConfigured()) {
+    const demoListings = await fetchMLSGridListings();
+    return demoListings.map(listing => toListingSummary({
+      ...listing,
+      Media: listing.Media.slice(0, 1)
+    }));
+  }
+
   const listings = dedupeListings(await readMLSSummaryCache());
   // Listing-index requests must never fan out to MLS Grid for one media request
   // per listing. Use the persisted preview cache so the page stays fast and the
@@ -71,6 +82,18 @@ export async function getListings(): Promise<RESOProperty[]> {
 
 async function getListingUncached(id: string): Promise<RESOProperty | undefined> {
   const decodedId = decodeURIComponent(id);
+
+  // Keep Preview detail requests isolated from production records in Blob. The
+  // ID must exist in Demo; if it does, fetch its current full CDN media manifest.
+  if (process.env.VERCEL_ENV === 'preview' && isMLSGridConfigured()) {
+    try {
+      return await fetchMLSGridLiveListing(decodedId);
+    } catch (error) {
+      console.error('Demo MLS listing detail request failed:', error);
+      return undefined;
+    }
+  }
+
   const listings = dedupeListings(await readMLSCache());
   if (listings.length) {
     const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
