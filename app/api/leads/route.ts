@@ -24,7 +24,7 @@ export async function POST(request:Request){
       const eventType=lead.type==='seller'?'Seller Inquiry':lead.type==='valuation'?'Seller Inquiry':lead.type==='showing'?'Showing Request':lead.type==='property'?'Property Inquiry':lead.type==='chat'?'General Inquiry':'General Inquiry';
       const event={
         source:'smre.info',
-        system:'SMRE Website',
+        system:'SMRE-Website',
         type:eventType,
         message:[lead.listingId?`MLS/Listing ID: ${String(lead.listingId)}`:'',lead.preferredDate?`Preferred date: ${String(lead.preferredDate)}`:'',lead.preferredTime?`Preferred time: ${String(lead.preferredTime)}`:'',String(lead.message || '')].filter(Boolean).join('\n'),
         sourceUrl:'https://smre.info',
@@ -42,7 +42,7 @@ export async function POST(request:Request){
           method:'POST',
           headers:{
             'Content-Type':'application/json',
-            'X-System':'SMRE Website',
+            'X-System':'SMRE-Website',
             'X-System-Key':systemKey,
             'Authorization':`Basic ${Buffer.from(`${apiKey}:`).toString('base64')}`,
           },
