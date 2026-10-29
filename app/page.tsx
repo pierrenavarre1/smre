@@ -22,6 +22,7 @@ export default async function Home(){
   const headlineKicker=headlineParts.shift()?.trim()||'REAL ESTATE,';
   const headlineMain=headlineParts.join(',').trim()||'Close to Home.';
   const areaImage=settings.localImage||fallbackAreaImage;
+  const localDescription=process.env.VERCEL_ENV==='production'?settings.localDescription:'Our local agents work with buyers and sellers throughout Northeast Kansas, bringing practical market knowledge, straightforward advice, and a personal approach to every transaction. Get to know our team, how we work, and the communities we serve.';
   return <>
     <style>{`
       .home-hero-actions{display:flex;gap:10px;margin:-10px 0 30px;flex-wrap:wrap}
@@ -57,15 +58,15 @@ export default async function Home(){
     </section>
 
     <section className="section container">
-      <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
-      <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
+      <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><a href="/listings" className="text-link">See all listings →</a></div>
+      <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><a href="/listings" className="button button-dark">See all listings</a></div>
       {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings}/></div>}
     </section>
 
     <section className="home-rural-strip">
       <div className="home-rural-grid home-rural-balanced">
         <div className="home-rural-photo"><img src={areaImage} alt="Kansas farm at sunset with a barn, fields and a country road" loading="lazy" /></div>
-        <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>{settings.localHeading}</h2><p>{settings.localDescription}</p><Link href="/about" className="button button-light">About SMRE</Link></div>
+        <div className="home-rural-copy"><p className="eyebrow">LOCAL KNOWLEDGE. PERSONAL SERVICE.</p><p>{localDescription}</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { RESOProperty } from '../lib/mock-properties';
@@ -48,6 +48,14 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   }));
   const [sort, setSort] = useState('priority');
   const [page, setPage] = useState(1);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const updateVisibility = () => setShowBackToTop(window.scrollY > 500);
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    return () => window.removeEventListener('scroll', updateVisibility);
+  }, []);
   const [addressOpen, setAddressOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -386,6 +394,31 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           <p>Try widening the city, price, bedroom, or property type search.</p>
           <button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button>
         </div>
+      )}
+
+      {showBackToTop && (
+        <button
+          type="button"
+          aria-label="Back to top of listings"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          style={{
+            position: 'fixed',
+            right: '20px',
+            bottom: '100px',
+            zIndex: 40,
+            border: '1px solid rgba(255,255,255,0.25)',
+            borderRadius: '999px',
+            padding: '11px 16px',
+            background: '#142d4e',
+            color: '#fff',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: 600,
+          }}
+        >
+          ↑ Back to top
+        </button>
       )}
     </>
   );

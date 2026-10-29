@@ -36,7 +36,7 @@ export function ListingCard({ p }: { p: RESOProperty }) {
           <strong>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p.ListPrice)}</strong>
           <SourceBadge source={p.MlsSource} />
         </div>
-        <div className="facts">{p.BedroomsTotal} bd · {baths} ba {p.LivingArea ? `· ${p.LivingArea.toLocaleString()} sq ft` : ''}</div>
+        <div className="facts">{p.BedroomsTotal} bd · {baths} ba {p.LotSizeAcres > 0 ? `· ${p.LotSizeAcres.toLocaleString('en-US', { maximumFractionDigits: 2 })} ${p.LotSizeAcres === 1 ? 'acre' : 'acres'}` : ''} {p.LivingArea ? `· ${p.LivingArea.toLocaleString()} sq ft` : ''}</div>
         <div>{p.StreetNumber} {p.StreetName}, {p.City}, KS {p.PostalCode}</div>
         {p.ListingDate ? <div className="listing-date">Listed {formatListingDate(p.ListingDate)}</div> : null}
         <div className="listing-idx-meta">

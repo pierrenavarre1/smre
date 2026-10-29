@@ -32,9 +32,14 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, name, email, phone, address, listingId, message: details }),
+        body: JSON.stringify({ type, name, email, phone, address, listingId, message: details, preferredDate: String(form.get('preferredDate') || ''), preferredTime: String(form.get('preferredTime') || '') }),
       });
       if (!response.ok) throw new Error('Unable to submit');
+      const result = await response.json();
+      if (result.forwarded !== true) {
+        setError('Your request was received by the website, but we could not confirm it reached our team. Please call us at (785) 465-2543.');
+        return;
+      }
       setSubmitted(true);
     } catch {
       setError('Something went wrong. Please call us at (785) 465-2543.');
