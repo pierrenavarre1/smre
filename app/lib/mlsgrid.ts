@@ -195,6 +195,15 @@ async function fetchMediaForRecords(source: string, records: MlsGridRecord[]) {
   return [...byId.values()];
 }
 
+function isProvisionedCdnUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
+  } catch {
+    return false;
+  }
+}
+
 const freshMediaCache = new Map<string, { expiresAt: number; media: RESOMedia[] }>();
 const freshPreviewCache = new Map<string, { expiresAt: number; media: RESOMedia[] }>();
 const FRESH_MEDIA_CACHE_MS = 10 * 60_000;
@@ -222,6 +231,12 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], e
   const jobs: Array<{ record: MlsGridRecord; photo: RESOMedia }> = [];
   for (const record of records) {
     const photos = media(record);
+    // MLS Grid's provisioned CDN URLs are durable browser-loadable images.
+    // Keep the complete manifest and avoid downloading these images into Blob.
+    if (photos.length > 0 && photos.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
+      record.Media = photos;
+      continue;
+    }
     const preview = photos.find(photo => photo.PreferredPhoto) || photos[0];
     if (!preview) {
       record.Media = [];
@@ -356,6 +371,12 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
   if (cached && cached.expiresAt > Date.now()) return cached.media;
 
+  // The stored CDN manifest is complete only when it contains multiple photos.
+  // A single CDN URL may be only the sync thumbnail, so refresh that case live.
+  if (listing.Media.length > 1 && listing.Media.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
+    return listing.Media;
+  }
+
   const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
   if (hasBlobPlaceholder) {
     // The scheduled sync stores only one preview to control Blob usage. When a
@@ -379,16 +400,16 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   }
 
   // Reuse media already available from the live feed or a healthy local cache.
-  if (listing.Media.length && !hasBlobPlaceholder) {
+  if (listing.Media.length && !hasBlobPlaceholder && !listing.Media.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
     freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: listing.Media });
     const preferred = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
     freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
     return listing.Media;
   }
 
-  // Do not fall back to live API requests during page rendering. The next
-  // scheduled sync will refresh the saved media set.
-  return [];
+  // Preserve a usable stored preview if the live manifest is unavailable.
+  // A transient API error should not turn a listing's gallery completely blank.
+  return listing.Media;
 }
 
 export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
