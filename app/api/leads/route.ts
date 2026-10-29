@@ -21,7 +21,7 @@ export async function POST(request:Request){
       const contact=String(lead.contact || '');
       const email=String(lead.email || (contact.includes('@')?contact:''));
       const phone=String(lead.phone || (!contact.includes('@')?contact:''));
-      const eventType=lead.type==='seller'?'Seller Inquiry':lead.type==='valuation'?'Seller Inquiry':lead.type==='showing'?'Showing Request':lead.type==='property'?'Property Inquiry':lead.type==='chat'?'General Inquiry':'General Inquiry';
+      const eventType=lead.type==='seller'?'Seller Inquiry':lead.type==='valuation'?'Seller Inquiry':lead.type==='showing'?'Property Inquiry':lead.type==='property'?'Property Inquiry':lead.type==='chat'?'General Inquiry':'General Inquiry';
       const event={
         source:'SMRE Website Preview',
         system:'SMRE-Website',
