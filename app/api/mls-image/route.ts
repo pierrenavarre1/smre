@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { get, put } from '@vercel/blob';
+import { getListing } from '../../lib/listings';
+import { fetchMLSGridLiveListing } from '../../lib/mlsgrid';
 
 function allowedMediaHost(hostname: string) {
   const host = hostname.toLowerCase();
@@ -10,6 +12,22 @@ function allowedMediaHost(hostname: string) {
 const inFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string }>>();
 let blobUnavailableUntil = 0;
 const BLOB_FAILURE_COOLDOWN_MS = 5 * 60_000;
+
+// MLS Grid throttles photo downloads when gallery images request concurrently.
+// Serialize downloads within each function instance and back off on HTTP 429.
+const MIN_MEDIA_REQUEST_INTERVAL_MS = 1500;
+let lastMediaRequestAt = 0;
+let mediaRequestQueue: Promise<void> = Promise.resolve();
+
+async function waitForMediaRequestSlot() {
+  const slot = mediaRequestQueue.then(async () => {
+    const wait = Math.max(0, MIN_MEDIA_REQUEST_INTERVAL_MS - (Date.now() - lastMediaRequestAt));
+    if (wait) await new Promise(resolve => setTimeout(resolve, wait));
+    lastMediaRequestAt = Date.now();
+  });
+  mediaRequestQueue = slot.catch(() => undefined);
+  await slot;
+}
 
 // Deduplicate simultaneous reads for the same private Blob object.
 const blobReadInFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string } | null>>();
@@ -38,35 +56,50 @@ async function downloadMedia(rawUrl: string) {
   if (existing) return existing;
 
   const promise = (async () => {
-    const token = process.env.MLSGRID_ACCESS_TOKEN;
-    if (!token) throw new Error('MLS Grid access token is not configured.');
+    const token = process.env.VERCEL_ENV === 'production'
+      ? process.env.MLSGRID_ACCESS_TOKEN
+      : (process.env.MLSGRID_DEMO_ACCESS_TOKEN || (process.env.VERCEL_ENV === 'preview' ? undefined : process.env.MLSGRID_ACCESS_TOKEN));
+    if (!token) throw new Error('MLS Grid access token is not configured for this environment.');
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    try {
-      const response = await fetch(rawUrl, {
-        headers: {
-          Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*',
-          'User-Agent': token
-        },
-        redirect: 'follow',
-        cache: 'no-store',
-        signal: controller.signal
-      });
+    for (let attempt = 0; attempt < 4; attempt++) {
+      await waitForMediaRequestSlot();
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
+      try {
+        const response = await fetch(rawUrl, {
+          headers: {
+            Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*',
+            'User-Agent': token
+          },
+          redirect: 'follow',
+          cache: 'no-store',
+          signal: controller.signal
+        });
 
-      if (!response.ok || !response.body) {
-        throw new Error('MLS image source returned ' + response.status + ' ' + response.statusText);
+        if (response.status === 429 && attempt < 3) {
+          const retryAfter = Number(response.headers.get('retry-after') || '');
+          const backoffMs = Number.isFinite(retryAfter) && retryAfter > 0
+            ? retryAfter * 1000
+            : 2000 * (attempt + 1);
+          await response.body?.cancel().catch(() => undefined);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
+          continue;
+        }
+        if (!response.ok || !response.body) {
+          throw new Error('MLS image source returned ' + response.status + ' ' + response.statusText);
+        }
+
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+        if (!contentType.toLowerCase().startsWith('image/')) {
+          throw new Error('MLS media URL returned non-image content.');
+        }
+
+        return { bytes: await response.arrayBuffer(), contentType };
+      } finally {
+        clearTimeout(timeout);
       }
-
-      const contentType = response.headers.get('content-type') || 'image/jpeg';
-      if (!contentType.toLowerCase().startsWith('image/')) {
-        throw new Error('MLS media URL returned non-image content.');
-      }
-
-      return { bytes: await response.arrayBuffer(), contentType };
-    } finally {
-      clearTimeout(timeout);
     }
+    throw new Error('MLS image source remained rate-limited after retries.');
   })();
 
   inFlight.set(rawUrl, promise);
@@ -98,38 +131,52 @@ function imageResponse(bytes: ArrayBuffer, contentType: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const rawUrl = request.nextUrl.searchParams.get('url');
-  if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
+  const listingId = request.nextUrl.searchParams.get('listingId');
+  const requestedIndex = Number(request.nextUrl.searchParams.get('index') || '0');
+  const mediaKey = request.nextUrl.searchParams.get('mediaKey') || '';
+  let rawUrl = request.nextUrl.searchParams.get('url') || '';
+  let stablePathname = '';
 
+  // Full-gallery URLs are supplied by the server-rendered listing manifest.
+  // Use listing ID + MediaKey for stable storage, not the expiring signed URL.
+  if (rawUrl && listingId && mediaKey) {
+    const stableKey = createHash('sha256').update(listingId + ':' + mediaKey).digest('hex');
+    stablePathname = 'mls/images/' + stableKey + '.image';
+  }
+
+  // Prefer a stable cache key for each listing/photo. MLS Grid URLs can be
+  // short-lived and signed, so caching by URL alone causes repeat downloads
+  // when the signature changes and can trigger upstream 429 responses.
+  if (!rawUrl && listingId && Number.isInteger(requestedIndex) && requestedIndex >= 0) {
+    try {
+      const listing = await getListing(listingId);
+      const photos = listing?.Media?.filter(photo => photo.MediaCategory === 'Photo' && photo.MediaURL) || [];
+      const current = photos[requestedIndex];
+      if (current) {
+        if (current.MediaURL) rawUrl = current.MediaURL;
+        const stableKey = createHash('sha256').update(listingId + ':' + current.MediaKey).digest('hex');
+        stablePathname = 'mls/images/' + stableKey + '.image';
+
+        // Stored photos are independent of the temporary signed URL. Return the
+        // stable cached copy first, avoiding an upstream media request entirely.
+        try {
+          const cached = await readStoredImage(stablePathname);
+          if (cached) return imageResponse(cached.bytes, cached.contentType);
+        } catch (error) {
+          console.error('MLS stable image cache read failed:', error instanceof Error ? error.message : error);
+        }
+      }
+    } catch (error) {
+      console.error('Unable to resolve current MLS photo:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
   const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
   if (storedKey && !/^[a-zA-Z0-9_-]{8,128}$/.test(storedKey)) {
     return new Response('Invalid stored image key.', { status: 400 });
   }
 
-  // Provisioned MLS Grid CDN URLs are intended to be served directly by the CDN.
-  // Do not download them through the standard signed-media endpoint or consume
-  // Blob storage for these durable CDN-hosted photos.
-  if (!storedKey) {
-    try {
-      const url = new URL(rawUrl);
-      if (url.protocol === 'https:' && url.hostname.toLowerCase() === 'cdn-stmarys.mlsgrid.com') {
-        return new Response(null, {
-          status: 302,
-          headers: {
-            Location: url.toString(),
-            'Cache-Control': 'public, max-age=300, s-maxage=3600',
-            'X-Content-Type-Options': 'nosniff'
-          }
-        });
-      }
-    } catch {
-      // The normal validation below returns the appropriate invalid-URL response.
-    }
-  }
-
-  // Detail pages can supply freshly issued MLS media URLs. Accept only HTTPS
-  // URLs from known MLS/CDN hosts, then cache the downloaded bytes by URL hash.
-  // Stored smre-blob keys never trigger a live download if their Blob is missing.
   if (!storedKey) {
     let url: URL;
     try { url = new URL(rawUrl); } catch { return new Response('Invalid image URL.', { status: 400 }); }
@@ -138,10 +185,12 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const key = storedKey || createHash('sha256').update(rawUrl).digest('hex');
+  // For old sync-generated Blob keys, keep the existing stable-key behavior.
+  const key = storedKey || (stablePathname
+    ? stablePathname.slice('mls/images/'.length, -'.image'.length)
+    : createHash('sha256').update(rawUrl).digest('hex'));
   const pathname = 'mls/images/' + key + '.image';
 
-  // Try existing stored bytes first, including during a storage-write cooldown.
   try {
     const cached = await readStoredImage(pathname);
     if (cached) return imageResponse(cached.bytes, cached.contentType);
@@ -149,28 +198,38 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
     console.error('MLS image storage read failed:', error instanceof Error ? error.message : error);
-    return unavailableResponse();
+    if (storedKey) return unavailableResponse();
   }
 
-  // Don't keep retrying signed single-use MLS URLs when storage is failing.
-  if (Date.now() < blobUnavailableUntil) return unavailableResponse();
-
   try {
-    const image = await downloadMedia(rawUrl);
+    let image: { bytes: ArrayBuffer; contentType: string };
+    try {
+      image = await downloadMedia(rawUrl);
+    } catch (initialError) {
+      // Listing detail HTML can be cached longer than a single-use MLS Grid
+      // media URL remains valid. If that URL fails, refresh the listing's
+      // media manifest directly and retry once with a newly issued URL for
+      // the same MediaKey. The stable Blob key means future views won't need
+      // another MLS Grid request for this photo.
+      if (!listingId || !mediaKey) throw initialError;
+      const freshListing = await fetchMLSGridLiveListing(listingId);
+      const freshPhoto = freshListing?.Media.find(photo => photo.MediaKey === mediaKey);
+      if (!freshPhoto?.MediaURL || freshPhoto.MediaURL === rawUrl) throw initialError;
+      image = await downloadMedia(freshPhoto.MediaURL);
+    }
+
     try {
       await put(pathname, image.bytes, {
         access: 'private',
         allowOverwrite: true,
-        cacheControlMaxAge: 86400,
+        cacheControlMaxAge: 31536000,
         contentType: image.contentType
       });
     } catch (error) {
       blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
       console.error('MLS image cache write failed:', error instanceof Error ? error.message : error);
-      // Return the photo to the current visitor even if persistent caching is temporarily down.
       return imageResponse(image.bytes, image.contentType);
     }
-
     return imageResponse(image.bytes, image.contentType);
   } catch (error) {
     console.error('MLS image fetch failed:', error instanceof Error ? error.message : error);
