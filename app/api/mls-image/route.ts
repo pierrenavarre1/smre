@@ -113,8 +113,10 @@ export async function GET(request: NextRequest) {
     try {
       const url = new URL(rawUrl);
       if (url.protocol === 'https:' && url.hostname.toLowerCase() === 'cdn-stmarys.mlsgrid.com') {
-        return Response.redirect(url.toString(), 302, {
+        return new Response(null, {
+          status: 302,
           headers: {
+            Location: url.toString(),
             'Cache-Control': 'public, max-age=300, s-maxage=3600',
             'X-Content-Type-Options': 'nosniff'
           }
