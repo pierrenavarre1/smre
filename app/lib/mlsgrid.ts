@@ -319,6 +319,15 @@ function listingSourceAndId(listing: RESOProperty) {
   return { source: listing.ListingId.slice(0, separator), listingId: listing.ListingId.slice(separator + 1) };
 }
 
+function isProvisionedCdnUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
+  } catch {
+    return false;
+  }
+}
+
 async function fetchFreshMediaBatch(source: string, listingIds: string[]) {
   const values = listingIds.map(id => "'" + id.replace(/'/g, "''") + "'").join(',');
   const filter = "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and ListingId in (" + values + ")";
@@ -354,41 +363,52 @@ export async function fetchFreshPreviewMedia(listings: RESOProperty[]) {
 
 export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
-  if (cached && cached.expiresAt > Date.now()) return cached.media;
-
-  const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
-  if (hasBlobPlaceholder) {
-    // The scheduled sync stores only one preview to control Blob usage. When a
-    // visitor opens a detail page, request this listing's full media manifest
-    // once, then let the image endpoint cache each photo as it is viewed.
-    if (isMLSGridConfigured()) {
-      try {
-        const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
-        const freshMedia = freshListing?.Media || [];
-        if (freshMedia.length) {
-          freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: freshMedia });
-          const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
-          freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
-          return freshMedia;
-        }
-      } catch (error) {
-        console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
-      }
-    }
-    return [];
+  // Reuse a complete recent live manifest, including CDN URLs.
+  if (
+    cached &&
+    cached.expiresAt > Date.now() &&
+    cached.media.every(photo => !photo.MediaURL.startsWith('smre-blob:'))
+  ) {
+    return cached.media;
   }
 
-  // Reuse media already available from the live feed or a healthy local cache.
-  if (listing.Media.length && !hasBlobPlaceholder) {
-    freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: listing.Media });
-    const preferred = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
-    freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
+  // A cached full gallery of provisioned CDN URLs is safe to serve directly.
+  if (
+    listing.Media.length > 1 &&
+    listing.Media.every(photo => isProvisionedCdnUrl(photo.MediaURL))
+  ) {
     return listing.Media;
   }
 
-  // Do not fall back to live API requests during page rendering. The next
-  // scheduled sync will refresh the saved media set.
-  return [];
+  // Keep the stored thumbnail available if the live API is not configured.
+  if (!isMLSGridConfigured()) return listing.Media;
+
+  try {
+    const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
+    const freshMedia = freshListing?.Media || [];
+    if (freshMedia.length > 0) {
+      // CDN URLs are durable. Standard MLS Grid URLs are short-lived, so cache
+      // either response briefly and refresh the manifest on later visits.
+      freshMediaCache.set(listing.ListingId, {
+        expiresAt: Date.now() + (freshMedia.every(photo => isProvisionedCdnUrl(photo.MediaURL)) ? FRESH_MEDIA_CACHE_MS : 60_000),
+        media: freshMedia
+      });
+      const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
+      freshPreviewCache.set(listing.ListingId, {
+        expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS,
+        media: preferred ? [preferred] : []
+      });
+      return freshMedia;
+    }
+
+    // Only treat a returned listing with no photos as a confirmed empty gallery.
+    if (freshListing && freshMedia.length === 0) return [];
+  } catch (error) {
+    console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
+  }
+
+  // On rate limits or transient failures, retain the local thumbnail/Blob key.
+  return listing.Media;
 }
 
 export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
@@ -453,8 +473,15 @@ export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
 
   const all: RESOProperty[] = [];
   for (const { source, records } of sourceRecords) {
-    await downloadAndStoreMedia(source, records, existingById);
     for (const record of records) {
+      const recordMedia = media(record);
+      // When MLS Grid returns provisioned CDN URLs, persist them directly.
+      // Keep the existing Blob download path for standard single-use media URLs.
+      if (recordMedia.length > 0 && recordMedia.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
+        record.Media = recordMedia;
+      } else {
+        await downloadAndStoreMedia(source, [record], existingById);
+      }
       all.push(normalizeMLSGridProperty(record, source));
     }
   }
