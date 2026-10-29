@@ -37,19 +37,25 @@ export async function POST(request:Request){
         },
       };
 
-      const response=await fetch('https://api.followupboss.com/v1/events',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'X-System':'SMRE Website',
-          'X-System-Key':systemKey,
-          'Authorization':`Basic ${Buffer.from(`${apiKey}:`).toString('base64')}`,
-        },
-        body:JSON.stringify(event),
-      });
-      if(!response.ok){
-        console.error('FUB lead submission failed',response.status,await response.text());
-        return NextResponse.json({error:'Unable to submit request.'},{status:502});
+      try{
+        const response=await fetch('https://api.followupboss.com/v1/events',{
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'X-System':'SMRE Website',
+            'X-System-Key':systemKey,
+            'Authorization':`Basic ${Buffer.from(`${apiKey}:`).toString('base64')}`,
+          },
+          body:JSON.stringify(event),
+          signal:AbortSignal.timeout(8000),
+        });
+        if(!response.ok){
+          console.error('FUB lead submission failed',response.status);
+          return NextResponse.json({ok:true,forwarded:false,crmWarning:true});
+        }
+      }catch(fubError){
+        console.error('FUB lead submission could not complete',fubError instanceof Error?fubError.message:'Unknown error');
+        return NextResponse.json({ok:true,forwarded:false,crmWarning:true});
       }
     }
 
