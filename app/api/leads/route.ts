@@ -6,6 +6,23 @@ function splitName(name:string){
   return {firstName:parts.shift() || '',lastName:parts.join(' ')};
 }
 
+function formatRequestedDate(value: unknown){
+  const raw=String(value || '').trim();
+  const match=raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!match) return raw;
+  return new Date(Number(match[1]),Number(match[2])-1,Number(match[3])).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+
+function formatRequestedTime(value: unknown){
+  const raw=String(value || '').trim();
+  const match=raw.match(/^(\d{1,2}):(\d{2})$/);
+  if(!match) return raw;
+  const hour=Number(match[1]);
+  const minute=Number(match[2]);
+  if(hour>23 || minute>59) return raw;
+  return new Date(2000,0,1,hour,minute).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+
 export async function POST(request:Request){
   try{
     const lead=await request.json();
@@ -26,7 +43,19 @@ export async function POST(request:Request){
         source:'SMRE Website Preview',
         system:'SMRE-Website',
         type:eventType,
-        message:[lead.listingId?`MLS/Listing ID: ${String(lead.listingId)}`:'',lead.preferredDate?`Preferred date: ${String(lead.preferredDate)}`:'',lead.preferredTime?`Preferred time: ${String(lead.preferredTime)}`:'',String(lead.message || '')].filter(Boolean).join('\n'),
+        message:lead.type==='showing'?[
+          'SHOWING REQUEST',
+          `Property: ${String(lead.address || 'Address not provided')}`,
+          lead.preferredDate?`Requested date: ${formatRequestedDate(lead.preferredDate)}`:'',
+          lead.preferredTime?`Requested time: ${formatRequestedTime(lead.preferredTime)}`:'',
+          lead.listingId?`MLS/Listing ID: ${String(lead.listingId)}`:'',
+          String(lead.message || '').trim()? `Additional details: ${String(lead.message).trim()}`:''
+        ].filter(Boolean).join('\n'): [
+          lead.listingId?`MLS/Listing ID: ${String(lead.listingId)}`:'',
+          lead.preferredDate?`Preferred date: ${String(lead.preferredDate)}`:'',
+          lead.preferredTime?`Preferred time: ${String(lead.preferredTime)}`:'',
+          String(lead.message || '')
+        ].filter(Boolean).join('\n'),
         sourceUrl:`https://${request.headers.get('host') || 'smre-preview.vercel.app'}`,
         person:{
           firstName,
