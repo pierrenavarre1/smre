@@ -32,9 +32,9 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
     const photo = photos[index];
     try {
       const parsed = new URL(photo.MediaURL);
-      // Match the working listing-card behavior: let browser requests use MLS Grid
-      // media URLs directly instead of funneling every gallery image through our proxy.
-      if (parsed.protocol === 'https:' && (parsed.hostname === 'media.mlsgrid.com' || parsed.hostname.endsWith('.mlsgrid.com'))) {
+      // Only the provisioned CDN host is durable for direct browser use. Standard MLS
+      // media URLs are signed and expire, so send them through our stable cache proxy.
+      if (parsed.protocol === 'https:' && parsed.hostname === 'cdn-stmarys.mlsgrid.com') {
         return photo.MediaURL;
       }
     } catch {}
