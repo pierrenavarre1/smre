@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { get, put } from '@vercel/blob';
 import { getListing } from '../../lib/listings';
-import { fetchMLSGridLiveListing } from '../../lib/mlsgrid';
 
 function allowedMediaHost(hostname: string) {
   const host = hostname.toLowerCase();
@@ -10,8 +9,6 @@ function allowedMediaHost(hostname: string) {
 }
 
 const inFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string }>>();
-let blobUnavailableUntil = 0;
-const BLOB_FAILURE_COOLDOWN_MS = 5 * 60_000;
 
 // MLS Grid throttles photo downloads when gallery images request concurrently.
 // Serialize downloads within each function instance and back off on HTTP 429.
@@ -214,7 +211,6 @@ export async function GET(request: NextRequest) {
         contentType: image.contentType
       });
     } catch (error) {
-      blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
       console.error('MLS image cache write failed:', error instanceof Error ? error.message : error);
       return imageResponse(image.bytes, image.contentType);
     }
