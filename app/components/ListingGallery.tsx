@@ -28,7 +28,18 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
   }, [open, photos.length]);
 
   if (!photos.length) return null;
-  const photoUrl = (index: number) => `/api/mls-image?url=${encodeURIComponent(photos[index].MediaURL)}&listingId=${encodeURIComponent(listingId)}&index=${index}`;
+  const photoUrl = (index: number) => {
+    const photo = photos[index];
+    try {
+      const parsed = new URL(photo.MediaURL);
+      // Match the working listing-card behavior: let browser requests use MLS Grid
+      // media URLs directly instead of funneling every gallery image through our proxy.
+      if (parsed.protocol === 'https:' && (parsed.hostname === 'media.mlsgrid.com' || parsed.hostname.endsWith('.mlsgrid.com'))) {
+        return photo.MediaURL;
+      }
+    } catch {}
+    return `/api/mls-image?url=${encodeURIComponent(photo.MediaURL)}&listingId=${encodeURIComponent(listingId)}&index=${index}&mediaKey=${encodeURIComponent(photo.MediaKey)}`;
+  };
 
   return (
     <>
