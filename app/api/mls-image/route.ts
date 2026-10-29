@@ -61,12 +61,11 @@ async function downloadMedia(rawUrl: string) {
       : (process.env.MLSGRID_DEMO_ACCESS_TOKEN || (process.env.VERCEL_ENV === 'preview' ? undefined : process.env.MLSGRID_ACCESS_TOKEN));
     if (!token) throw new Error('MLS Grid access token is not configured for this environment.');
 
-    for (let attempt = 0; attempt < 4; attempt++) {
-      await waitForMediaRequestSlot();
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      try {
-        const response = await fetch(rawUrl, {
+    await waitForMediaRequestSlot();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch(rawUrl, {
           headers: {
             Accept: 'image/avif,image/webp,image/jpeg,image/png,*/*',
             'User-Agent': token
@@ -76,15 +75,8 @@ async function downloadMedia(rawUrl: string) {
           signal: controller.signal
         });
 
-        if (response.status === 429 && attempt < 3) {
-          const retryAfter = Number(response.headers.get('retry-after') || '');
-          const backoffMs = Number.isFinite(retryAfter) && retryAfter > 0
-            ? retryAfter * 1000
-            : 2000 * (attempt + 1);
-          await response.body?.cancel().catch(() => undefined);
-          await new Promise(resolve => setTimeout(resolve, backoffMs));
-          continue;
-        }
+        // MLS Grid MediaURLs are signed, single-use URLs. A 429 is not safely
+        // recoverable by retrying the same URL; retries can worsen throttling.
         if (!response.ok || !response.body) {
           throw new Error('MLS image source returned ' + response.status + ' ' + response.statusText);
         }
@@ -95,11 +87,9 @@ async function downloadMedia(rawUrl: string) {
         }
 
         return { bytes: await response.arrayBuffer(), contentType };
-      } finally {
-        clearTimeout(timeout);
-      }
+    } finally {
+      clearTimeout(timeout);
     }
-    throw new Error('MLS image source remained rate-limited after retries.');
   })();
 
   inFlight.set(rawUrl, promise);
@@ -183,6 +173,18 @@ export async function GET(request: NextRequest) {
     if (url.protocol !== 'https:' || !allowedMediaHost(url.hostname)) {
       return new Response('Image host is not allowed.', { status: 403 });
     }
+    // MLS Grid's provisioned CDN URLs are intended for direct browser delivery.
+    // Redirect them instead of proxying/downloading them through this function.
+    if (url.hostname.toLowerCase() === 'cdn-stmarys.mlsgrid.com') {
+      return new Response(null, {
+        status: 302,
+        headers: {
+          Location: url.toString(),
+          'Cache-Control': 'public, max-age=300, s-maxage=3600',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+    }
   }
 
   // For old sync-generated Blob keys, keep the existing stable-key behavior.
@@ -202,21 +204,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    let image: { bytes: ArrayBuffer; contentType: string };
-    try {
-      image = await downloadMedia(rawUrl);
-    } catch (initialError) {
-      // Listing detail HTML can be cached longer than a single-use MLS Grid
-      // media URL remains valid. If that URL fails, refresh the listing's
-      // media manifest directly and retry once with a newly issued URL for
-      // the same MediaKey. The stable Blob key means future views won't need
-      // another MLS Grid request for this photo.
-      if (!listingId || !mediaKey) throw initialError;
-      const freshListing = await fetchMLSGridLiveListing(listingId);
-      const freshPhoto = freshListing?.Media.find(photo => photo.MediaKey === mediaKey);
-      if (!freshPhoto?.MediaURL || freshPhoto.MediaURL === rawUrl) throw initialError;
-      image = await downloadMedia(freshPhoto.MediaURL);
-    }
+    const image = await downloadMedia(rawUrl);
 
     try {
       await put(pathname, image.bytes, {
