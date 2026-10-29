@@ -23,11 +23,11 @@ export async function POST(request:Request){
       const phone=String(lead.phone || (!contact.includes('@')?contact:''));
       const eventType=lead.type==='seller'?'Seller Inquiry':lead.type==='valuation'?'Seller Inquiry':lead.type==='showing'?'Showing Request':lead.type==='property'?'Property Inquiry':lead.type==='chat'?'General Inquiry':'General Inquiry';
       const event={
-        source:'smre.info',
+        source:'SMRE Website Preview',
         system:'SMRE-Website',
         type:eventType,
         message:[lead.listingId?`MLS/Listing ID: ${String(lead.listingId)}`:'',lead.preferredDate?`Preferred date: ${String(lead.preferredDate)}`:'',lead.preferredTime?`Preferred time: ${String(lead.preferredTime)}`:'',String(lead.message || '')].filter(Boolean).join('\n'),
-        sourceUrl:'https://smre.info',
+        sourceUrl:`https://${request.headers.get('host') || 'smre-preview.vercel.app'}`,
         person:{
           firstName,
           lastName,
