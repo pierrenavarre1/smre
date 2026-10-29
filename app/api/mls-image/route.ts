@@ -106,6 +106,25 @@ export async function GET(request: NextRequest) {
     return new Response('Invalid stored image key.', { status: 400 });
   }
 
+  // Provisioned MLS Grid CDN URLs are intended to be served directly by the CDN.
+  // Do not download them through the standard signed-media endpoint or consume
+  // Blob storage for these durable CDN-hosted photos.
+  if (!storedKey) {
+    try {
+      const url = new URL(rawUrl);
+      if (url.protocol === 'https:' && url.hostname.toLowerCase() === 'cdn-stmarys.mlsgrid.com') {
+        return Response.redirect(url.toString(), 302, {
+          headers: {
+            'Cache-Control': 'public, max-age=300, s-maxage=3600',
+            'X-Content-Type-Options': 'nosniff'
+          }
+        });
+      }
+    } catch {
+      // The normal validation below returns the appropriate invalid-URL response.
+    }
+  }
+
   // Detail pages can supply freshly issued MLS media URLs. Accept only HTTPS
   // URLs from known MLS/CDN hosts, then cache the downloaded bytes by URL hash.
   // Stored smre-blob keys never trigger a live download if their Blob is missing.
