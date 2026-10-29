@@ -195,7 +195,6 @@ export async function GET(request: NextRequest) {
     if (cached) return imageResponse(cached.bytes, cached.contentType);
     if (storedKey) return unavailableResponse();
   } catch (error) {
-    blobUnavailableUntil = Date.now() + BLOB_FAILURE_COOLDOWN_MS;
     console.error('MLS image storage read failed:', error instanceof Error ? error.message : error);
     if (storedKey) return unavailableResponse();
   }
