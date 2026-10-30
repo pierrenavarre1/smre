@@ -372,44 +372,32 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
   if (cached && cached.expiresAt > Date.now()) return cached.media;
 
-  // The stored CDN manifest is complete only when it contains multiple photos.
-  // A single CDN URL may be only the sync thumbnail, so refresh that case live.
+  // A multi-photo CDN manifest is already complete and can be used directly.
   if (listing.Media.length > 1 && listing.Media.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
-    return listing.Media;
-  }
-
-  const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
-  if (hasBlobPlaceholder) {
-    // The scheduled sync stores only one preview to control Blob usage. When a
-    // visitor opens a detail page, request this listing's full media manifest
-    // once, then let the image endpoint cache each photo as it is viewed.
-    if (isMLSGridConfigured()) {
-      try {
-        const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
-        const freshMedia = freshListing?.Media || [];
-        if (freshMedia.length) {
-          freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: freshMedia });
-          const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
-          freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
-          return freshMedia;
-        }
-      } catch (error) {
-        console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
-      }
-    }
-    return [];
-  }
-
-  // Reuse media already available from the live feed or a healthy local cache.
-  if (listing.Media.length && !hasBlobPlaceholder && !listing.Media.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
     freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: listing.Media });
-    const preferred = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
-    freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
     return listing.Media;
   }
 
-  // Preserve a usable stored preview if the live manifest is unavailable.
-  // A transient API error should not turn a listing's gallery completely blank.
+  // The scheduled sync may store only a thumbnail, or no photo at all if the
+  // original signed-media download failed. Do not mistake either state for a
+  // complete gallery. Request the listing's full Media expansion on detail view.
+  if (isMLSGridConfigured()) {
+    try {
+      const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
+      const freshMedia = freshListing?.Media || [];
+      if (freshMedia.length) {
+        freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: freshMedia });
+        const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
+        freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
+        return freshMedia;
+      }
+    } catch (error) {
+      console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  // If the full manifest is unavailable, retain whatever usable preview was
+  // saved during sync instead of replacing it with an empty gallery.
   return listing.Media;
 }
 
