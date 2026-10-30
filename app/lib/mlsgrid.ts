@@ -2,7 +2,8 @@ import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-pr
 import { get, put } from '@vercel/blob';
 import { readMLSCache } from './mls-store';
 
-const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
+const USING_DEMO_SUBSCRIPTION = Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN);
+const API_BASE = USING_DEMO_SUBSCRIPTION ? 'https://api-demo.mlsgrid.com/v2' : (process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2');
 const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
 const SOURCE_CONFIG: Record<string, { label: MLSSource }> = {
   sunflower: { label: 'Sunflower MLS' },
@@ -82,9 +83,9 @@ function sourceLabel(source: string): MLSSource {
   return SOURCE_CONFIG[source]?.label || 'Sunflower MLS';
 }
 
-// MLS Grid provides one access token for the subscription. Both MLS sources use it.
+// Prefer the separate Demo subscription token when it is configured.
 function sourceToken(_source: string) {
-  return process.env.MLSGRID_ACCESS_TOKEN;
+  return process.env.MLSGRID_DEMO_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN;
 }
 
 export function isMLSGridConfigured() {
