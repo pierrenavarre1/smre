@@ -12,7 +12,15 @@ function formatListingDate(value?: string) {
 export function ListingCard({ p }: { p: RESOProperty }) {
   const baths = p.BathroomsTotalInteger + (p.BathroomsHalf ? 0.5 : 0);
   const photo = (p.Media.find(m => m.PreferredPhoto) || p.Media[0])?.MediaURL;
-  const photoSrc = photo ? `/api/mls-image?url=${encodeURIComponent(photo)}&listingId=${encodeURIComponent(p.ListingId)}&index=0` : '';
+  const photoSrc = photo ? (() => {
+    try {
+      const parsed = new URL(photo);
+      // CDN URLs are durable and can be loaded directly without consuming
+      // MLS Grid's signed-media download allowance.
+      if (parsed.protocol === 'https:' && parsed.hostname === 'cdn-stmarys.mlsgrid.com') return photo;
+    } catch {}
+    return `/api/mls-image?url=${encodeURIComponent(photo)}&listingId=${encodeURIComponent(p.ListingId)}&index=0`;
+  })() : '';
 
   return (
     <Link href={`/listings/${encodeURIComponent(p.ListingId)}`} className="listing-card">
