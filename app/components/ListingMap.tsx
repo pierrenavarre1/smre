@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RESOProperty } from '../lib/mock-properties';
 
-const TILE=256, MIN_ZOOM=6, MAX_ZOOM=14;
+const TILE=256, MIN_ZOOM=6, MAX_ZOOM=18;
 const DEFAULT={lat:39.22,lon:-96.02,zoom:9};
 const SERVICE_AREA_DEFAULT={lat:39.1947,lon:-96.0715,zoom:12};
 function project(lat:number,lon:number,zoom:number){const scale=TILE*Math.pow(2,zoom),safe=Math.max(-85.0511,Math.min(85.0511,lat)),sin=Math.sin(safe*Math.PI/180);return{x:((lon+180)/360)*scale,y:(.5-Math.log((1+sin)/(1-sin))/(4*Math.PI))*scale};}
