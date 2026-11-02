@@ -404,7 +404,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label="Back to top"
           style={{
-            position: 'fixed', right: '24px', bottom: '24px', zIndex: 40,
+            position: 'fixed', right: '92px', bottom: '24px', zIndex: 40,
             display: 'inline-flex', alignItems: 'center', gap: '9px',
             padding: '12px 16px', border: '1px solid rgba(255,255,255,.18)',
             borderRadius: '3px', background: 'var(--navy)', color: '#fff',
