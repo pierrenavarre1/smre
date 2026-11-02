@@ -59,7 +59,7 @@ export default async function Home(){
     <section className="section container">
       <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
-      {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings} onSearchArea={(bounds)=>{if(bounds){const params=new URLSearchParams(Object.entries(bounds).map(([key,value])=>[key,String(value)]));window.location.href=`/listings?${params.toString()}`;}}}/></div>}
+      {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings} searchAreaNavigate/></div>}
     </section>
 
     <section className="home-rural-strip">
