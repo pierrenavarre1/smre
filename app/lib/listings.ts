@@ -22,6 +22,7 @@ function toListingSummary(listing: RESOProperty): RESOProperty {
     PostalCode: listing.PostalCode,
     LivingArea: listing.LivingArea,
     LotSizeAcres: listing.LotSizeAcres,
+    LotSizeSqFt: listing.LotSizeSqFt,
     YearBuilt: listing.YearBuilt,
     PublicRemarks: '',
     Media: listing.Media,
