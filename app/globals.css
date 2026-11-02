@@ -131,3 +131,5 @@
 .admin-analytics-setup code{font-size:11px;background:#fff;border:1px solid var(--line);padding:2px 5px}
 .admin-analytics-link{display:inline-block;margin-top:8px;color:var(--navy);font-size:12px;font-weight:700;text-decoration:underline}
 @media(max-width:800px){.admin-analytics-cards{grid-template-columns:1fr}.admin-analytics-grid{grid-template-columns:1fr}.admin-analytics-bars{height:190px}}
+
+.listing-date{font-size:11px;line-height:1.4;color:var(--muted);margin-top:3px}
