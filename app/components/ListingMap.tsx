@@ -27,7 +27,7 @@ export function ListingMap({listings,onSearchArea}:{listings:RESOProperty[];onSe
   const groups:{items:number[];left:number;top:number}[]=[];
   markerPositions.forEach((point,index)=>{
    // Keep individual markers when the result set is small; clusters are useful only in dense maps.
-   const group=valid.length>12?groups.find(g=>Math.hypot(g.left-point.left,g.top-point.top)<42):undefined;
+   const group=valid.length>20?groups.find(g=>Math.hypot(g.left-point.left,g.top-point.top)<42):undefined;
    if(group){group.items.push(index);group.left=group.items.reduce((sum,i)=>sum+markerPositions[i].left,0)/group.items.length;group.top=group.items.reduce((sum,i)=>sum+markerPositions[i].top,0)/group.items.length;}
    else groups.push({items:[index],left:point.left,top:point.top});
   });
