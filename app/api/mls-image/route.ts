@@ -7,6 +7,15 @@ function allowedMediaHost(hostname: string) {
   return host === 'media.mlsgrid.com' || host.endsWith('.mlsgrid.com') || host === 's3.amazonaws.com' || host.endsWith('.s3.amazonaws.com') || host.endsWith('.amazonaws.com');
 }
 
+function isProvisionedCdnUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
+  } catch {
+    return false;
+  }
+}
+
 const inFlight = new Map<string, Promise<{ bytes: ArrayBuffer; contentType: string }>>();
 let blobUnavailableUntil = 0;
 const BLOB_FAILURE_COOLDOWN_MS = 5 * 60_000;
@@ -100,6 +109,19 @@ function imageResponse(bytes: ArrayBuffer, contentType: string) {
 export async function GET(request: NextRequest) {
   const rawUrl = request.nextUrl.searchParams.get('url');
   if (!rawUrl) return new Response('Missing image URL.', { status: 400 });
+
+  // The MLS Grid provisioned CDN is the image origin. Redirect the browser
+  // instead of proxying the bytes through a Vercel Function or Blob.
+  if (isProvisionedCdnUrl(rawUrl)) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: rawUrl,
+        'Cache-Control': 'public, max-age=300, s-maxage=3600',
+        'X-Content-Type-Options': 'nosniff'
+      }
+    });
+  }
 
   const storedKey = rawUrl.startsWith('smre-blob:') ? rawUrl.slice('smre-blob:'.length) : '';
   if (storedKey && !/^[a-zA-Z0-9_-]{8,128}$/.test(storedKey)) {
