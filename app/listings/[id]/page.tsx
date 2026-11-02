@@ -21,7 +21,8 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
   const p = await getListing(id);
   if (!p) notFound();
   const photos=p.Media.filter(m=>m.MediaCategory==='Photo');
-  const baths=p.BathroomsTotalInteger+(p.BathroomsHalf?0.5:0);
+  const baths=(p.BathroomsTotalInteger || p.BathroomsFull || 0)+(p.BathroomsHalf?0.5:0);
+  const acreage=p.LotSizeAcres || (p.LotSizeSqFt ? p.LotSizeSqFt/43560 : 0);
   return <section className="section container detail">
     <Link href="/listings" className="back">← All listings</Link>
     <ListingGallery photos={photos} address={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} listingId={p.ListingId} />
@@ -30,7 +31,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
         <div className="card-top"><p className="eyebrow">{p.StandardStatus}</p><SourceBadge source={p.MlsSource}/></div>
         <h1>{money.format(p.ListPrice)}</h1>
         <h2 className="detail-address">{p.StreetNumber} {p.StreetName}, {p.City}, KS {p.PostalCode}</h2>
-        <div className="detail-facts"><b>{p.BedroomsTotal}</b> beds <b>{baths}</b> baths {p.LivingArea>0&&<><b>{number.format(p.LivingArea)}</b> sq ft</>} {p.LotSizeAcres>0&&<><b>{p.LotSizeAcres}</b> acres</>}</div>
+        <div className="detail-facts"><b>{p.BedroomsTotal}</b> beds {baths>0&&<><b>{baths}</b> baths</>} {p.LivingArea>0&&<><b>{number.format(p.LivingArea)}</b> sq ft</>} {acreage>0&&<><b>{acreage.toLocaleString(undefined,{maximumFractionDigits:2})}</b> acres</>}</div>
         <p className="description">{p.PublicRemarks}</p>
         {p.ListOfficeName ? <p className="listing-agency">Listed by {p.ListOfficeName}</p> : null}
         {p.Features?.length?<div className="feature-list">{p.Features.map(f=><span key={f}>{f}</span>)}</div>:null}
