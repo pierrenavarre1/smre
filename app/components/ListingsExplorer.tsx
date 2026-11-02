@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { RESOProperty } from '../lib/mock-properties';
@@ -48,6 +48,14 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   }));
   const [sort, setSort] = useState('priority');
   const [page, setPage] = useState(1);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const updateVisibility = () => setShowBackToTop(window.scrollY > 600);
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    return () => window.removeEventListener('scroll', updateVisibility);
+  }, []);
   const [addressOpen, setAddressOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -387,6 +395,26 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           <p>Try widening the city, price, bedroom, or property type search.</p>
           <button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button>
         </div>
+      )}
+
+      {showBackToTop && (
+        <button
+          type="button"
+          className="listings-back-to-top"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Back to top"
+          style={{
+            position: 'fixed', right: '24px', bottom: '24px', zIndex: 40,
+            display: 'inline-flex', alignItems: 'center', gap: '9px',
+            padding: '12px 16px', border: '1px solid rgba(255,255,255,.18)',
+            borderRadius: '3px', background: 'var(--navy)', color: '#fff',
+            boxShadow: '0 5px 18px rgba(15,20,71,.22)', fontSize: '12px',
+            fontWeight: 700, letterSpacing: '.02em', cursor: 'pointer'
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: '18px', lineHeight: '12px' }}>↑</span>
+          Back to Top
+        </button>
       )}
     </>
   );
