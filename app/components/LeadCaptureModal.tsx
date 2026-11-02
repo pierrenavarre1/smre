@@ -21,6 +21,8 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
     const phone = String(form.get('phone') || '');
     const details = String(form.get('details') || '');
     const address = String(form.get('address') || propertyAddress || '');
+    const preferredDate = String(form.get('preferredDate') || '');
+    const preferredTime = String(form.get('preferredTime') || '');
 
     if (!email && !phone) {
       setError('Please enter an email or phone number.');
@@ -32,7 +34,17 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, name, email, phone, address, listingId, message: details }),
+        body: JSON.stringify({
+          type,
+          name,
+          email,
+          phone,
+          address,
+          listingId,
+          preferredDate: isShowing ? preferredDate : undefined,
+          preferredTime: isShowing ? preferredTime : undefined,
+          message: details,
+        }),
       });
       if (!response.ok) throw new Error('Unable to submit');
       setSubmitted(true);
