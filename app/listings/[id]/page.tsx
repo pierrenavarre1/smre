@@ -6,6 +6,7 @@ import { ListingGallery } from '../../components/ListingGallery';
 import { ListingLeadButton } from '../../components/ListingLeadButton';
 import { ListingMap } from '../../components/ListingMap';
 
+
 const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const number = new Intl.NumberFormat('en-US');
 const date = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
