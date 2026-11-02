@@ -22,7 +22,7 @@ const seed:AdminData={
   officeHours:'By appointment',facebook:'',instagram:'',youtube:'',googleBusiness:'',
   defaultTitle:'St. Mary’s Real Estate | SMRE',defaultDescription:'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.',ogImage:'',leadNotificationEmail:'admin@smre.info',
   heroEyebrow:'LOCAL REAL ESTATE',heroDescription:'Local knowledge, straightforward advice, and real estate experience across Northeast Kansas.',
-  localHeading:'Small towns. Open country. Real local knowledge.',localDescription:'From St. Marys and Wamego to the farms, acreage, and communities between Topeka and Manhattan, we understand that buying here is about more than an address.',
+  localHeading:'LOCAL KNOWLEDGE. PERSONAL SERVICE.',localDescription:'Our local agents work with buyers and sellers throughout Northeast Kansas, bringing practical market knowledge, straightforward advice, and a personal approach to every transaction. Get to know our team, how we work, and the communities we serve.',
   localImage:'/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png',featuredCount:6
  },
  agents:seedAgents,guides:seedGuides,leads:[],
