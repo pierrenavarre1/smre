@@ -2,8 +2,18 @@ import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-pr
 import { get, put } from '@vercel/blob';
 import { readMLSCache } from './mls-store';
 
-const USING_DEMO_SUBSCRIPTION = Boolean(process.env.MLSGRID_DEMO_ACCESS_TOKEN);
-const API_BASE = USING_DEMO_SUBSCRIPTION ? 'https://api-demo.mlsgrid.com/v2' : (process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2');
+// Prefer Production credentials when both are present so Preview can resolve real listings.
+// Demo remains the fallback for environments without a Production token.
+function sourceToken(_source: string) {
+  return process.env.MLSGRID_ACCESS_TOKEN || process.env.MLSGRID_DEMO_ACCESS_TOKEN;
+}
+
+function sourceApiBase() {
+  if (process.env.MLSGRID_ACCESS_TOKEN) {
+    return process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
+  }
+  return 'https://api-demo.mlsgrid.com/v2';
+}
 const DEFAULT_SOURCES = ['sunflower', 'flinthills'] as const;
 const SOURCE_CONFIG: Record<string, { label: MLSSource }> = {
   sunflower: { label: 'Sunflower MLS' },
@@ -83,11 +93,6 @@ function sourceLabel(source: string): MLSSource {
   return SOURCE_CONFIG[source]?.label || 'Sunflower MLS';
 }
 
-// Prefer the separate Demo subscription token when it is configured.
-function sourceToken(_source: string) {
-  return process.env.MLSGRID_DEMO_ACCESS_TOKEN || process.env.MLSGRID_ACCESS_TOKEN;
-}
-
 export function isMLSGridConfigured() {
   return sourceKeys().some(source => Boolean(sourceToken(source)));
 }
@@ -116,7 +121,7 @@ export async function fetchMLSGridPage(
 
   await waitForMLSGridSlot();
 
-  const endpoint = url || API_BASE + '/Property?' + new URLSearchParams({
+  const endpoint = url || sourceApiBase() + '/Property?' + new URLSearchParams({
     '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and StandardStatus in ('Active','Pending')",
     ...(expandMedia ? { '$expand': 'Media' } : {}),
     // MLS Grid allows up to 1,000 records when Media is expanded.
@@ -178,7 +183,7 @@ async function fetchMediaForRecords(source: string, records: MlsGridRecord[]) {
 
     const page = await fetchMLSGridPage(
       source,
-      API_BASE + '/Property?' + new URLSearchParams({
+      sourceApiBase() + '/Property?' + new URLSearchParams({
         '$filter': filter,
         '$expand': 'Media',
         '$top': '100'
@@ -338,7 +343,7 @@ function listingSourceAndId(listing: RESOProperty) {
 async function fetchFreshMediaBatch(source: string, listingIds: string[]) {
   const values = listingIds.map(id => "'" + id.replace(/'/g, "''") + "'").join(',');
   const filter = "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and ListingId in (" + values + ")";
-  const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
+  const page = await fetchMLSGridPage(source, sourceApiBase() + '/Property?' + new URLSearchParams({
     '$filter': filter, '$expand': 'Media', '$top': '100'
   }).toString(), true);
   const result = new Map<string, RESOMedia[]>();
@@ -431,7 +436,7 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
 
   const filter = "OriginatingSystemName eq '" + source +
     "' and MlgCanView eq true and ListingId eq '" + listingId.replace(/'/g, "''") + "'";
-  const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
+  const page = await fetchMLSGridPage(source, sourceApiBase() + '/Property?' + new URLSearchParams({
     '$filter': filter,
     '$expand': 'Media',
     '$top': '1'
