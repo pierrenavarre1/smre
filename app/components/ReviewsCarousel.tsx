@@ -52,6 +52,7 @@ export function ReviewsCarousel(){
   const rating=data.rating || 0;
 
   return <section ref={ref} className="reviews-section section container" aria-label="Google client reviews">
+    <style>{`.reviews-section .reviews-rating > span,.reviews-section .stars{color:#D4A017}`}</style>
     <div className="reviews-head">
       <div><p className="eyebrow">CLIENT REVIEWS</p><h2>What clients have said.</h2></div>
       <div className="reviews-rating"><strong>{rating ? rating.toFixed(1) : '—'}</strong><span>★ ★ ★ ★ ★</span><small>{data.userRatingCount ? `${data.userRatingCount} Google reviews` : 'Google reviews'}</small></div>
