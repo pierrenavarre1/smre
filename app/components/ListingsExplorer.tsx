@@ -347,11 +347,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           </div>
 
           <div className="listings-results-column">
-            <div className="listings-results-toolbar">
-              <div>
-                <strong>{shown.length} {shown.length === 1 ? 'home' : 'homes'}</strong>
-                <span> for sale</span>
-              </div>
+            <div className="listings-results-toolbar listings-results-toolbar-no-count">
               <label>
                 <span>Sort</span>
                 <select
@@ -404,7 +400,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           aria-label="Back to top"
           style={{
-            position: 'fixed', right: '92px', bottom: '24px', zIndex: 40,
+            position: 'fixed', right: '22px', bottom: '100px', zIndex: 60,
             display: 'inline-flex', alignItems: 'center', gap: '9px',
             padding: '12px 16px', border: '1px solid rgba(255,255,255,.18)',
             borderRadius: '3px', background: 'var(--navy)', color: '#fff',
