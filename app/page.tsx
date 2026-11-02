@@ -9,7 +9,7 @@ import { HomeSearch } from './components/HomeSearch';
 import { MLSDisclosure } from './components/MLSDisclosure';
 import { getAdminData } from './lib/admin-store';
 
-const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
+const heroImage = '/images/Hero for SMRE Web.png';
 const fallbackAreaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 
 export const revalidate = 60;
