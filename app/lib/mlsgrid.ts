@@ -595,7 +595,10 @@ export function dedupeListings(listings: RESOProperty[]) {
 export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflower'): RESOProperty {
   const listPrice = asNumber(record.ListPrice);
   const livingArea = asNumber(record.LivingArea || record.LivingAreaTotal);
-  const lotSqFt = asNumber(record.LotSizeSquareFeet || record.LotSizeSquareFeetTotal);
+  const lotSqFt = asNumber(record.LotSizeSquareFeet || record.LotSizeSquareFeetTotal || record.LotSizeSqFt);
+  const totalBaths = asNumber(record.BathroomsTotalInteger ?? record.BathroomsTotal ?? record.BathroomsFull);
+  const fullBaths = asNumber(record.BathroomsFull ?? record.BathroomsTotalInteger ?? record.BathroomsTotal);
+  const halfBaths = asNumber(record.BathroomsHalf ?? record.BathroomsPartial ?? record.BathroomsThreeQuarter);
   const originalId = String(record.ListingId || record.ListingKey || '');
   const sourceKey = source.toLowerCase();
   const internalId = sourceKey + ':' + originalId;
@@ -609,9 +612,9 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
       : 'Active',
     ListPrice: listPrice,
     BedroomsTotal: asNumber(record.BedroomsTotal),
-    BathroomsTotalInteger: asNumber(record.BathroomsTotalInteger || record.BathroomsTotal),
-    BathroomsFull: asNumber(record.BathroomsFull),
-    BathroomsHalf: asNumber(record.BathroomsHalf),
+    BathroomsTotalInteger: totalBaths,
+    BathroomsFull: fullBaths,
+    BathroomsHalf: halfBaths,
     PropertyType: propertyType(record.PropertyType),
     PropertySubType: firstString(record.PropertySubType) || '',
     StreetNumber: firstString(record.StreetNumber) || '',
