@@ -34,7 +34,7 @@ export default async function Home(){
       .home-rural-balanced .home-rural-photo img{object-fit:cover;object-position:center;width:100%;height:100%;display:block;image-rendering:auto}
       .home-rural-balanced .home-rural-copy{padding:78px clamp(44px,6vw,96px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
       .home-rural-balanced .home-rural-copy .eyebrow{color:#fff;opacity:.72;margin:0 0 16px}
-      .home-rural-balanced .home-rural-copy h2{font-family:var(--serif);font-size:clamp(40px,4vw,56px);line-height:1.04;font-weight:400;letter-spacing:-.04em;margin:0 0 24px;max-width:600px}
+      .home-rural-balanced .home-rural-copy h2{font-family:var(--serif);font-size:clamp(32px,3.2vw,44px);line-height:1.08;font-weight:400;letter-spacing:-.04em;margin:0 0 24px;max-width:600px}
       .home-rural-balanced .home-rural-copy p:not(.eyebrow){color:#fff;opacity:.82;font-size:16px;line-height:1.7;max-width:570px;margin:0 0 32px}
       .home-rural-balanced .home-rural-copy .button{align-self:flex-start}
       @media(max-width:800px){
@@ -65,7 +65,7 @@ export default async function Home(){
     <section className="home-rural-strip">
       <div className="home-rural-grid home-rural-balanced">
         <div className="home-rural-photo"><img src={areaImage} alt="Kansas farm at sunset with a barn, fields and a country road" loading="lazy" /></div>
-        <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>LOCAL KNOWLEDGE. PERSONAL SERVICE.</h2><p>Our local agents work with buyers and sellers throughout Northeast Kansas, bringing practical market knowledge, straightforward advice, and a personal approach to every transaction. Get to know our team, how we work, and the communities we serve.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
+        <div className="home-rural-copy"><h2>LOCAL KNOWLEDGE. PERSONAL SERVICE.</h2><p>Our local agents work with buyers and sellers throughout Northeast Kansas, bringing practical market knowledge, straightforward advice, and a personal approach to every transaction. Get to know our team, how we work, and the communities we serve.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
 
