@@ -158,8 +158,25 @@ function photos(record: MlsGridRecord): RESOMedia[] {
     }))
     .sort((a, b) => a.MediaOrder - b.MediaOrder);
 }
+
+function isProvisionedCdnUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
+  } catch {
+    return false;
+  }
+}
+
 async function downloadPreview(source: string, record: MlsGridRecord) {
   const availablePhotos = photos(record);
+  // When MLS Grid supplies its provisioned CDN URLs for the complete manifest,
+  // retain every photo in MediaOrder and serve them from the CDN. Do not fetch
+  // or copy these files through Vercel Blob.
+  if (availablePhotos.length > 0 && availablePhotos.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
+    record.Media = availablePhotos;
+    return;
+  }
   const preview = availablePhotos.find(photo => photo.PreferredPhoto) || availablePhotos[0];
   if (!preview) {
     record.Media = [];

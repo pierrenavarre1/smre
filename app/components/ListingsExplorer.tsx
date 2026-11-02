@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { RESOProperty } from '../lib/mock-properties';
@@ -37,7 +37,7 @@ function filtersFromUrl(): Partial<Filters> {
 export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   const [filters, setFilters] = useState<Filters>(() => ({
     type: [],
-    status: 'Active',
+    status: '',
     beds: '',
     baths: '',
     max: '',
@@ -48,6 +48,14 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   }));
   const [sort, setSort] = useState('priority');
   const [page, setPage] = useState(1);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const updateVisibility = () => setShowBackToTop(window.scrollY > 600);
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    return () => window.removeEventListener('scroll', updateVisibility);
+  }, []);
   const [addressOpen, setAddressOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -116,7 +124,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   };
 
   const clearFilters = () => {
-    setFilters({ type: [], status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '', address: '' });
+    setFilters({ type: [], status: '', beds: '', baths: '', max: '', acreage: '', city: '', address: '' });
     setAddressOpen(false);
     setTypeOpen(false);
     setMobileFiltersOpen(false);
@@ -296,8 +304,8 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           </select>
 
           <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}>
-            <option value="Active">Active</option>
-            <option value="">All statuses</option>
+            <option value="">Active &amp; Pending</option>
+            <option value="Active">Active only</option>
             <option value="Pending">Pending</option>
           </select>
         </div>
@@ -325,7 +333,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
               <select aria-label="Bathrooms" value={filters.baths} onChange={(e) => update('baths', e.target.value)}><option value="">Baths</option><option value="1">1+ baths</option><option value="1.5">1.5+ baths</option><option value="2">2+ baths</option><option value="2.5">2+ baths</option><option value="3">3+ baths</option><option value="4">4+ baths</option></select>
               <select aria-label="Maximum price" value={filters.max} onChange={(e) => update('max', e.target.value)}><option value="">Price</option><option value="200000">Under $200k</option><option value="300000">Under $300k</option><option value="400000">Under $400k</option><option value="500000">Under $500k</option><option value="750000">Under $750k</option><option value="1000000">Under $1M</option></select>
               <select aria-label="Acreage" value={filters.acreage} onChange={(e) => update('acreage', e.target.value)}><option value="">Acreage</option><option value="0.25">¼+ acre</option><option value="0.5">½+ acre</option><option value="1">1+ acre</option><option value="2">2+ acres</option><option value="5">5+ acres</option><option value="10">10+ acres</option><option value="20">20+ acres</option><option value="40">40+ acres</option></select>
-              <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}><option value="Active">Active</option><option value="">All statuses</option><option value="Pending">Pending</option></select>
+              <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}><option value="">Active &amp; Pending</option><option value="Active">Active only</option><option value="Pending">Pending</option></select>
             </div>
             <div className="listings-mobile-filter-actions"><button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button><button type="button" className="button button-dark" onClick={() => setMobileFiltersOpen(false)}>View {shown.length} {shown.length === 1 ? 'home' : 'homes'}</button></div>
           </div>
@@ -339,11 +347,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           </div>
 
           <div className="listings-results-column">
-            <div className="listings-results-toolbar">
-              <div>
-                <strong>{shown.length} {shown.length === 1 ? 'home' : 'homes'}</strong>
-                <span> for sale</span>
-              </div>
+            <div className="listings-results-toolbar listings-results-toolbar-no-count">
               <label>
                 <span>Sort</span>
                 <select
@@ -387,6 +391,26 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           <p>Try widening the city, price, bedroom, or property type search.</p>
           <button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button>
         </div>
+      )}
+
+      {showBackToTop && (
+        <button
+          type="button"
+          className="listings-back-to-top"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Back to top"
+          style={{
+            position: 'fixed', right: '22px', bottom: '100px', zIndex: 60,
+            display: 'inline-flex', alignItems: 'center', gap: '9px',
+            padding: '12px 16px', border: '1px solid rgba(255,255,255,.18)',
+            borderRadius: '3px', background: 'var(--navy)', color: '#fff',
+            boxShadow: '0 5px 18px rgba(15,20,71,.22)', fontSize: '12px',
+            fontWeight: 700, letterSpacing: '.02em', cursor: 'pointer'
+          }}
+        >
+          <span aria-hidden="true" style={{ fontSize: '18px', lineHeight: '12px' }}>↑</span>
+          Back to Top
+        </button>
       )}
     </>
   );

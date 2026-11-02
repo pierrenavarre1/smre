@@ -213,6 +213,52 @@ function mediaStorageKey(value: string) {
   return (a >>> 0).toString(16).padStart(8, '0') + (b >>> 0).toString(16).padStart(8, '0');
 }
 
+function isProvisionedCdnUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname === 'cdn-stmarys.mlsgrid.com';
+  } catch {
+    return false;
+  }
+}
+
+function mediaManifestPath(listing: RESOProperty) {
+  if (!listing.ModificationTimestamp) return '';
+  const key = mediaStorageKey('cdn-manifest:' + listing.ListingId + ':' + listing.ModificationTimestamp);
+  return 'mls/media-manifests/' + key + '.json';
+}
+
+async function readCdnMediaManifest(listing: RESOProperty): Promise<RESOMedia[]> {
+  const pathname = mediaManifestPath(listing);
+  if (!pathname) return [];
+  try {
+    const stored = await get(pathname, { access: 'private', useCache: false });
+    if (!stored || stored.statusCode !== 200 || !stored.stream) return [];
+    const payload = JSON.parse(await new Response(stored.stream).text());
+    const items = Array.isArray(payload?.media) ? payload.media as RESOMedia[] : [];
+    return items.length > 0 && items.every(photo => isProvisionedCdnUrl(photo.MediaURL)) ? items : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeCdnMediaManifest(listing: RESOProperty, items: RESOMedia[]) {
+  const pathname = mediaManifestPath(listing);
+  if (!pathname || !items.length || !items.every(photo => isProvisionedCdnUrl(photo.MediaURL))) return;
+  try {
+    await put(pathname, JSON.stringify({ version: 1, media: items }), {
+      access: 'private',
+      allowOverwrite: true,
+      cacheControlMaxAge: 31536000,
+      contentType: 'application/json'
+    });
+  } catch (error) {
+    // The current page can still use the fresh CDN URLs; a failed manifest
+    // write only means another cold function may need to refresh them later.
+    console.warn('Unable to persist MLS CDN photo manifest:', error instanceof Error ? error.message : error);
+  }
+}
+
 async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], existingById: Map<string, RESOProperty>) {
   const token = sourceToken(source);
   if (!token) return;
@@ -356,39 +402,48 @@ export async function fetchFreshMediaForListing(listing: RESOProperty) {
   const cached = freshMediaCache.get(listing.ListingId);
   if (cached && cached.expiresAt > Date.now()) return cached.media;
 
-  const hasBlobPlaceholder = listing.Media.some(photo => photo.MediaURL.startsWith('smre-blob:'));
-  if (hasBlobPlaceholder) {
-    // The scheduled sync stores only one preview to control Blob usage. When a
-    // visitor opens a detail page, request this listing's full media manifest
-    // once, then let the image endpoint cache each photo as it is viewed.
-    if (isMLSGridConfigured()) {
-      try {
-        const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
-        const freshMedia = freshListing?.Media || [];
-        if (freshMedia.length) {
-          freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: freshMedia });
-          const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
-          freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
-          return freshMedia;
-        }
-      } catch (error) {
-        console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
-      }
-    }
-    return [];
-  }
-
-  // Reuse media already available from the live feed or a healthy local cache.
-  if (listing.Media.length && !hasBlobPlaceholder) {
+  // A complete CDN manifest is durable and can be reused without another
+  // MLS Grid request. The incremental sync stores the full ordered manifest.
+  if (listing.Media.length > 0 && listing.Media.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
     freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: listing.Media });
-    const preferred = listing.Media.find(photo => photo.PreferredPhoto) || listing.Media[0];
-    freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
     return listing.Media;
   }
 
-  // Do not fall back to live API requests during page rendering. The next
-  // scheduled sync will refresh the saved media set.
-  return [];
+  // Persist CDN manifests in shared Blob storage, keyed by the listing's MLS
+  // modification timestamp. This avoids a fresh MLS Grid request on every
+  // serverless cold start while naturally invalidating the manifest on edits.
+  const persistedManifest = await readCdnMediaManifest(listing);
+  if (persistedManifest.length) {
+    freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: persistedManifest });
+    const preferred = persistedManifest.find(photo => photo.PreferredPhoto) || persistedManifest[0];
+    freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
+    return persistedManifest;
+  }
+
+  // Existing sync records may contain only a Blob preview (or no preview if a
+  // previous download was throttled). Refresh this listing's full manifest
+  // once, and persist it only when every URL is on the provisioned CDN.
+  if (isMLSGridConfigured()) {
+    try {
+      const freshListing = await fetchMLSGridLiveListing(listing.ListingId);
+      const freshMedia = freshListing?.Media || [];
+      if (freshMedia.length) {
+        if (freshMedia.every(photo => isProvisionedCdnUrl(photo.MediaURL))) {
+          await writeCdnMediaManifest(listing, freshMedia);
+        }
+        freshMediaCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: freshMedia });
+        const preferred = freshMedia.find(photo => photo.PreferredPhoto) || freshMedia[0];
+        freshPreviewCache.set(listing.ListingId, { expiresAt: Date.now() + FRESH_MEDIA_CACHE_MS, media: preferred ? [preferred] : [] });
+        return freshMedia;
+      }
+    } catch (error) {
+      console.error('Unable to refresh listing gallery media:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  // Preserve the saved preview as a fallback if a fresh full manifest cannot
+  // be obtained; never turn a previously visible photo into an empty gallery.
+  return listing.Media;
 }
 
 export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
