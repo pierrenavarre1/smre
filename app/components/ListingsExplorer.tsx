@@ -37,7 +37,7 @@ function filtersFromUrl(): Partial<Filters> {
 export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   const [filters, setFilters] = useState<Filters>(() => ({
     type: [],
-    status: 'Active',
+    status: '',
     beds: '',
     baths: '',
     max: '',
@@ -116,7 +116,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   };
 
   const clearFilters = () => {
-    setFilters({ type: [], status: 'Active', beds: '', baths: '', max: '', acreage: '', city: '', address: '' });
+    setFilters({ type: [], status: '', beds: '', baths: '', max: '', acreage: '', city: '', address: '' });
     setAddressOpen(false);
     setTypeOpen(false);
     setMobileFiltersOpen(false);
@@ -296,8 +296,8 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           </select>
 
           <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}>
-            <option value="Active">Active</option>
-            <option value="">All statuses</option>
+            <option value="">Active &amp; Pending</option>
+            <option value="Active">Active only</option>
             <option value="Pending">Pending</option>
           </select>
         </div>
@@ -325,7 +325,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
               <select aria-label="Bathrooms" value={filters.baths} onChange={(e) => update('baths', e.target.value)}><option value="">Baths</option><option value="1">1+ baths</option><option value="1.5">1.5+ baths</option><option value="2">2+ baths</option><option value="2.5">2+ baths</option><option value="3">3+ baths</option><option value="4">4+ baths</option></select>
               <select aria-label="Maximum price" value={filters.max} onChange={(e) => update('max', e.target.value)}><option value="">Price</option><option value="200000">Under $200k</option><option value="300000">Under $300k</option><option value="400000">Under $400k</option><option value="500000">Under $500k</option><option value="750000">Under $750k</option><option value="1000000">Under $1M</option></select>
               <select aria-label="Acreage" value={filters.acreage} onChange={(e) => update('acreage', e.target.value)}><option value="">Acreage</option><option value="0.25">¼+ acre</option><option value="0.5">½+ acre</option><option value="1">1+ acre</option><option value="2">2+ acres</option><option value="5">5+ acres</option><option value="10">10+ acres</option><option value="20">20+ acres</option><option value="40">40+ acres</option></select>
-              <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}><option value="Active">Active</option><option value="">All statuses</option><option value="Pending">Pending</option></select>
+              <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}><option value="">Active &amp; Pending</option><option value="Active">Active only</option><option value="Pending">Pending</option></select>
             </div>
             <div className="listings-mobile-filter-actions"><button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button><button type="button" className="button button-dark" onClick={() => setMobileFiltersOpen(false)}>View {shown.length} {shown.length === 1 ? 'home' : 'homes'}</button></div>
           </div>
