@@ -37,6 +37,7 @@ export function ListingCard({ p }: { p: RESOProperty }) {
           <span>{p.StandardStatus}</span>
           {p.ListOfficeName ? <span>Listing office: {p.ListOfficeName}</span> : null}
           <span>MLS # {p.MLSNumber || p.ListingId}</span>
+          {p.ListOfficeEmail ? <span>Listing office email: {p.ListOfficeEmail}</span> : null}
         </div>
       </div>
     </Link>
