@@ -84,7 +84,7 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
                     <label>Property address<input name="address" value={propertyAddress || ''} readOnly /></label>
                     <div className="lead-form-row">
                       <label>Preferred date<input name="preferredDate" type="date" /></label>
-                      <label>Preferred time<input name="preferredTime" type="time" step={600} /></label>
+                      <label>Preferred time<input name="preferredTime" type="time" step={300} /></label>
                     </div>
                     <label>Anything we should know?<textarea name="details" rows={3} placeholder="Availability, questions, or anything else." /></label>
                   </>
