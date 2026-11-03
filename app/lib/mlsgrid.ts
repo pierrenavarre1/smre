@@ -498,6 +498,20 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
     '$top': '1'
   }).toString(), true);
   const record = page.value?.[0];
+  if (record && listingId === 'FHR20262853') {
+    const agentFieldKeys = Object.keys(record).filter(key => /listagent|agent(first|last|full|middle)|agentkey/i.test(key));
+    const relatedAgent = record.ListAgent && typeof record.ListAgent === 'object' ? record.ListAgent : undefined;
+    console.info('[MLS attribution field diagnostic]', {
+      source,
+      listingId,
+      agentFieldKeys,
+      populatedAgentFields: agentFieldKeys.filter(key => {
+        const value = record[key];
+        return typeof value === 'string' ? Boolean(value.trim()) : value !== null && value !== undefined;
+      }),
+      relatedAgentKeys: relatedAgent ? Object.keys(relatedAgent) : []
+    });
+  }
   return record ? normalizeMLSGridProperty(record, source) : undefined;
 }
 
