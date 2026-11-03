@@ -30,6 +30,7 @@ function toListingSummary(listing: RESOProperty): RESOProperty {
     ListAgentMlsId: '',
     ListOfficeName: listing.ListOfficeName,
     ListOfficeEmail: listing.ListOfficeEmail,
+    ListOfficePhone: listing.ListOfficePhone,
     MlsSource: listing.MlsSource,
     Latitude: listing.Latitude,
     Longitude: listing.Longitude,
