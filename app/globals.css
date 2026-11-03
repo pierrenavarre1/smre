@@ -133,3 +133,5 @@
 @media(max-width:800px){.admin-analytics-cards{grid-template-columns:1fr}.admin-analytics-grid{grid-template-columns:1fr}.admin-analytics-bars{height:190px}}
 
 .listing-date{font-size:11px;line-height:1.4;color:var(--muted);margin-top:3px}
+
+.listing-attribution{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 4px;margin:30px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:12px;line-height:1.5;color:var(--muted)}.listing-attribution a{color:inherit;text-decoration:none;overflow-wrap:anywhere}.listing-attribution a:hover{text-decoration:underline;text-underline-offset:3px}
