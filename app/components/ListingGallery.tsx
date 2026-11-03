@@ -1,11 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { LeadCaptureModal } from './LeadCaptureModal';
 
 type Photo = { MediaKey: string; MediaURL: string };
 
 export function ListingGallery({ photos, address, listingId }: { photos: Photo[]; address: string; listingId: string }) {
   const [open, setOpen] = useState<number | null>(null);
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const [tourOpen, setTourOpen] = useState(false);
+  const mobileTrack = useRef<HTMLDivElement>(null);
   const touchStart = useRef<number | null>(null);
 
   const close = () => setOpen(null);
@@ -32,6 +36,13 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
 
   return (
     <>
+      <div className="gallery-mobile" aria-label="Property photos">
+        <div className="gallery-mobile-track" ref={mobileTrack} onScroll={(event) => { const el=event.currentTarget; const index=Math.round(el.scrollLeft/Math.max(1,el.clientWidth)); setMobileIndex(Math.min(photos.length-1,Math.max(0,index))); }}>
+          {photos.map((photo,index)=><button type="button" className="gallery-mobile-slide" key={photo.MediaKey} onClick={()=>setOpen(index)} aria-label={`Open photo ${index+1}`}><img src={photoUrl(index)} alt={`${address} property photo ${index+1}`} loading={index<2?'eager':'lazy'} /></button>)}
+        </div>
+        <span className="gallery-mobile-count">{mobileIndex+1} of {photos.length}</span>
+        <button type="button" className="gallery-mobile-tour" onClick={()=>setTourOpen(true)}>Request a Tour</button>
+      </div>
       <div className="gallery">
         <button type="button" className="gallery-photo-button gallery-main" onClick={() => setOpen(0)} aria-label="Open photo 1">
           <img src={photoUrl(0)} alt={address} loading="eager" />
@@ -52,6 +63,8 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
           ))}
         </div>
       </div>
+
+      {tourOpen && <LeadCaptureModal type="showing" propertyAddress={address} listingId={listingId} onClose={()=>setTourOpen(false)} />}
 
       {open !== null && (
         <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`Photo ${open + 1} of ${photos.length}`} onClick={close}>
