@@ -11,6 +11,7 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
   const [tourOpen, setTourOpen] = useState(false);
   const mobileTrack = useRef<HTMLDivElement>(null);
   const viewerTrack = useRef<HTMLDivElement>(null);
+  const previousOpen = useRef<number | null>(null);
   const touchStart = useRef<number | null>(null);
 
   const close = () => setOpen(null);
@@ -18,9 +19,10 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
   const next = () => setOpen((current) => current === null ? null : (current + 1) % photos.length);
 
   useEffect(() => {
-    if (open === null || !viewerTrack.current) return;
-    const track = viewerTrack.current;
-    track.scrollLeft = open * track.clientWidth;
+    if (open !== null && previousOpen.current === null && viewerTrack.current) {
+      viewerTrack.current.scrollLeft = open * viewerTrack.current.clientWidth;
+    }
+    previousOpen.current = open;
   }, [open]);
 
   useEffect(() => {
