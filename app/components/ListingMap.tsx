@@ -24,20 +24,9 @@ export function ListingMap({listings,onSearchArea,searchAreaNavigate=false}:{lis
  const tiles=useMemo(()=>{const tileZoom=view.zoom,ox=Math.floor(centerPoint.x/TILE),oy=Math.floor(centerPoint.y/TILE),dx=centerPoint.x-ox*TILE,dy=centerPoint.y-oy*TILE,max=Math.pow(2,tileZoom),left=Math.floor((centerPoint.x-size.width/2)/TILE)-1,right=Math.floor((centerPoint.x+size.width/2)/TILE)+1,top=Math.floor((centerPoint.y-size.height/2)/TILE)-1,bottom=Math.floor((centerPoint.y+size.height/2)/TILE)+1,out=[] as {key:string;x:number;y:number;tx:number;ty:number}[];for(let ty=top;ty<=bottom;ty++)for(let tx=left;tx<=right;tx++){if(ty>=0&&ty<max)out.push({key:String(tx)+'-'+String(ty),x:(tx-ox)*TILE-dx+size.width/2,y:(ty-oy)*TILE-dy+size.height/2,tx:((tx%max)+max)%max,ty});}return out;},[centerPoint,view.zoom,size.width,size.height]);
  const markerPositions=useMemo(()=>valid.map(p=>{const point=project(p.Latitude,p.Longitude,view.zoom);return{left:point.x-centerPoint.x+size.width/2,top:point.y-centerPoint.y+size.height/2};}),[valid,view.zoom,centerPoint,size.width,size.height]);
  const markerGroups=useMemo(()=>{
-  // Zillow-style clustering: group markers by on-screen proximity at the current zoom.
-  // Connected components avoid order-dependent gaps from first-centroid grouping.
-  const parent=markerPositions.map((_,index)=>index);
-  const find=(value:number):number=>parent[value]===value?value:(parent[value]=find(parent[value]));
-  const join=(a:number,b:number)=>{const ra=find(a),rb=find(b);if(ra!==rb)parent[rb]=ra;};
-  const radius=56;
-  for(let i=0;i<markerPositions.length;i++){
-   for(let j=i+1;j<markerPositions.length;j++){
-    if(Math.hypot(markerPositions[i].left-markerPositions[j].left,markerPositions[i].top-markerPositions[j].top)<radius)join(i,j);
-   }
-  }
-  const buckets=new Map<number,number[]>();
-  markerPositions.forEach((_,index)=>{const root=find(index);const items=buckets.get(root)||[];items.push(index);buckets.set(root,items);});
-  return [...buckets.values()].map(items=>({items,left:items.reduce((sum,i)=>sum+markerPositions[i].left,0)/items.length,top:items.reduce((sum,i)=>sum+markerPositions[i].top,0)/items.length}));
+  // Zillow-style map behavior: keep every listing visible as its own price pin.
+  // Do not collapse nearby listings into numbered cluster markers.
+  return markerPositions.map((point,index)=>({items:[index],left:point.left,top:point.top}));
  },[markerPositions]); const tileUrl=satellite?'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile':'https://tile.openstreetmap.org';
  function zoomToCluster(indices:number[]){
   const points=indices.map(i=>valid[i]).filter(Boolean);
