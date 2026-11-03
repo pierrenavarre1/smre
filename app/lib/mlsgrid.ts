@@ -632,6 +632,7 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
     ListAgentMlsId: firstString(record.ListAgentMlsId) || '',
     ListOfficeName: firstString(record.ListOfficeName) || '',
     ListOfficeEmail: firstString(record.ListOfficeEmail) || '',
+    ListOfficePhone: firstString(record.ListOfficePhone) || '',
     MlsSource: sourceLabel(source),
     Latitude: asNumber(record.Latitude),
     Longitude: asNumber(record.Longitude),
