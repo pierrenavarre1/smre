@@ -44,7 +44,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
         <div className="detail-map"><ListingMap listings={[p]} /></div>
         <MLSDisclosure source={p.MlsSource}/>
       </div>
-
+      <aside className="contact-card listing-contact-desktop"><p className="eyebrow">CONTACT AN AGENT</p><h3>{MLS_OFFICE}</h3><p>Have questions about this property or want to schedule a showing? A St. Mary’s Real Estate agent can help.</p><p className="listing-contact-meta"><strong>{p.StandardStatus}</strong> · MLS # {p.MLSNumber || p.ListingId}</p><p className="listing-contact-phone">{MLS_PHONE}</p><ListingLeadButton address={`${p.StreetNumber} ${p.StreetName}, ${p.City}, KS ${p.PostalCode}`} listingId={p.ListingId} /></aside>
     </div>
   </section>;
 }
