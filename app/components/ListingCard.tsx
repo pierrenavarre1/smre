@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { RESOProperty } from '../lib/mock-properties';
-import { SourceBadge, MLS_PHONE } from './MLSDisclosure';
+import { SourceBadge } from './MLSDisclosure';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 function formatListingDate(value?: string) {
@@ -37,7 +37,6 @@ export function ListingCard({ p }: { p: RESOProperty }) {
           <span>{p.StandardStatus}</span>
           {p.ListOfficeName ? <span>Listing office: {p.ListOfficeName}</span> : null}
           <span>MLS # {p.MLSNumber || p.ListingId}</span>
-          <span>{MLS_PHONE}</span>
         </div>
       </div>
     </Link>
