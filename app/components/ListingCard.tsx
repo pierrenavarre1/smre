@@ -35,6 +35,7 @@ export function ListingCard({ p }: { p: RESOProperty }) {
         {p.ListingDate ? <div className="listing-date">Listed {formatListingDate(p.ListingDate)}</div> : null}
         <div className="listing-idx-meta">
           <span>{p.StandardStatus}</span>
+          {p.ListOfficeName ? <span>Listing office: {p.ListOfficeName}</span> : null}
           <span>MLS # {p.MLSNumber || p.ListingId}</span>
           <span>{MLS_PHONE}</span>
         </div>
