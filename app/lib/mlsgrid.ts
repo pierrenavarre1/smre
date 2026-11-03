@@ -467,6 +467,22 @@ export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
   return dedupeListings(all);
 }
 
+export async function fetchMLSGridLiveListingWithRetry(internalId: string): Promise<RESOProperty | undefined> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await fetchMLSGridLiveListing(internalId);
+    } catch (error) {
+      lastError = error;
+      const status = (error as Error & { status?: number }).status;
+      // Do not retry authorization, validation, or rate-limit responses.
+      if (status && (status < 500 || status === 429)) throw error;
+      if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 1200));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('MLS Grid detail refresh failed.');
+}
+
 export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOProperty | undefined> {
   const separator = internalId.indexOf(':');
   if (separator < 0) return undefined;
