@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
-import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, isMLSGridConfigured } from './mlsgrid';
+import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, fetchMLSGridLiveListingWithRetry, isMLSGridConfigured } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
   return {
@@ -81,8 +81,8 @@ async function getListingUncached(id: string): Promise<RESOProperty | undefined>
     const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
     if (!listing) return undefined;
     if (isMLSGridConfigured()) {
-      const live = await fetchMLSGridLiveListing(decodedId).catch((error) => {
-        console.error('Live MLS attribution refresh failed:', error);
+      const live = await fetchMLSGridLiveListingWithRetry(decodedId).catch((error) => {
+        console.error('Live MLS listing refresh failed:', error);
         return undefined;
       });
       const refreshed = live ? {
@@ -94,7 +94,10 @@ async function getListingUncached(id: string): Promise<RESOProperty | undefined>
         ListOfficeEmail: live.ListOfficeEmail || listing.ListOfficeEmail,
         ListOfficePhone: live.ListOfficePhone || listing.ListOfficePhone
       } : listing;
-      return { ...refreshed, Media: await fetchFreshMediaForListing(refreshed) };
+      // The live detail request already expands the complete Media collection.
+      // Reuse it directly instead of discarding it and making a second request.
+      const detailMedia = live?.Media?.length ? live.Media : await fetchFreshMediaForListing(refreshed);
+      return { ...refreshed, Media: detailMedia };
     }
     return listing;
   }
@@ -112,7 +115,7 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
   const decodedId = decodeURIComponent(id);
   const cached = unstable_cache(
     () => getListingUncached(decodedId),
-    ['smre-listing-detail-v3', decodedId],
+    ['smre-listing-detail-v4', decodedId],
     { revalidate: 300 }
   );
   return cached();
