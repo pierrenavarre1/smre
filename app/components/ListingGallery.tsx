@@ -41,7 +41,6 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
           {photos.map((photo,index)=><button type="button" className="gallery-mobile-slide" key={photo.MediaKey} onClick={()=>setOpen(index)} aria-label={`Open photo ${index+1}`}><img src={photoUrl(index)} alt={`${address} property photo ${index+1}`} loading={index<2?'eager':'lazy'} /></button>)}
         </div>
         <span className="gallery-mobile-count">{mobileIndex+1} of {photos.length}</span>
-        <button type="button" className="gallery-mobile-tour" onClick={()=>setTourOpen(true)}>Request a Tour</button>
       </div>
       <div className="gallery">
         <button type="button" className="gallery-photo-button gallery-main" onClick={() => setOpen(0)} aria-label="Open photo 1">
@@ -84,7 +83,8 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
             <img src={photoUrl(open)} alt={`${address} property photo ${open + 1}`} />
           </div>
           <button type="button" className="photo-lightbox-arrow photo-lightbox-next" onClick={(event) => { event.stopPropagation(); next(); }} aria-label="Next photo">›</button>
-          <div className="photo-lightbox-count">{open + 1} / {photos.length}</div>
+          <div className="photo-lightbox-count">{open + 1} of {photos.length}</div>
+          <button type="button" className="photo-lightbox-tour" onClick={(event)=>{event.stopPropagation();setTourOpen(true);}}>Request a Tour</button>
         </div>
       )}
     </>
