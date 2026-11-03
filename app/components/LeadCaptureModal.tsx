@@ -21,6 +21,8 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
     const phone = String(form.get('phone') || '');
     const details = String(form.get('details') || '');
     const address = String(form.get('address') || propertyAddress || '');
+    const preferredDate = String(form.get('preferredDate') || '');
+    const preferredTime = String(form.get('preferredTime') || '');
 
     if (!email && !phone) {
       setError('Please enter an email or phone number.');
@@ -32,7 +34,17 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, name, email, phone, address, listingId, message: details }),
+        body: JSON.stringify({
+          type,
+          name,
+          email,
+          phone,
+          address,
+          listingId,
+          preferredDate: isShowing ? preferredDate : undefined,
+          preferredTime: isShowing ? preferredTime : undefined,
+          message: details,
+        }),
       });
       if (!response.ok) throw new Error('Unable to submit');
       setSubmitted(true);
@@ -72,7 +84,7 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
                     <label>Property address<input name="address" value={propertyAddress || ''} readOnly /></label>
                     <div className="lead-form-row">
                       <label>Preferred date<input name="preferredDate" type="date" /></label>
-                      <label>Preferred time<input name="preferredTime" type="time" /></label>
+                      <label>Preferred time<input name="preferredTime" type="time" step={300} /></label>
                     </div>
                     <label>Anything we should know?<textarea name="details" rows={3} placeholder="Availability, questions, or anything else." /></label>
                   </>

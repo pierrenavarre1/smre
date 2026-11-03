@@ -1,16 +1,29 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { LeadCaptureModal } from './LeadCaptureModal';
 
 type Photo = { MediaKey: string; MediaURL: string };
 
 export function ListingGallery({ photos, address, listingId }: { photos: Photo[]; address: string; listingId: string }) {
   const [open, setOpen] = useState<number | null>(null);
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const [tourOpen, setTourOpen] = useState(false);
+  const mobileTrack = useRef<HTMLDivElement>(null);
+  const viewerTrack = useRef<HTMLDivElement>(null);
+  const previousOpen = useRef<number | null>(null);
   const touchStart = useRef<number | null>(null);
 
   const close = () => setOpen(null);
   const previous = () => setOpen((current) => current === null ? null : (current - 1 + photos.length) % photos.length);
   const next = () => setOpen((current) => current === null ? null : (current + 1) % photos.length);
+
+  useEffect(() => {
+    if (open !== null && previousOpen.current === null && viewerTrack.current) {
+      viewerTrack.current.scrollLeft = open * viewerTrack.current.clientWidth;
+    }
+    previousOpen.current = open;
+  }, [open]);
 
   useEffect(() => {
     if (open === null) return;
@@ -53,25 +66,21 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
         </div>
       </div>
 
+      {tourOpen && <LeadCaptureModal type="showing" propertyAddress={address} listingId={listingId} onClose={()=>setTourOpen(false)} />}
+
       {open !== null && (
         <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`Photo ${open + 1} of ${photos.length}`} onClick={close}>
           <button type="button" className="photo-lightbox-close" onClick={close} aria-label="Close photo viewer">×</button>
           <button type="button" className="photo-lightbox-arrow photo-lightbox-prev" onClick={(event) => { event.stopPropagation(); previous(); }} aria-label="Previous photo">‹</button>
-          <div
-            className="photo-lightbox-stage"
-            onClick={(event) => event.stopPropagation()}
-            onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
-            onTouchEnd={(event) => {
-              if (touchStart.current === null) return;
-              const delta = (event.changedTouches[0]?.clientX ?? touchStart.current) - touchStart.current;
-              touchStart.current = null;
-              if (Math.abs(delta) > 50) delta < 0 ? next() : previous();
-            }}
-          >
+          <div className="photo-lightbox-stage" onClick={(event) => event.stopPropagation()}>
             <img src={photoUrl(open)} alt={`${address} property photo ${open + 1}`} />
           </div>
+          <div className="photo-lightbox-mobile-track" ref={viewerTrack} onClick={(event)=>event.stopPropagation()} onScroll={(event)=>{const el=event.currentTarget;const index=Math.round(el.scrollLeft/Math.max(1,el.clientWidth));setOpen(current=>current===null?null:Math.min(photos.length-1,Math.max(0,index)));}}>
+            {photos.map((photo,index)=><div className="photo-lightbox-mobile-slide" key={photo.MediaKey}><img src={photoUrl(index)} alt={`${address} property photo ${index+1}`} loading={Math.abs(index-open)<2?'eager':'lazy'}/></div>)}
+          </div>
           <button type="button" className="photo-lightbox-arrow photo-lightbox-next" onClick={(event) => { event.stopPropagation(); next(); }} aria-label="Next photo">›</button>
-          <div className="photo-lightbox-count">{open + 1} / {photos.length}</div>
+          <div className="photo-lightbox-count">{open + 1} of {photos.length}</div>
+          <button type="button" className="photo-lightbox-tour" onClick={(event)=>{event.stopPropagation();setTourOpen(true);}}>Request a Tour</button>
         </div>
       )}
     </>

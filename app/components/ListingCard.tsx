@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { RESOProperty } from '../lib/mock-properties';
-import { SourceBadge, MLS_PHONE } from './MLSDisclosure';
+import { SourceBadge } from './MLSDisclosure';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 function formatListingDate(value?: string) {
@@ -10,7 +10,9 @@ function formatListingDate(value?: string) {
 }
 
 export function ListingCard({ p }: { p: RESOProperty }) {
-  const baths = p.BathroomsTotalInteger + (p.BathroomsHalf ? 0.5 : 0);
+  const baths = p.BathroomsTotalInteger || p.BathroomsFull || 0;
+  const bathCount = baths + (p.BathroomsHalf ? 0.5 : 0);
+  const acreage = p.LotSizeAcres || (p.LotSizeSqFt ? p.LotSizeSqFt / 43560 : 0);
   const photo = (p.Media.find(m => m.PreferredPhoto) || p.Media[0])?.MediaURL;
   const photoSrc = photo ? `/api/mls-image?url=${encodeURIComponent(photo)}&listingId=${encodeURIComponent(p.ListingId)}&index=0` : '';
 
@@ -28,13 +30,13 @@ export function ListingCard({ p }: { p: RESOProperty }) {
           <strong>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p.ListPrice)}</strong>
           <SourceBadge source={p.MlsSource} />
         </div>
-        <div className="facts">{p.BedroomsTotal} bd · {baths} ba {p.LivingArea ? `· ${p.LivingArea.toLocaleString()} sq ft` : ''}</div>
+        <div className="facts">{p.BedroomsTotal} bd{bathCount > 0 ? ` · ${bathCount} ba` : ''}{p.LivingArea ? ` · ${p.LivingArea.toLocaleString()} sq ft` : ''}{acreage > 0 ? ` · ${acreage.toLocaleString(undefined,{maximumFractionDigits:2})} acres` : ''}</div>
         <div>{p.StreetNumber} {p.StreetName}, {p.City}, KS {p.PostalCode}</div>
         {p.ListingDate ? <div className="listing-date">Listed {formatListingDate(p.ListingDate)}</div> : null}
         <div className="listing-idx-meta">
           <span>{p.StandardStatus}</span>
-          <span>MLS # {p.MLSNumber || p.ListingId}</span>
-          <span>{MLS_PHONE}</span>
+          {p.ListOfficeName ? <span>{p.ListOfficeName}</span> : null}
+          {p.ListOfficeEmail ? <span>Listing office email: {p.ListOfficeEmail}</span> : null}
         </div>
       </div>
     </Link>

@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
-import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, isMLSGridConfigured } from './mlsgrid';
+import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, fetchMLSGridLiveListingWithRetry, isMLSGridConfigured } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
   return {
@@ -22,12 +22,17 @@ function toListingSummary(listing: RESOProperty): RESOProperty {
     PostalCode: listing.PostalCode,
     LivingArea: listing.LivingArea,
     LotSizeAcres: listing.LotSizeAcres,
+    LotSizeSqFt: listing.LotSizeSqFt,
     YearBuilt: listing.YearBuilt,
     PublicRemarks: '',
     Media: listing.Media,
-    ListAgentFullName: '',
-    ListAgentMlsId: '',
+    ListAgentFullName: listing.ListAgentFullName,
+    ListAgentMlsId: listing.ListAgentMlsId,
+    ListAgentEmail: listing.ListAgentEmail,
+    ListAgentDirectPhone: listing.ListAgentDirectPhone,
     ListOfficeName: listing.ListOfficeName,
+    ListOfficeEmail: listing.ListOfficeEmail,
+    ListOfficePhone: listing.ListOfficePhone,
     MlsSource: listing.MlsSource,
     Latitude: listing.Latitude,
     Longitude: listing.Longitude,
@@ -75,7 +80,25 @@ async function getListingUncached(id: string): Promise<RESOProperty | undefined>
   if (listings.length) {
     const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
     if (!listing) return undefined;
-    if (isMLSGridConfigured()) return { ...listing, Media: await fetchFreshMediaForListing(listing) };
+    if (isMLSGridConfigured()) {
+      const live = await fetchMLSGridLiveListingWithRetry(decodedId).catch((error) => {
+        console.error('Live MLS listing refresh failed:', error);
+        return undefined;
+      });
+      const refreshed = live ? {
+        ...listing,
+        ListAgentFullName: live.ListAgentFullName || listing.ListAgentFullName,
+        ListAgentEmail: live.ListAgentEmail || listing.ListAgentEmail,
+        ListAgentDirectPhone: live.ListAgentDirectPhone || listing.ListAgentDirectPhone,
+        ListOfficeName: live.ListOfficeName || listing.ListOfficeName,
+        ListOfficeEmail: live.ListOfficeEmail || listing.ListOfficeEmail,
+        ListOfficePhone: live.ListOfficePhone || listing.ListOfficePhone
+      } : listing;
+      // The live detail request already expands the complete Media collection.
+      // Reuse it directly instead of discarding it and making a second request.
+      const detailMedia = live?.Media?.length ? live.Media : await fetchFreshMediaForListing(refreshed);
+      return { ...refreshed, Media: detailMedia };
+    }
     return listing;
   }
   if (isMLSGridConfigured()) {
@@ -92,7 +115,7 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
   const decodedId = decodeURIComponent(id);
   const cached = unstable_cache(
     () => getListingUncached(decodedId),
-    ['smre-listing-detail-v2', decodedId],
+    ['smre-listing-detail-v5', decodedId],
     { revalidate: 300 }
   );
   return cached();

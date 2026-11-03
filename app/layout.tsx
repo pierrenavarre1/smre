@@ -68,7 +68,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       </div>
       <div className="container footer-bottom">
         <span>© {new Date().getFullYear()} St. Mary’s Real Estate</span>
-        <span>MLS attribution and disclosures appear wherever IDX listings are displayed.</span>
+        <span>Equal Housing Opportunity · MLS attribution and disclosures appear wherever IDX listings are displayed.</span>
       </div>
     </footer>
     <ChatBubble />

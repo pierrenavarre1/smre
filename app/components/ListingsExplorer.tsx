@@ -59,7 +59,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   const [addressOpen, setAddressOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [mapBounds, setMapBounds] = useState<{ minLat:number; maxLat:number; minLon:number; maxLon:number } | null>(null);
+  const [mapBounds, setMapBounds] = useState<{ minLat:number; maxLat:number; minLon:number; maxLon:number } | null>(() => { if(typeof window==='undefined')return null; const q=new URLSearchParams(window.location.search); const keys=['minLat','maxLat','minLon','maxLon'] as const; const values=keys.map(k=>Number(q.get(k))); return values.every(Number.isFinite)&&keys.every(k=>q.has(k))?{minLat:values[0],maxLat:values[1],minLon:values[2],maxLon:values[3]}:null; });
 
   const shown = useMemo(() => {
     const normalize = (value: string) =>

@@ -21,7 +21,8 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
   const p = await getListing(id);
   if (!p) notFound();
   const photos=p.Media.filter(m=>m.MediaCategory==='Photo');
-  const baths=p.BathroomsTotalInteger+(p.BathroomsHalf?0.5:0);
+  const baths=(p.BathroomsTotalInteger || p.BathroomsFull || 0)+(p.BathroomsHalf?0.5:0);
+  const acreage=p.LotSizeAcres || (p.LotSizeSqFt ? p.LotSizeSqFt/43560 : 0);
   return <section className="section container detail">
     <Link href="/listings" className="back">← All listings</Link>
     <ListingGallery photos={photos} address={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} listingId={p.ListingId} />
@@ -30,18 +31,20 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
         <div className="card-top"><p className="eyebrow">{p.StandardStatus}</p><SourceBadge source={p.MlsSource}/></div>
         <h1>{money.format(p.ListPrice)}</h1>
         <h2 className="detail-address">{p.StreetNumber} {p.StreetName}, {p.City}, KS {p.PostalCode}</h2>
-        <div className="detail-facts"><b>{p.BedroomsTotal}</b> beds <b>{baths}</b> baths {p.LivingArea>0&&<><b>{number.format(p.LivingArea)}</b> sq ft</>} {p.LotSizeAcres>0&&<><b>{p.LotSizeAcres}</b> acres</>}</div>
+        <div className="detail-facts"><b>{p.BedroomsTotal}</b> beds {baths>0&&<><b>{baths}</b> baths</>} {p.LivingArea>0&&<><b>{number.format(p.LivingArea)}</b> sq ft</>} {acreage>0&&<><b>{acreage.toLocaleString(undefined,{maximumFractionDigits:2})}</b> acres</>}</div>
         <p className="description">{p.PublicRemarks}</p>
-        {p.ListOfficeName ? <p className="listing-agency">Listed by {p.ListOfficeName}</p> : null}
+        <aside className="contact-card listing-contact-inline"><p className="eyebrow">CONTACT AN AGENT</p><h3>{MLS_OFFICE}</h3><p>Have questions about this property or want to schedule a showing? A St. Mary’s Real Estate agent can help.</p><p className="listing-contact-meta"><strong>{p.StandardStatus}</strong> · MLS # {p.MLSNumber || p.ListingId}</p><p className="listing-contact-phone">{MLS_PHONE}</p><ListingLeadButton address={`${p.StreetNumber} ${p.StreetName}, ${p.City}, KS ${p.PostalCode}`} listingId={p.ListingId} /></aside>
+        
         {p.Features?.length?<div className="feature-list">{p.Features.map(f=><span key={f}>{f}</span>)}</div>:null}
         <div className="details-section"><p className="eyebrow">PROPERTY DETAILS</p><div className="detail-items">
           <DetailItem label="Property type" value={`${p.PropertyType} · ${p.PropertySubType}`} /><DetailItem label="Year built" value={p.YearBuilt} /><DetailItem label="Living area" value={p.LivingArea?`${number.format(p.LivingArea)} sq ft`:undefined}/><DetailItem label="Lot size" value={p.LotSizeSqFt?`${number.format(p.LotSizeSqFt)} sq ft${p.LotSizeAcres?` · ${p.LotSizeAcres} acres`:''}`:undefined}/><DetailItem label="Price / sq ft" value={p.PricePerSqFt?money.format(p.PricePerSqFt):undefined}/><DetailItem label="Annual taxes" value={p.AnnualTaxes?money.format(p.AnnualTaxes):undefined}/><DetailItem label="Garage / parking" value={p.GarageSpaces!==undefined?`${p.GarageSpaces} spaces${p.ParkingFeatures?` · ${p.ParkingFeatures}`:''}`:p.ParkingFeatures}/><DetailItem label="Basement" value={p.Basement}/><DetailItem label="Foundation" value={p.Foundation}/><DetailItem label="Roof" value={p.Roof}/><DetailItem label="Exterior" value={p.Exterior}/><DetailItem label="Flooring" value={p.Flooring}/><DetailItem label="Appliances" value={p.Appliances}/><DetailItem label="Heating" value={p.Heating}/><DetailItem label="Cooling" value={p.Cooling}/><DetailItem label="Water" value={p.WaterSource}/><DetailItem label="Sewer" value={p.Sewer}/><DetailItem label="HOA" value={p.HOA}/><DetailItem label="Schools" value={p.Schools}/><DetailItem label="Other structures" value={p.OtherStructures}/><DetailItem label="Architectural style" value={p.ArchitecturalStyle}/><DetailItem label="Listing date" value={formatListingDate(p.ListingDate)}/><DetailItem label="MLS number" value={p.MLSNumber}/><DetailItem label="Parcel number" value={p.ParcelNumber}/>
         </div></div>
+        {(p.ListOfficeName || p.ListAgentFullName || p.ListAgentEmail || p.ListAgentDirectPhone || p.ListOfficeEmail || p.ListOfficePhone) ? <p className="listing-agency listing-attribution">{p.ListOfficeName ? `Listed by ${p.ListOfficeName}` : null}{p.ListAgentFullName ? <> · Listing agent: {p.ListAgentFullName}</> : null}{p.ListAgentEmail ? <> · <a href={`mailto:${p.ListAgentEmail}`}>{p.ListAgentEmail}</a></> : p.ListAgentDirectPhone ? <> · <a href={`tel:${p.ListAgentDirectPhone}`}>{p.ListAgentDirectPhone}</a></> : p.ListOfficeEmail ? <> · <a href={`mailto:${p.ListOfficeEmail}`}>{p.ListOfficeEmail}</a></> : p.ListOfficePhone ? <> · <a href={`tel:${p.ListOfficePhone}`}>{p.ListOfficePhone}</a></> : null}</p> : null}
         {p.Directions?<div className="details-section"><p className="eyebrow">DIRECTIONS</p><p>{p.Directions}</p></div>:null}
         <div className="detail-map"><ListingMap listings={[p]} /></div>
         <MLSDisclosure source={p.MlsSource}/>
       </div>
-      <aside className="contact-card"><p className="eyebrow">CONTACT AN AGENT</p><h3>{MLS_OFFICE}</h3><p>Have questions about this property or want to schedule a showing? A St. Mary’s Real Estate agent can help.</p><p className="listing-contact-meta"><strong>{p.StandardStatus}</strong> · MLS # {p.MLSNumber || p.ListingId}</p><p className="listing-contact-phone">{MLS_PHONE}</p><ListingLeadButton address={`${p.StreetNumber} ${p.StreetName}, ${p.City}, KS ${p.PostalCode}`} listingId={p.ListingId} /></aside>
+      <aside className="contact-card listing-contact-desktop"><p className="eyebrow">CONTACT AN AGENT</p><h3>{MLS_OFFICE}</h3><p>Have questions about this property or want to schedule a showing? A St. Mary’s Real Estate agent can help.</p><p className="listing-contact-meta"><strong>{p.StandardStatus}</strong> · MLS # {p.MLSNumber || p.ListingId}</p><p className="listing-contact-phone">{MLS_PHONE}</p><ListingLeadButton address={`${p.StreetNumber} ${p.StreetName}, ${p.City}, KS ${p.PostalCode}`} listingId={p.ListingId} /></aside>
     </div>
   </section>;
 }

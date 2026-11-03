@@ -9,7 +9,7 @@ import { HomeSearch } from './components/HomeSearch';
 import { MLSDisclosure } from './components/MLSDisclosure';
 import { getAdminData } from './lib/admin-store';
 
-const heroImage = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=88';
+const heroImage = '/images/Hero for SMRE Web.png';
 const fallbackAreaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 
 export const revalidate = 60;
@@ -34,7 +34,7 @@ export default async function Home(){
       .home-rural-balanced .home-rural-photo img{object-fit:cover;object-position:center;width:100%;height:100%;display:block;image-rendering:auto}
       .home-rural-balanced .home-rural-copy{padding:78px clamp(44px,6vw,96px);display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
       .home-rural-balanced .home-rural-copy .eyebrow{color:#fff;opacity:.72;margin:0 0 16px}
-      .home-rural-balanced .home-rural-copy h2{font-family:var(--serif);font-size:clamp(40px,4vw,56px);line-height:1.04;font-weight:400;letter-spacing:-.04em;margin:0 0 24px;max-width:600px}
+      .home-rural-balanced .home-rural-copy h2{font-family:var(--serif);font-size:clamp(32px,3.2vw,44px);line-height:1.08;font-weight:400;letter-spacing:-.04em;margin:0 0 24px;max-width:600px}
       .home-rural-balanced .home-rural-copy p:not(.eyebrow){color:#fff;opacity:.82;font-size:16px;line-height:1.7;max-width:570px;margin:0 0 32px}
       .home-rural-balanced .home-rural-copy .button{align-self:flex-start}
       @media(max-width:800px){
@@ -48,7 +48,6 @@ export default async function Home(){
       <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
       <div className="home-hero-overlay" />
       <div className="container home-hero-inner">
-        <p className="eyebrow">{settings.heroEyebrow}</p>
         <h1><span className="hero-heading-kicker">{headlineKicker}{headlineParts.length||settings.homepageHeadline.includes(",")?",":""}</span><span className="hero-heading-main">{headlineMain}</span></h1>
         <p className="hero-copy">{settings.heroDescription}</p>
         <HomeLeadButtons />
@@ -57,21 +56,21 @@ export default async function Home(){
     </section>
 
     <section className="section container">
-      <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
+      <div className="section-head"><div><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
-      {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings}/></div>}
+      {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings} searchAreaNavigate/></div>}
     </section>
 
     <section className="home-rural-strip">
       <div className="home-rural-grid home-rural-balanced">
         <div className="home-rural-photo"><img src={areaImage} alt="Kansas farm at sunset with a barn, fields and a country road" loading="lazy" /></div>
-        <div className="home-rural-copy"><p className="eyebrow">THE AREA WE KNOW</p><h2>{settings.localHeading}</h2><p>{settings.localDescription}</p><Link href="/about" className="button button-light">About SMRE</Link></div>
+        <div className="home-rural-copy"><h2>LOCAL KNOWLEDGE. PERSONAL SERVICE.</h2><p>Our local agents work with buyers and sellers throughout Northeast Kansas, bringing practical market knowledge, straightforward advice, and a personal approach to every transaction. Get to know our team, how we work, and the communities we serve.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
       </div>
     </section>
 
     <section className="section container cta-grid">
-      <Link href="/valuation" className="cta-card"><span className="eyebrow">SELLING</span><h3>What is your home worth in today’s market?</h3><span className="text-link">Request a home value →</span></Link>
-      <Link href="/contact" className="cta-card"><span className="eyebrow">BUYING OR SELLING</span><h3>Have a property, a question, or a plan?</h3><span className="text-link">Talk with SMRE →</span></Link>
+      <Link href="/valuation" className="cta-card"><span className="eyebrow">SELLING</span><h3>What is your home worth in today’s market?</h3><span className="text-link">Request a home value</span></Link>
+      <Link href="/contact" className="cta-card"><span className="eyebrow">BUYING OR SELLING</span><h3>Have a property, a question, or a plan?</h3><span className="text-link">Talk with SMRE</span></Link>
     </section>
 
     <ReviewsCarousel />

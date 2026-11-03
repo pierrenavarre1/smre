@@ -60,9 +60,9 @@
   .chat{right:10px;bottom:10px}
 }
 
-.listing-idx-meta{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:9px;line-height:1.35;color:var(--muted)}.listing-idx-meta span{white-space:nowrap}
+.listing-idx-meta{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;line-height:1.4;color:var(--muted)}.listing-idx-meta span{overflow-wrap:anywhere}
 .mls-disclosure{border-top:1px solid var(--line);margin-top:28px;padding-top:18px;color:var(--muted);font-size:11px;line-height:1.55}.mls-disclosure p{margin:8px 0;max-width:980px}.mls-grid-source{display:flex;align-items:center;gap:12px;flex-wrap:wrap;color:var(--ink)}.mls-grid-wordmark{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--ink);padding:4px 7px;font-size:8px;letter-spacing:.12em;font-weight:700}.idx-use-notice{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 24px;padding:12px 14px;background:var(--wash);border:1px solid var(--line);font-size:11px;color:var(--muted)}.idx-use-notice strong{color:var(--ink);white-space:nowrap}.listing-contact-meta{font-size:12px;color:var(--muted)}
-@media(max-width:600px){.idx-use-notice{display:grid;gap:5px}.listing-idx-meta{font-size:8px}.mls-grid-source{align-items:flex-start;flex-direction:column;gap:7px}}
+@media(max-width:600px){.idx-use-notice{display:grid;gap:5px}.listing-idx-meta{font-size:13px}.mls-grid-source{align-items:flex-start;flex-direction:column;gap:7px}}
 
 @media(max-width:700px){.contact-card{padding:26px}.contact-card h3{font-size:21px}.contact-card .button{width:100%}}
 
@@ -131,3 +131,74 @@
 .admin-analytics-setup code{font-size:11px;background:#fff;border:1px solid var(--line);padding:2px 5px}
 .admin-analytics-link{display:inline-block;margin-top:8px;color:var(--navy);font-size:12px;font-weight:700;text-decoration:underline}
 @media(max-width:800px){.admin-analytics-cards{grid-template-columns:1fr}.admin-analytics-grid{grid-template-columns:1fr}.admin-analytics-bars{height:190px}}
+
+.listing-date{font-size:11px;line-height:1.4;color:var(--muted);margin-top:3px}
+
+.listing-attribution{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 4px;margin:30px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:16px;line-height:1.5;color:var(--muted)}.listing-attribution a{color:inherit;text-decoration:none;overflow-wrap:anywhere}.listing-attribution a:hover{text-decoration:underline;text-underline-offset:3px}
+
+.gallery-mobile{display:none}
+.listing-contact-inline{display:none}
+.photo-lightbox-tour{display:none}
+
+/* Mobile listing detail refinements: preserve original text alignment and desktop contact layout */
+.listing-contact-inline{display:none}
+.photo-lightbox-tour{display:none}
+@media(max-width:600px){
+ .detail.container{width:min(100% - 40px,1240px);padding-left:0;padding-right:0;text-align:left}
+ .detail>.back{display:inline-block;text-align:left;margin:0 0 16px}
+ .gallery{display:none}
+ .gallery-mobile{display:block;position:relative;width:100%;overflow:hidden;background:#101010}
+ .gallery-mobile-track{display:flex;width:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x}
+ .gallery-mobile-track::-webkit-scrollbar{display:none}
+ .gallery-mobile-slide{flex:0 0 100%;width:100%;height:min(68vw,390px);min-height:250px;padding:0;border:0;background:#151515;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center}
+ .gallery-mobile-slide img{display:block;width:100%;height:100%;object-fit:cover}
+ .gallery-mobile-count{position:absolute;right:14px;top:14px;z-index:2;padding:6px 10px;border-radius:20px;background:rgba(12,15,28,.72);color:#fff;font-size:12px;font-weight:700}
+ .detail-grid{display:block;padding:28px 0 42px;text-align:left}
+ .detail-grid>div{min-width:0}
+ .detail .card-top{justify-content:space-between}
+ .detail h1{font-size:44px;margin:12px 0}
+ .detail-address{font-size:18px;line-height:1.35}
+ .detail-facts{justify-content:flex-start;gap:8px 10px;padding:18px 0;margin-bottom:18px;font-size:13px}
+ .description{max-width:none;margin:0 0 22px;text-align:left;line-height:1.65}
+ .listing-contact-desktop{display:none}
+ .listing-contact-inline{display:block;margin:22px 0 28px;padding:24px 20px;text-align:left}
+ .listing-contact-inline .listing-lead-actions{display:grid;grid-template-columns:1fr;gap:8px}
+ .feature-list{justify-content:flex-start}
+ .detail-items{text-align:left}
+ .listing-attribution{justify-content:flex-start;font-size:13px}
+ .details-section,.detail-map,.mls-disclosure{text-align:left}
+ .photo-lightbox{padding:18px 10px}
+ .photo-lightbox-stage{width:100%;height:calc(100vh - 150px)}
+ .photo-lightbox-close{right:10px;top:10px;width:38px;height:38px}
+ .photo-lightbox-arrow{display:none}
+ .photo-lightbox-count{bottom:68px}
+ .photo-lightbox-tour{display:block;position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:3;white-space:nowrap;border:0;border-radius:4px;background:#fff;color:var(--navy);padding:12px 22px;font-size:13px;font-weight:800;box-shadow:0 3px 12px rgba(0,0,0,.25);cursor:pointer}
+}
+
+/* Ensure only the swipe gallery is rendered visually on narrow listing pages. */
+@media screen and (max-width: 700px){
+ .detail.container .gallery{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important}
+ .detail.container .gallery-mobile{display:block!important;visibility:visible!important}
+}
+
+/* Mobile listing entry state: show one photo collage, not a second swipe strip. */
+@media screen and (max-width: 700px){
+ .detail.container .gallery{display:grid!important;visibility:visible!important;height:auto!important;overflow:visible!important;grid-template-columns:1fr!important;gap:8px!important}
+ .detail.container .gallery-mobile{display:none!important}
+ .detail.container .gallery-main{height:300px!important}
+ .detail.container .gallery-side{height:190px!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ .detail.container .gallery-side .gallery-photo-button{min-height:0!important}
+}
+
+/* Zillow-style continuous horizontal photo browsing inside the mobile lightbox. */
+.photo-lightbox-mobile-track{display:none}
+@media screen and (max-width:700px){
+ .photo-lightbox-stage{display:none!important}
+ .photo-lightbox-mobile-track{display:flex!important;position:absolute;left:0;right:0;top:50%;height:calc(100vh - 190px);transform:translateY(-50%);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-snap-stop:always;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x;}
+ .photo-lightbox-mobile-track::-webkit-scrollbar{display:none}
+  .photo-lightbox-mobile-slide{flex:0 0 100%;width:100%;height:100%;display:flex;align-items:center;justify-content:center;scroll-snap-align:start;scroll-snap-stop:always;}
+ .photo-lightbox-mobile-slide img{display:block;max-width:100%;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}
+ .photo-lightbox-arrow{display:none!important}
+ .photo-lightbox-count{position:absolute!important;top:16px!important;right:16px!important;left:auto!important;bottom:auto!important;transform:none!important;z-index:20!important;padding:7px 11px;border-radius:18px;background:rgba(12,15,28,.78);color:#fff!important;font-size:13px;font-weight:800;letter-spacing:0;}
+ .photo-lightbox-tour{z-index:6}
+}

@@ -467,6 +467,22 @@ export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
   return dedupeListings(all);
 }
 
+export async function fetchMLSGridLiveListingWithRetry(internalId: string): Promise<RESOProperty | undefined> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await fetchMLSGridLiveListing(internalId);
+    } catch (error) {
+      lastError = error;
+      const status = (error as Error & { status?: number }).status;
+      // Do not retry authorization, validation, or rate-limit responses.
+      if (status && (status < 500 || status === 429)) throw error;
+      if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 1200));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('MLS Grid detail refresh failed.');
+}
+
 export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOProperty | undefined> {
   const separator = internalId.indexOf(':');
   if (separator < 0) return undefined;
@@ -482,6 +498,20 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
     '$top': '1'
   }).toString(), true);
   const record = page.value?.[0];
+  if (record && listingId === 'FHR20262853') {
+    const agentFieldKeys = Object.keys(record).filter(key => /listagent|agent(first|last|full|middle)|agentkey/i.test(key));
+    const relatedAgent = record.ListAgent && typeof record.ListAgent === 'object' ? record.ListAgent : undefined;
+    console.info('[MLS attribution field diagnostic]', {
+      source,
+      listingId,
+      agentFieldKeys,
+      populatedAgentFields: agentFieldKeys.filter(key => {
+        const value = record[key];
+        return typeof value === 'string' ? Boolean(value.trim()) : value !== null && value !== undefined;
+      }),
+      relatedAgentKeys: relatedAgent ? Object.keys(relatedAgent) : []
+    });
+  }
   return record ? normalizeMLSGridProperty(record, source) : undefined;
 }
 
@@ -595,7 +625,10 @@ export function dedupeListings(listings: RESOProperty[]) {
 export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflower'): RESOProperty {
   const listPrice = asNumber(record.ListPrice);
   const livingArea = asNumber(record.LivingArea || record.LivingAreaTotal);
-  const lotSqFt = asNumber(record.LotSizeSquareFeet || record.LotSizeSquareFeetTotal);
+  const lotSqFt = asNumber(record.LotSizeSquareFeet || record.LotSizeSquareFeetTotal || record.LotSizeSqFt);
+  const totalBaths = asNumber(record.BathroomsTotalInteger) || asNumber(record.BathroomsTotal) || asNumber(record.BathroomsFull);
+  const fullBaths = asNumber(record.BathroomsFull) || asNumber(record.BathroomsTotalInteger) || asNumber(record.BathroomsTotal);
+  const halfBaths = asNumber(record.BathroomsHalf ?? record.BathroomsPartial ?? record.BathroomsThreeQuarter);
   const originalId = String(record.ListingId || record.ListingKey || '');
   const sourceKey = source.toLowerCase();
   const internalId = sourceKey + ':' + originalId;
@@ -609,9 +642,9 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
       : 'Active',
     ListPrice: listPrice,
     BedroomsTotal: asNumber(record.BedroomsTotal),
-    BathroomsTotalInteger: asNumber(record.BathroomsTotalInteger || record.BathroomsTotal),
-    BathroomsFull: asNumber(record.BathroomsFull),
-    BathroomsHalf: asNumber(record.BathroomsHalf),
+    BathroomsTotalInteger: totalBaths,
+    BathroomsFull: fullBaths,
+    BathroomsHalf: halfBaths,
     PropertyType: propertyType(record.PropertyType),
     PropertySubType: firstString(record.PropertySubType) || '',
     StreetNumber: firstString(record.StreetNumber) || '',
@@ -625,9 +658,13 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
     YearBuilt: asNumber(record.YearBuilt),
     PublicRemarks: firstString(record.PublicRemarks) || '',
     Media: media(record),
-    ListAgentFullName: firstString(record.ListAgentFullName) || '',
+    ListAgentFullName: firstString(record.ListAgentFullName, [firstString(record.ListAgentFirstName), firstString(record.ListAgentLastName)].filter(Boolean).join(' ')) || '',
     ListAgentMlsId: firstString(record.ListAgentMlsId) || '',
+    ListAgentEmail: firstString(record.ListAgentEmail) || '',
+    ListAgentDirectPhone: firstString(record.ListAgentDirectPhone, record.ListAgentPreferredPhone) || '',
     ListOfficeName: firstString(record.ListOfficeName) || '',
+    ListOfficeEmail: firstString(record.ListOfficeEmail) || '',
+    ListOfficePhone: firstString(record.ListOfficePhone) || '',
     MlsSource: sourceLabel(source),
     Latitude: asNumber(record.Latitude),
     Longitude: asNumber(record.Longitude),
