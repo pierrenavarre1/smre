@@ -48,7 +48,6 @@ export default async function Home(){
       <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
       <div className="home-hero-overlay" />
       <div className="container home-hero-inner">
-        <p className="eyebrow">{settings.heroEyebrow}</p>
         <h1><span className="hero-heading-kicker">{headlineKicker}{headlineParts.length||settings.homepageHeadline.includes(",")?",":""}</span><span className="hero-heading-main">{headlineMain}</span></h1>
         <p className="hero-copy">{settings.heroDescription}</p>
         <HomeLeadButtons />
@@ -57,7 +56,7 @@ export default async function Home(){
     </section>
 
     <section className="section container">
-      <div className="section-head"><div><p className="eyebrow">CURRENT LISTINGS</p><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
+      <div className="section-head"><div><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">See all listings →</Link></div>
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
       {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings} searchAreaNavigate/></div>}
     </section>
