@@ -189,3 +189,16 @@
  .detail.container .gallery-side{height:190px!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:8px!important}
  .detail.container .gallery-side .gallery-photo-button{min-height:0!important}
 }
+
+/* Zillow-style continuous horizontal photo browsing inside the mobile lightbox. */
+.photo-lightbox-mobile-track{display:none}
+@media screen and (max-width:700px){
+ .photo-lightbox-stage{display:none!important}
+ .photo-lightbox-mobile-track{display:flex!important;position:absolute;left:0;right:0;top:50%;height:calc(100vh - 190px);transform:translateY(-50%);overflow-x:auto;overflow-y:hidden;scroll-snap-type:none;scroll-behavior:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x;}
+ .photo-lightbox-mobile-track::-webkit-scrollbar{display:none}
+ .photo-lightbox-mobile-slide{flex:0 0 100%;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+ .photo-lightbox-mobile-slide img{display:block;max-width:100%;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}
+ .photo-lightbox-arrow{display:none!important}
+ .photo-lightbox-count{z-index:5;bottom:68px}
+ .photo-lightbox-tour{z-index:6}
+}
