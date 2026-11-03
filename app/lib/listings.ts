@@ -80,7 +80,22 @@ async function getListingUncached(id: string): Promise<RESOProperty | undefined>
   if (listings.length) {
     const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
     if (!listing) return undefined;
-    if (isMLSGridConfigured()) return { ...listing, Media: await fetchFreshMediaForListing(listing) };
+    if (isMLSGridConfigured()) {
+      const live = await fetchMLSGridLiveListing(decodedId).catch((error) => {
+        console.error('Live MLS attribution refresh failed:', error);
+        return undefined;
+      });
+      const refreshed = live ? {
+        ...listing,
+        ListAgentFullName: live.ListAgentFullName || listing.ListAgentFullName,
+        ListAgentEmail: live.ListAgentEmail || listing.ListAgentEmail,
+        ListAgentDirectPhone: live.ListAgentDirectPhone || listing.ListAgentDirectPhone,
+        ListOfficeName: live.ListOfficeName || listing.ListOfficeName,
+        ListOfficeEmail: live.ListOfficeEmail || listing.ListOfficeEmail,
+        ListOfficePhone: live.ListOfficePhone || listing.ListOfficePhone
+      } : listing;
+      return { ...refreshed, Media: await fetchFreshMediaForListing(refreshed) };
+    }
     return listing;
   }
   if (isMLSGridConfigured()) {
@@ -97,7 +112,7 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
   const decodedId = decodeURIComponent(id);
   const cached = unstable_cache(
     () => getListingUncached(decodedId),
-    ['smre-listing-detail-v2', decodedId],
+    ['smre-listing-detail-v3', decodedId],
     { revalidate: 300 }
   );
   return cached();
