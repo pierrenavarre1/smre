@@ -180,3 +180,12 @@
  .detail.container .gallery{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important}
  .detail.container .gallery-mobile{display:block!important;visibility:visible!important}
 }
+
+/* Mobile listing entry state: show one photo collage, not a second swipe strip. */
+@media screen and (max-width: 700px){
+ .detail.container .gallery{display:grid!important;visibility:visible!important;height:auto!important;overflow:visible!important;grid-template-columns:1fr!important;gap:8px!important}
+ .detail.container .gallery-mobile{display:none!important}
+ .detail.container .gallery-main{height:300px!important}
+ .detail.container .gallery-side{height:190px!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ .detail.container .gallery-side .gallery-photo-button{min-height:0!important}
+}
