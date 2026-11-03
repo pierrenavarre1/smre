@@ -644,7 +644,7 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
     YearBuilt: asNumber(record.YearBuilt),
     PublicRemarks: firstString(record.PublicRemarks) || '',
     Media: media(record),
-    ListAgentFullName: firstString(record.ListAgentFullName) || '',
+    ListAgentFullName: firstString(record.ListAgentFullName, [firstString(record.ListAgentFirstName), firstString(record.ListAgentLastName)].filter(Boolean).join(' ')) || '',
     ListAgentMlsId: firstString(record.ListAgentMlsId) || '',
     ListAgentEmail: firstString(record.ListAgentEmail) || '',
     ListAgentDirectPhone: firstString(record.ListAgentDirectPhone, record.ListAgentPreferredPhone) || '',
