@@ -135,3 +135,34 @@
 .listing-date{font-size:11px;line-height:1.4;color:var(--muted);margin-top:3px}
 
 .listing-attribution{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 4px;margin:30px 0 0;padding-top:14px;border-top:1px solid var(--line);font-size:16px;line-height:1.5;color:var(--muted)}.listing-attribution a{color:inherit;text-decoration:none;overflow-wrap:anywhere}.listing-attribution a:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* Mobile listing detail: swipe-first gallery and earlier contact action */
+.gallery-mobile{display:none}
+@media(max-width:600px){
+ .detail.container{width:100%;padding-left:0;padding-right:0;text-align:center}
+ .detail>.back{display:block;text-align:left;margin:0 20px 16px}
+ .gallery{display:none}
+ .gallery-mobile{display:block;position:relative;width:100%;overflow:hidden;background:#101010}
+ .gallery-mobile-track{display:flex;width:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-behavior:smooth;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scrollbar-width:none;touch-action:pan-x}
+ .gallery-mobile-track::-webkit-scrollbar{display:none}
+ .gallery-mobile-slide{flex:0 0 100%;width:100%;height:min(68vw,390px);min-height:250px;padding:0;border:0;background:#151515;scroll-snap-align:center;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center}
+ .gallery-mobile-slide img{display:block;width:100%;height:100%;object-fit:cover}
+ .gallery-mobile-count{position:absolute;right:14px;top:14px;z-index:2;padding:6px 10px;border-radius:20px;background:rgba(12,15,28,.72);color:#fff;font-size:12px;font-weight:700;letter-spacing:.02em}
+ .gallery-mobile-tour{position:absolute;left:14px;bottom:14px;z-index:2;border:0;border-radius:4px;background:var(--navy);color:#fff;padding:12px 18px;font-size:13px;font-weight:800;box-shadow:0 3px 12px rgba(0,0,0,.25);cursor:pointer}
+ .detail-grid{display:block;padding:28px 20px 42px;text-align:center}
+ .detail-grid>div{min-width:0}
+ .detail .card-top{justify-content:center}
+ .detail h1{font-size:44px;margin:12px 0}
+ .detail-address{font-size:18px;line-height:1.35}
+ .detail-facts{justify-content:center;gap:8px 10px;padding:18px 0;margin-bottom:18px;font-size:13px}
+ .description{max-width:none;margin:0 auto 22px;text-align:left;line-height:1.65}
+ .listing-contact-inline{margin:22px 0 28px;padding:24px 20px;text-align:center}
+ .listing-contact-inline .listing-lead-actions{display:grid;grid-template-columns:1fr;gap:8px}
+ .feature-list{justify-content:center}
+ .detail-items{ text-align:left }
+ .listing-attribution{justify-content:center;font-size:13px}
+ .details-section{text-align:left}
+ .detail-map{text-align:left}
+ .detail-map .listing-map-heading{text-align:left}
+ .mls-disclosure{text-align:left}
+}
