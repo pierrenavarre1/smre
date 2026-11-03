@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const eventType = lead.type === 'seller' || lead.type === 'valuation'
       ? 'Seller Inquiry'
       : lead.type === 'showing'
-        ? 'Showing Request'
+        ? 'Property Inquiry'
         : lead.type === 'property'
           ? 'Property Inquiry'
           : 'General Inquiry';
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       system: 'SMRE Website',
       type: eventType,
       message: [
+        lead.type === 'showing' ? 'INQUIRY CATEGORY: SHOWING REQUEST' : '',
         lead.listingId ? `MLS/Listing ID: ${String(lead.listingId)}` : '',
         lead.address ? `Property address: ${String(lead.address)}` : '',
         lead.preferredDate ? `Preferred date: ${String(lead.preferredDate)}` : '',
