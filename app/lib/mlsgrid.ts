@@ -622,9 +622,31 @@ export function dedupeListings(listings: RESOProperty[]) {
   return result;
 }
 
+function areaInSquareFeet(value: unknown, units: unknown) {
+  const area = asNumber(value);
+  if (area <= 0) return 0;
+  const unit = String(units || '').toLowerCase();
+  if (unit.includes('meter') || unit === 'sqm' || unit === 'm2') return Math.round(area * 10.7639104167);
+  return Math.round(area);
+}
+
+function livingAreaInSquareFeet(record: MlsGridRecord) {
+  // Prefer the MLS's explicitly designated living-area fields.
+  const direct = areaInSquareFeet(record.LivingArea, record.LivingAreaUnits)
+    || areaInSquareFeet(record.LivingAreaTotal, record.LivingAreaUnits);
+  if (direct > 0) return direct;
+
+  // Some feeds omit LivingArea but provide finished above/below-grade areas.
+  // These are finished floor areas; do not substitute total building area,
+  // garage area, or lot area for a home's living space.
+  const above = areaInSquareFeet(record.AboveGradeFinishedArea, record.AboveGradeFinishedAreaUnits || record.LivingAreaUnits);
+  const below = areaInSquareFeet(record.BelowGradeFinishedArea, record.BelowGradeFinishedAreaUnits || record.LivingAreaUnits);
+  return above + below;
+}
+
 export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflower'): RESOProperty {
   const listPrice = asNumber(record.ListPrice);
-  const livingArea = asNumber(record.LivingArea || record.LivingAreaTotal);
+  const livingArea = livingAreaInSquareFeet(record);
   const lotSqFt = asNumber(record.LotSizeSquareFeet || record.LotSizeSquareFeetTotal || record.LotSizeSqFt);
   const totalBaths = asNumber(record.BathroomsTotalInteger) || asNumber(record.BathroomsTotal) || asNumber(record.BathroomsFull);
   const fullBaths = asNumber(record.BathroomsFull) || asNumber(record.BathroomsTotalInteger) || asNumber(record.BathroomsTotal);

@@ -82,15 +82,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unable to submit your request. Please call (785) 465-2543.' }, { status: 502 });
     }
 
-    await addLead({
-      type: eventType,
-      name,
-      email: email || undefined,
-      phone: phone || undefined,
-      address: lead.address ? String(lead.address) : undefined,
-      listingId: lead.listingId ? String(lead.listingId) : undefined,
-      message: message || undefined,
-    });
+    // Follow Up Boss has accepted the inquiry at this point. Keep the visitor's
+    // submission successful even if the secondary website archive is temporarily
+    // unavailable; otherwise a retry could create a duplicate CRM event.
+    try {
+      await addLead({
+        type: eventType,
+        name,
+        email: email || undefined,
+        phone: phone || undefined,
+        address: lead.address ? String(lead.address) : undefined,
+        listingId: lead.listingId ? String(lead.listingId) : undefined,
+        message: message || undefined,
+      });
+    } catch (archiveError) {
+      console.error('Lead was accepted by Follow Up Boss but website archive failed:', archiveError);
+    }
 
     return NextResponse.json({ ok: true, forwarded: true });
   } catch (error) {
