@@ -31,7 +31,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
         <div className="card-top"><p className="eyebrow">{p.StandardStatus}</p><SourceBadge source={p.MlsSource}/></div>
         <h1>{money.format(p.ListPrice)}</h1>
         <h2 className="detail-address">{p.StreetNumber} {p.StreetName}, {p.City}, KS {p.PostalCode}</h2>
-        <div className="detail-facts"><b>{p.BedroomsTotal}</b> beds {baths>0&&<><b>{baths}</b> baths</>} {p.LivingArea>0&&<><b>{number.format(p.LivingArea)}</b> sq ft living area</>} {acreage>0&&<><b>{acreage.toLocaleString(undefined,{maximumFractionDigits:2})}</b>-acre lot</>}{acreage<=0&&p.LotSizeSqFt>0&&<><b>{number.format(p.LotSizeSqFt)}</b> sq ft lot</>}</div>
+        <div className="detail-facts"><b>{p.BedroomsTotal}</b> beds {baths>0&&<><b>{baths}</b> baths</>} {p.LivingArea>0&&<><b>{number.format(p.LivingArea)}</b> sq ft living area</>} {acreage>0&&<><b>{acreage.toLocaleString(undefined,{maximumFractionDigits:2})}</b>-acre lot</>}{acreage<=0&&(p.LotSizeSqFt ?? 0)>0&&<><b>{number.format(p.LotSizeSqFt ?? 0)}</b> sq ft lot</>}</div>
         <p className="description">{p.PublicRemarks}</p>
         <aside className="contact-card listing-contact-inline"><p className="eyebrow">CONTACT AN AGENT</p><h3>{MLS_OFFICE}</h3><p>Have questions about this property or want to schedule a showing? A St. Mary’s Real Estate agent can help.</p><p className="listing-contact-meta"><strong>{p.StandardStatus}</strong> · MLS # {p.MLSNumber || p.ListingId}</p><p className="listing-contact-phone">{MLS_PHONE}</p><ListingLeadButton address={`${p.StreetNumber} ${p.StreetName}, ${p.City}, KS ${p.PostalCode}`} listingId={p.ListingId} /></aside>
         
