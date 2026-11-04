@@ -30,13 +30,12 @@ export function ListingCard({ p }: { p: RESOProperty }) {
           <strong>{new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(p.ListPrice)}</strong>
           <SourceBadge source={p.MlsSource} />
         </div>
-        <div className="facts">{p.BedroomsTotal} bd{bathCount > 0 ? ` · ${bathCount} ba` : ''}{p.LivingArea ? ` · ${p.LivingArea.toLocaleString()} sq ft` : ''}{acreage > 0 ? ` · ${acreage.toLocaleString(undefined,{maximumFractionDigits:2})} acres` : ''}</div>
+        <div className="facts">{p.BedroomsTotal} beds{bathCount > 0 ? ` · ${bathCount} baths` : ''}{p.LivingArea ? ` · ${p.LivingArea.toLocaleString()} sqft` : ''}{acreage > 0 ? ` · ${acreage.toLocaleString(undefined,{maximumFractionDigits:2})} acres` : p.LotSizeSqFt ? ` · ${p.LotSizeSqFt.toLocaleString()} sq ft lot` : ''}</div>
         <div>{p.StreetNumber} {p.StreetName}, {p.City}, KS {p.PostalCode}</div>
         {p.ListingDate ? <div className="listing-date">Listed {formatListingDate(p.ListingDate)}</div> : null}
         <div className="listing-idx-meta">
           <span>{p.StandardStatus}</span>
           {p.ListOfficeName ? <span>{p.ListOfficeName}</span> : null}
-          {p.ListOfficeEmail ? <span>Listing office email: {p.ListOfficeEmail}</span> : null}
         </div>
       </div>
     </Link>
