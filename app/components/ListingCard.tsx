@@ -36,7 +36,6 @@ export function ListingCard({ p }: { p: RESOProperty }) {
         <div className="listing-idx-meta">
           <span>{p.StandardStatus}</span>
           {p.ListOfficeName ? <span>{p.ListOfficeName}</span> : null}
-          {p.ListOfficeEmail ? <span>Listing office email: {p.ListOfficeEmail}</span> : null}
         </div>
       </div>
     </Link>
