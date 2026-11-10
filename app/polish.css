@@ -4,3 +4,100 @@
 @media(max-width:900px){.about-local-points{grid-template-columns:1fr 1fr}.about-local-point:nth-child(3){grid-column:1/-1;border-top:1px solid var(--line);padding-left:0}.about-area-card{grid-template-columns:150px 1fr}}
 @media(max-width:560px){.brand-logo{flex-basis:180px!important;width:180px!important;max-width:180px!important}.about-local-points{grid-template-columns:1fr;margin-top:36px}.about-local-point,.about-local-point+.about-local-point{padding:20px 0;border-left:0!important}.about-local-point+.about-local-point{border-top:1px solid var(--line)}.about-local-point:nth-child(3){grid-column:auto}.about-area-card{grid-template-columns:1fr;gap:10px;padding:25px 22px 28px}.about-area-card p{line-height:1.9}.chat{right:16px;bottom:16px}.chat-button{min-width:96px;height:48px;padding:0 16px}.chat-panel{right:0;bottom:58px;width:min(360px,calc(100vw - 32px));padding:20px}.chat-panel-head strong{font-size:25px}}
 @media(max-width:400px){.brand-logo{flex-basis:165px!important;width:165px!important;max-width:165px!important}.header-phone{display:none}.nav-links{margin-left:auto}.nav-cta{padding:10px 14px!important}.chat-panel{width:calc(100vw - 24px)}}
+
+
+/* Mobile client reviews: compact the review cards on both About and Testimonials pages. */
+@media screen and (max-width: 600px) {
+  .about-page .about-review-grid,
+  .testimonials-page .about-review-grid {
+    gap: 10px !important;
+  }
+
+  .about-page .about-review-grid > blockquote,
+  .testimonials-page .about-review-grid > blockquote {
+    min-height: 0 !important;
+    padding: 16px 18px 15px !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  .about-page .about-review-grid .review-quote-text,
+  .testimonials-page .about-review-grid .review-quote-text {
+    padding: 0 !important;
+  }
+
+  .about-page .about-review-grid cite,
+  .testimonials-page .about-review-grid cite {
+    margin-top: 10px !important;
+    padding-top: 0 !important;
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+  }
+
+  .testimonials-page .testimonials-summary {
+    margin-bottom: 18px;
+  }
+}
+
+
+/* Review carousel: support natural finger swipes on touch screens. */
+.review-stage {
+  touch-action: pan-y;
+}
+
+/* Keep longer testimonials readable without letting them dominate the page. */
+.review-text-wrap {
+  display: block;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .review-expandable-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    overflow: hidden;
+  }
+  .review-expandable-text.is-expanded {
+    display: block;
+    overflow: visible;
+  }
+}
+.review-expand-toggle {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+
+/* Reviews carousel: one transform-based track controls arrows, autoplay, and swipes. */
+.review-carousel-viewport {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.review-carousel-track {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  transition: transform 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+.review-carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+}
+.review-carousel-slide .review-quote {
+  box-sizing: border-box;
+  width: 100%;
+}

@@ -80,7 +80,7 @@ export function ListingGallery({ photos, address, listingId }: { photos: Photo[]
           </div>
           <button type="button" className="photo-lightbox-arrow photo-lightbox-next" onClick={(event) => { event.stopPropagation(); next(); }} aria-label="Next photo">›</button>
           <div className="photo-lightbox-count">{open + 1} of {photos.length}</div>
-          <button type="button" className="photo-lightbox-tour" onClick={(event)=>{event.stopPropagation();setTourOpen(true);}}>Request a Tour</button>
+          <button type="button" className="photo-lightbox-tour" onClick={(event)=>{event.stopPropagation();setOpen(null);setTourOpen(true);}}>Request a Tour</button>
         </div>
       )}
     </>

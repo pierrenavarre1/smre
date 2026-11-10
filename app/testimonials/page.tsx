@@ -1,5 +1,6 @@
 export const metadata={title:'Client Reviews'};
 import { TestimonialsReviews } from '../components/TestimonialsReviews';
+import { ReviewText } from '../components/ReviewText';
 import { getAdminData } from '../lib/admin-store';
 
 export default async function Testimonials(){const {testimonials}=await getAdminData();return <section className="section container testimonials-page">
@@ -9,7 +10,7 @@ export default async function Testimonials(){const {testimonials}=await getAdmin
     <p>We appreciate the people who have trusted St. Mary’s Real Estate to help them buy and sell property. Here are the reviews currently available from Google.</p>
   </div>
   <TestimonialsReviews />
-  {testimonials.filter(t=>t.featured).length>0&&<div className="manual-testimonials"><p className="eyebrow">SELECTED CLIENT FEEDBACK</p><div className="about-review-grid">{testimonials.filter(t=>t.featured).sort((a,b)=>a.sort-b.sort).map(t=><blockquote key={t.id}><div className="stars">{'★'.repeat(Math.max(0,Math.round(t.rating)))}</div><span className="review-quote-text">“{t.quote}”</span><cite>— {t.name}{t.source?` · ${t.source}`:''}</cite></blockquote>)}</div></div>}
+  {testimonials.filter(t=>t.featured).length>0&&<div className="manual-testimonials"><p className="eyebrow">SELECTED CLIENT FEEDBACK</p><div className="about-review-grid">{testimonials.filter(t=>t.featured).sort((a,b)=>a.sort-b.sort).map(t=><blockquote key={t.id}><div className="stars">{'★'.repeat(Math.max(0,Math.round(t.rating)))}</div><ReviewText>“{t.quote}”</ReviewText><cite>— {t.name}{t.source?` · ${t.source}`:''}</cite></blockquote>)}</div></div>}
   <div className="testimonials-contact">
     <p className="eyebrow">WORK WITH US</p>
     <h2>Have a real estate question?</h2>
