@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { ReviewText } from './ReviewText';
 
 type Review = { author:string; rating:number; text:string; relativeTime?:string };
 type ReviewResponse = { rating?:number; userRatingCount?:number; reviews?:Review[]; live?:boolean };
@@ -11,6 +12,7 @@ export function ReviewsCarousel(){
   const [index,setIndex]=useState(0);
   const [visible,setVisible]=useState(false);
   const ref=useRef<HTMLElement|null>(null);
+  const touchStartX=useRef<number|null>(null);
 
   useEffect(()=>{
     let active=true;
@@ -58,9 +60,9 @@ export function ReviewsCarousel(){
       <div className="reviews-rating"><strong>{rating ? rating.toFixed(1) : '—'}</strong><span>★ ★ ★ ★ ★</span><small>{data.userRatingCount ? `${data.userRatingCount} Google reviews` : 'Google reviews'}</small></div>
     </div>
     {review ? <>
-      <div className="review-stage">
+      <div className="review-stage" onTouchStart={event=>{touchStartX.current=event.changedTouches[0]?.clientX ?? null;}} onTouchEnd={event=>{const start=touchStartX.current;const end=event.changedTouches[0]?.clientX;touchStartX.current=null;if(start===null||end===undefined)return;const delta=end-start;if(Math.abs(delta)<45)return;setIndex(i=>(i+(delta<0?1:reviews.length-1))%reviews.length);}}>
         <button className="review-arrow" aria-label="Previous review" onClick={()=>setIndex(i=>(i-1+reviews.length)%reviews.length)}>←</button>
-        <blockquote key={`${review.author}-${index}`} className="review-quote"><div className="stars" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(Math.max(0,Math.round(review.rating)))}</div><p>{review.text ? `“${review.text}”` : '5-star Google review'}</p><footer>{review.author}{review.relativeTime?` · ${review.relativeTime}`:''}</footer></blockquote>
+        <blockquote key={`${review.author}-${index}`} className="review-quote"><div className="stars" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(Math.max(0,Math.round(review.rating)))}</div><ReviewText>{review.text ? `“${review.text}”` : '5-star Google review'}</ReviewText><footer>{review.author}{review.relativeTime?` · ${review.relativeTime}`:''}</footer></blockquote>
         <button className="review-arrow" aria-label="Next review" onClick={()=>setIndex(i=>(i+1)%reviews.length)}>→</button>
       </div>
       <div className="review-dots" aria-hidden="true">{reviews.map((_,i)=><span key={i} className={i===index?'active':''}/>)}</div>
