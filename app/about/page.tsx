@@ -1,4 +1,5 @@
 export const metadata={title:'About SMRE'};
+import { ReviewText } from '../components/ReviewText';
 const areas=['St. Marys','Wamego','Manhattan','Topeka','Rossville','Silver Lake','St. George','Alma','Emmett','Maple Hill'];
 export default function About(){return <>
 <section className="section container about-page">
@@ -33,9 +34,9 @@ export default function About(){return <>
   </div>
 
   <div className="about-review-grid">
-    <blockquote><span className="review-quote-text">“Never missed a call from me throughout the entire two-month process.”</span><cite>— Patrick, published SMRE client review</cite></blockquote>
-    <blockquote><span className="review-quote-text">“They walked us through the process and helped us with our first home purchase.”</span><cite>— Jim, published SMRE client review</cite></blockquote>
-    <blockquote><span className="review-quote-text">“Michael Kirby made my purchase experience very easy for an out-of-state buyer moving to St. Marys.”</span><cite>— Anne, published SMRE client review</cite></blockquote>
+    <blockquote><ReviewText>“Never missed a call from me throughout the entire two-month process.”</ReviewText><cite>— Patrick, published SMRE client review</cite></blockquote>
+    <blockquote><ReviewText>“They walked us through the process and helped us with our first home purchase.”</ReviewText><cite>— Jim, published SMRE client review</cite></blockquote>
+    <blockquote><ReviewText>“Michael Kirby made my purchase experience very easy for an out-of-state buyer moving to St. Marys.”</ReviewText><cite>— Anne, published SMRE client review</cite></blockquote>
   </div>
 
   <div className="about-google-review">
