@@ -11,6 +11,8 @@ export function ReviewsCarousel(){
   const [loaded,setLoaded]=useState(false);
   const [index,setIndex]=useState(0);
   const [visible,setVisible]=useState(false);
+  const [autoPaused,setAutoPaused]=useState(false);
+  const resumeTimerRef=useRef<number|null>(null);
   const ref=useRef<HTMLElement|null>(null);
   const trackRef=useRef<HTMLDivElement|null>(null);
 
@@ -45,10 +47,20 @@ export function ReviewsCarousel(){
   const reviews=data.reviews || [];
 
   useEffect(()=>{
-    if(!visible || reviews.length<2) return;
-    const timer=window.setInterval(()=>setIndex(i=>(i+1)%reviews.length),5500);
-    return()=>window.clearInterval(timer);
-  },[visible,reviews.length]);
+    if(!visible || autoPaused || reviews.length<2) return;
+    const timer=window.setTimeout(()=>setIndex(i=>(i+1)%reviews.length),5500);
+    return()=>window.clearTimeout(timer);
+  },[visible,autoPaused,index,reviews.length]);
+
+  useEffect(()=>()=>{
+    if(resumeTimerRef.current!==null) window.clearTimeout(resumeTimerRef.current);
+  },[]);
+
+  const pauseAutoAdvance=()=>{
+    setAutoPaused(true);
+    if(resumeTimerRef.current!==null) window.clearTimeout(resumeTimerRef.current);
+    resumeTimerRef.current=window.setTimeout(()=>setAutoPaused(false),8000);
+  };
 
   const review=reviews[index%Math.max(reviews.length,1)];
 
@@ -75,9 +87,9 @@ export function ReviewsCarousel(){
     </div>
     {review ? <>
       <div className="review-stage">
-        <button className="review-arrow" aria-label="Previous review" onClick={()=>setIndex(i=>(i-1+reviews.length)%reviews.length)}>←</button>
+        <button className="review-arrow" aria-label="Previous review" onClick={()=>{pauseAutoAdvance();setIndex(i=>(i-1+reviews.length)%reviews.length)}}>←</button>
         <div className="review-carousel-track" ref={trackRef} onScrollEnd={syncIndex} aria-label="Client reviews">{reviews.map((item,i)=><div className="review-carousel-slide" key={`${item.author}-${i}`}><blockquote className="review-quote"><div className="stars" aria-label={`${item.rating} out of 5 stars`}>{'★'.repeat(Math.max(0,Math.round(item.rating)))}</div><ReviewText>{item.text ? `“${item.text}”` : '5-star Google review'}</ReviewText><footer>{item.author}{item.relativeTime?` · ${item.relativeTime}`:''}</footer></blockquote></div>)}</div>
-        <button className="review-arrow" aria-label="Next review" onClick={()=>setIndex(i=>(i+1)%reviews.length)}>→</button>
+        <button className="review-arrow" aria-label="Next review" onClick={()=>{pauseAutoAdvance();setIndex(i=>(i+1)%reviews.length)}}>→</button>
       </div>
       <div className="review-dots" aria-hidden="true">{reviews.map((_,i)=><span key={i} className={i===index?'active':''}/>)}</div>
       <div className="reviews-source"><a href="https://www.google.com/maps/place/?q=place_id:ChIJ4Uo61nlgvocR5W-xo_H_xJk" target="_blank" rel="noreferrer">Read all reviews on Google</a></div>
