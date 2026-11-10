@@ -12,7 +12,7 @@ export function ReviewsCarousel(){
   const [index,setIndex]=useState(0);
   const [visible,setVisible]=useState(false);
   const ref=useRef<HTMLElement|null>(null);
-  const touchStartX=useRef<number|null>(null);
+  const trackRef=useRef<HTMLDivElement|null>(null);
 
   useEffect(()=>{
     let active=true;
@@ -51,6 +51,20 @@ export function ReviewsCarousel(){
   },[visible,reviews.length]);
 
   const review=reviews[index%Math.max(reviews.length,1)];
+
+  useEffect(()=>{
+    const track=trackRef.current;
+    if(!track) return;
+    const slide=track.children[index] as HTMLElement|undefined;
+    if(slide) track.scrollTo({left:slide.offsetLeft,behavior:'smooth'});
+  },[index]);
+
+  const syncIndex=()=>{
+    const track=trackRef.current;
+    if(!track) return;
+    const next=Math.round(track.scrollLeft/Math.max(1,track.clientWidth));
+    setIndex(current=>current===next?current:next);
+  };
   const rating=data.rating || 0;
 
   return <section ref={ref} className="reviews-section section container" aria-label="Google client reviews">
@@ -60,9 +74,9 @@ export function ReviewsCarousel(){
       <div className="reviews-rating"><strong>{rating ? rating.toFixed(1) : '—'}</strong><span>★ ★ ★ ★ ★</span><small>{data.userRatingCount ? `${data.userRatingCount} Google reviews` : 'Google reviews'}</small></div>
     </div>
     {review ? <>
-      <div className="review-stage" onTouchStart={event=>{touchStartX.current=event.changedTouches[0]?.clientX ?? null;}} onTouchEnd={event=>{const start=touchStartX.current;const end=event.changedTouches[0]?.clientX;touchStartX.current=null;if(start===null||end===undefined)return;const delta=end-start;if(Math.abs(delta)<45)return;setIndex(i=>(i+(delta<0?1:reviews.length-1))%reviews.length);}}>
+      <div className="review-stage">
         <button className="review-arrow" aria-label="Previous review" onClick={()=>setIndex(i=>(i-1+reviews.length)%reviews.length)}>←</button>
-        <blockquote key={`${review.author}-${index}`} className="review-quote"><div className="stars" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(Math.max(0,Math.round(review.rating)))}</div><ReviewText>{review.text ? `“${review.text}”` : '5-star Google review'}</ReviewText><footer>{review.author}{review.relativeTime?` · ${review.relativeTime}`:''}</footer></blockquote>
+        <div className="review-carousel-track" ref={trackRef} onScrollEnd={syncIndex} aria-label="Client reviews">{reviews.map((item,i)=><div className="review-carousel-slide" key={`${item.author}-${i}`}><blockquote className="review-quote"><div className="stars" aria-label={`${item.rating} out of 5 stars`}>{'★'.repeat(Math.max(0,Math.round(item.rating)))}</div><ReviewText>{item.text ? `“${item.text}”` : '5-star Google review'}</ReviewText><footer>{item.author}{item.relativeTime?` · ${item.relativeTime}`:''}</footer></blockquote></div>)}</div>
         <button className="review-arrow" aria-label="Next review" onClick={()=>setIndex(i=>(i+1)%reviews.length)}>→</button>
       </div>
       <div className="review-dots" aria-hidden="true">{reviews.map((_,i)=><span key={i} className={i===index?'active':''}/>)}</div>
