@@ -38,3 +38,39 @@
     margin-bottom: 18px;
   }
 }
+
+
+/* Review carousel: support natural finger swipes on touch screens. */
+.review-stage {
+  touch-action: pan-y;
+}
+
+/* Keep longer testimonials readable without letting them dominate the page. */
+.review-text-wrap {
+  display: block;
+  min-width: 0;
+}
+.review-expandable-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+}
+.review-expandable-text.is-expanded {
+  display: block;
+  overflow: visible;
+}
+.review-expand-toggle {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--navy);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
