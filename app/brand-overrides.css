@@ -1126,3 +1126,39 @@
     margin: 0;
   }
 }
+
+
+/* Mobile listing photo viewer: place the photo counter centered below the image. */
+@media (max-width: 700px) {
+  .photo-lightbox-count {
+    top: auto !important;
+    right: auto !important;
+    left: 50% !important;
+    bottom: 74px !important;
+    transform: translateX(-50%) !important;
+    z-index: 20 !important;
+  }
+}
+
+/* Mobile testimonials: reduce card height without changing the review content. */
+@media (max-width: 600px) {
+  .about-review-grid {
+    gap: 12px;
+  }
+  .about-review-grid blockquote,
+  .testimonials-page .about-review-grid blockquote {
+    min-height: 0;
+    padding: 20px 20px 18px !important;
+    font-size: 17px;
+    line-height: 1.45;
+  }
+  .about-review-grid .review-quote-text {
+    padding: 0 !important;
+  }
+  .about-review-grid cite {
+    margin-top: 14px;
+  }
+  .testimonials-page .about-review-grid {
+    gap: 12px;
+  }
+}
