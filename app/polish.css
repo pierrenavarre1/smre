@@ -50,15 +50,17 @@
   display: block;
   min-width: 0;
 }
-.review-expandable-text {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 5;
-  overflow: hidden;
-}
-.review-expandable-text.is-expanded {
-  display: block;
-  overflow: visible;
+@media (max-width: 600px) {
+  .review-expandable-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    overflow: hidden;
+  }
+  .review-expandable-text.is-expanded {
+    display: block;
+    overflow: visible;
+  }
 }
 .review-expand-toggle {
   display: inline-block;
