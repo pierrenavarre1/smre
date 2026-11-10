@@ -76,3 +76,40 @@
   text-underline-offset: 3px;
   cursor: pointer;
 }
+
+
+/* Reviews carousel: native horizontal scrolling and snap points on mobile,
+   matching the photo viewer's finger-driven browsing. */
+.review-carousel-track {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  scroll-behavior: smooth;
+}
+.review-carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+.review-carousel-slide .review-quote {
+  box-sizing: border-box;
+  width: 100%;
+}
+@media (max-width: 700px) {
+  .review-carousel-track {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-snap-stop: always;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+  .review-carousel-track::-webkit-scrollbar {
+    display: none;
+  }
+}
