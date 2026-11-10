@@ -14,7 +14,7 @@ export function ReviewsCarousel(){
   const [autoPaused,setAutoPaused]=useState(false);
   const resumeTimerRef=useRef<number|null>(null);
   const ref=useRef<HTMLElement|null>(null);
-  const trackRef=useRef<HTMLDivElement|null>(null);
+  const touchStartXRef=useRef<number|null>(null);
 
   useEffect(()=>{
     let active=true;
@@ -64,18 +64,17 @@ export function ReviewsCarousel(){
 
   const review=reviews[index%Math.max(reviews.length,1)];
 
-  useEffect(()=>{
-    const track=trackRef.current;
-    if(!track) return;
-    const slide=track.children[index] as HTMLElement|undefined;
-    if(slide) track.scrollTo({left:slide.offsetLeft,behavior:'smooth'});
-  },[index]);
-
-  const syncIndex=()=>{
-    const track=trackRef.current;
-    if(!track) return;
-    const next=Math.round(track.scrollLeft/Math.max(1,track.clientWidth));
-    setIndex(current=>current===next?current:next);
+  const handleTouchStart=(event:React.TouchEvent<HTMLDivElement>)=>{
+    touchStartXRef.current=event.touches[0]?.clientX ?? null;
+  };
+  const handleTouchEnd=(event:React.TouchEvent<HTMLDivElement>)=>{
+    const startX=touchStartXRef.current;
+    touchStartXRef.current=null;
+    if(startX===null) return;
+    const delta=startX-(event.changedTouches[0]?.clientX ?? startX);
+    if(Math.abs(delta)<45) return;
+    pauseAutoAdvance();
+    setIndex(current=>(current+(delta>0?1:-1)+reviews.length)%reviews.length);
   };
   const rating=data.rating || 0;
 
@@ -88,7 +87,7 @@ export function ReviewsCarousel(){
     {review ? <>
       <div className="review-stage">
         <button className="review-arrow" aria-label="Previous review" onClick={()=>{pauseAutoAdvance();setIndex(i=>(i-1+reviews.length)%reviews.length)}}>←</button>
-        <div className="review-carousel-track" ref={trackRef} onScrollEnd={syncIndex} aria-label="Client reviews">{reviews.map((item,i)=><div className="review-carousel-slide" key={`${item.author}-${i}`}><blockquote className="review-quote"><div className="stars" aria-label={`${item.rating} out of 5 stars`}>{'★'.repeat(Math.max(0,Math.round(item.rating)))}</div><ReviewText>{item.text ? `“${item.text}”` : '5-star Google review'}</ReviewText><footer>{item.author}{item.relativeTime?` · ${item.relativeTime}`:''}</footer></blockquote></div>)}</div>
+        <div className="review-carousel-viewport" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} aria-label="Client reviews"><div className="review-carousel-track" style={{ transform: `translate3d(-${index * 100}%, 0, 0)` }}>{reviews.map((item,i)=><div className="review-carousel-slide" key={`${item.author}-${i}`}><blockquote className="review-quote"><div className="stars" aria-label={`${item.rating} out of 5 stars`}>{'★'.repeat(Math.max(0,Math.round(item.rating)))}</div><ReviewText>{item.text ? `“${item.text}”` : '5-star Google review'}</ReviewText><footer>{item.author}{item.relativeTime?` · ${item.relativeTime}`:''}</footer></blockquote></div>)}</div></div>
         <button className="review-arrow" aria-label="Next review" onClick={()=>{pauseAutoAdvance();setIndex(i=>(i+1)%reviews.length)}}>→</button>
       </div>
       <div className="review-dots" aria-hidden="true">{reviews.map((_,i)=><span key={i} className={i===index?'active':''}/>)}</div>
