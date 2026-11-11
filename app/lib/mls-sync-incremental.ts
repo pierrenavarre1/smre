@@ -469,7 +469,14 @@ export async function runIncrementalMLSGridSync() {
         const page = await readJson<StagePage>(path);
         if (page) allListings.push(...page.processed.filter((item): item is RESOProperty => Boolean(item)));
       }
-      const listings = dedupeListings(allListings);
+      const mergedListings = new Map(existingById);
+      if (state.incremental) {
+        for (const listing of allListings) mergedListings.set(listing.ListingId, listing);
+      } else {
+        mergedListings.clear();
+        for (const listing of allListings) mergedListings.set(listing.ListingId, listing);
+      }
+      const listings = dedupeListings([...mergedListings.values()]);
       await writeMLSCache(listings);
       const completedAt = new Date().toISOString();
       const pathsToDelete = state.pagePaths;
