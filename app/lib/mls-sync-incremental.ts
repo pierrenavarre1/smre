@@ -428,6 +428,7 @@ export async function runIncrementalMLSGridSync() {
           if (ap.localOffice !== bp.localOffice) return ap.localOffice ? -1 : 1;
           if (ap.date !== bp.date) return bp.date - ap.date;
           if (ap.localCity !== bp.localCity) return ap.localCity ? -1 : 1;
+          return 0;
         });
         stagedPage.records = paired.map(item => item.record);
         stagedPage.processed = paired.map(item => item.processed);
