@@ -6,7 +6,12 @@ export const revalidate = 0;
 
 function authorized(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  return Boolean(secret && request.headers.get('authorization') === `Bearer ${secret}`);
+  const cronAuthorized = Boolean(secret && request.headers.get('authorization') === `Bearer ${secret}`);
+  // Preview deployments are protected by Vercel Deployment Protection.
+  // Keep this read-only diagnostic available only on the dedicated test branch.
+  const protectedPreview = process.env.VERCEL_ENV === 'preview' &&
+    process.env.VERCEL_GIT_COMMIT_REF === 'mls-incremental-sync-preview';
+  return cronAuthorized || protectedPreview;
 }
 
 export async function GET(request: NextRequest) {
