@@ -21,6 +21,9 @@ type SyncState = {
   cacheSeeded?: boolean;
   prioritySorted?: boolean;
   startedAt: string;
+  incremental?: boolean;
+  sourceWatermarks?: Record<string, string>;
+  nextWatermarks?: Record<string, string>;
 };
 
 const STATE_PATH = mlsBlobPath('mls/sync-state.json');
@@ -62,7 +65,7 @@ async function releaseSyncLock(owner: string) {
     try { await del(LOCK_PATH); } catch {}
   }
 }
-const DAILY_INTERVAL_MS = 23 * 60 * 60 * 1000;
+const INCREMENTAL_INTERVAL_MS = 15 * 60 * 1000;
 const RECORDS_PER_INVOCATION = 10;
 const SERVICE_CITIES = new Set([
   'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka',
@@ -123,10 +126,13 @@ async function writeJson(pathname: string, value: unknown) {
     access: 'private', allowOverwrite: true, cacheControlMaxAge: 0, contentType: 'application/json'
   });
 }
-function newState(): SyncState {
+function newState(previous?: SyncState): SyncState {
   return {
     version: 1, runId: Date.now().toString(36), phase: 'metadata', sourceIndex: 0,
-    pagePaths: [], pageIndex: 0, recordIndex: 0, startedAt: new Date().toISOString()
+    pagePaths: [], pageIndex: 0, recordIndex: 0, startedAt: new Date().toISOString(),
+    incremental: Boolean(previous?.sourceWatermarks),
+    sourceWatermarks: previous?.sourceWatermarks || {},
+    nextWatermarks: previous?.sourceWatermarks || {}
   };
 }
 async function loadState(): Promise<SyncState | null> {
@@ -348,11 +354,11 @@ export async function runIncrementalMLSGridSync() {
     delete state.blockedUntil;
     await writeJson(STATE_PATH, state);
   }
-  if (state?.phase === 'idle' && state.lastCompletedAt && Date.now() - Date.parse(state.lastCompletedAt) < DAILY_INTERVAL_MS) {
-    return { ok: true, status: 'idle', nextRunAfter: new Date(Date.parse(state.lastCompletedAt) + DAILY_INTERVAL_MS).toISOString() };
+  if (state?.phase === 'idle' && state.lastCompletedAt && Date.now() - Date.parse(state.lastCompletedAt) < INCREMENTAL_INTERVAL_MS) {
+    return { ok: true, status: 'idle', nextRunAfter: new Date(Date.parse(state.lastCompletedAt) + INCREMENTAL_INTERVAL_MS).toISOString() };
   }
   if (!state || state.phase === 'idle') {
-    state = newState();
+    state = newState(state || undefined);
     await writeJson(STATE_PATH, state);
   }
   const sources = sourceKeys();
@@ -363,14 +369,29 @@ export async function runIncrementalMLSGridSync() {
   if (state.phase === 'metadata') {
     if (state.sourceIndex >= sources.length) {
       state.phase = 'media';
+      state.sourceWatermarks = state.nextWatermarks || state.sourceWatermarks || {};
       state.pageIndex = 0;
       state.recordIndex = 0;
       await writeJson(STATE_PATH, state);
       return { ok: true, status: 'metadata-complete', pages: state.pagePaths.length };
     }
     const source = sources[state.sourceIndex];
-    const page = await fetchMLSGridPage(source, state.nextUrl, false);
-    const stagedRecords: StagedRecord[] = (page.value || []).filter(inServiceArea).map(record => ({ source, record }));
+    const watermark = state.incremental ? state.sourceWatermarks?.[source] : undefined;
+    const requestUrl = state.nextUrl || (watermark
+      ? 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
+          '$filter': \"OriginatingSystemName eq '\" + source + \"' and MlgCanView eq true and StandardStatus in ('Active','Pending') and ModificationTimestamp gt \" + watermark,
+          '$top': '5000'
+        }).toString()
+      : undefined);
+    const page = await fetchMLSGridPage(source, requestUrl, false);
+    const records = page.value || [];
+    const nextWatermarks = { ...(state.nextWatermarks || state.sourceWatermarks || {}) };
+    for (const record of records) {
+      const modified = String(record.ModificationTimestamp || '');
+      if (modified && (!nextWatermarks[source] || Date.parse(modified) > Date.parse(nextWatermarks[source]))) nextWatermarks[source] = modified;
+    }
+    state.nextWatermarks = nextWatermarks;
+    const stagedRecords: StagedRecord[] = records.filter(inServiceArea).map(record => ({ source, record }));
     const path = `${STAGING_ROOT}/${state.runId}/page-${state.pagePaths.length}.json`;
     await writeJson(path, { records: stagedRecords, processed: stagedRecords.map(() => null) } satisfies StagePage);
     state.pagePaths.push(path);
@@ -453,7 +474,9 @@ export async function runIncrementalMLSGridSync() {
       const completedAt = new Date().toISOString();
       const pathsToDelete = state.pagePaths;
       await writeJson(STATE_PATH, {
-        ...state, phase: 'idle', lastCompletedAt: completedAt, pagePaths: [], pageIndex: 0, recordIndex: 0
+        ...state, phase: 'idle', lastCompletedAt: completedAt,
+        sourceWatermarks: state.nextWatermarks || state.sourceWatermarks || {},
+        pagePaths: [], pageIndex: 0, recordIndex: 0, incremental: true
       } satisfies SyncState);
       try { await del(pathsToDelete); }
       catch (error) { console.warn('Could not clean MLS staging files:', error instanceof Error ? error.message : error); }
