@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
   }
 
   const sources = requestedSource === 'flinthills' ? ['flinthills', 'sunflower'] : ['sunflower', 'flinthills'];
+  const prefixes: Record<string, string> = { flinthills: 'FHR', sunflower: 'SUN' };
   const serviceCities = new Set([
     'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka', 'st george', 'saint george',
     'rossville', 'silver lake', 'auburn', 'willard', 'berryton', 'dover', 'elmont', 'pauline',
@@ -36,10 +37,12 @@ export async function GET(request: NextRequest) {
     'alma', 'paxico', 'maple hill', 'eskridge', 'harveyville', 'mcfarland', 'junction city',
     'mayetta', 'holton'
   ]);
-  const checks: Array<{ source: string; found: boolean; error?: string; status?: number }> = [];
+  const checks: Array<{ source: string; queriedListingId: string; found: boolean; error?: string; status?: number }> = [];
 
   for (const source of sources) {
-    const filter = `OriginatingSystemName eq '${source}' and ListingId eq '${listingNumber}'`;
+    const prefix = prefixes[source];
+    const normalizedId = listingNumber.toUpperCase().startsWith(prefix) ? listingNumber.toUpperCase() : prefix + listingNumber;
+    const filter = `OriginatingSystemName eq '${source}' and ListingId eq '${normalizedId}'`;
     const endpoint = 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
       '$filter': filter,
       '$top': '2'
@@ -48,7 +51,7 @@ export async function GET(request: NextRequest) {
       // Read-only query. No Blob, sync-state, cache, or public-data writes.
       const page = await fetchMLSGridPage(source, endpoint, false);
       const record = page.value?.[0];
-      checks.push({ source, found: Boolean(record) });
+      checks.push({ source, queriedListingId: normalizedId, found: Boolean(record) });
       if (!record) continue;
       const city = String(record.City || '');
       const normalizedCity = city.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\\s+/g, ' ').trim();
@@ -58,10 +61,10 @@ export async function GET(request: NextRequest) {
         requestedSource,
         matchedSource: source,
         listingNumber,
+        queriedListingId: normalizedId,
         listingId: String(record.ListingId || ''),
-        listingKeyPresent: Boolean(record.ListingKey),
+        listingKey: String(record.ListingKey || ''),
         originatingSystemName: String(record.OriginatingSystemName || ''),
-        originatingSystemId: String(record.OriginatingSystemID || ''),
         city,
         inServiceArea: serviceCities.has(normalizedCity),
         standardStatus: String(record.StandardStatus || ''),
@@ -72,7 +75,7 @@ export async function GET(request: NextRequest) {
       });
     } catch (error) {
       const status = (error as Error & { status?: number }).status;
-      checks.push({ source, found: false, status: status || 500, error: (error instanceof Error ? error.message : String(error)).slice(0, 500) });
+      checks.push({ source, queriedListingId: normalizedId, found: false, status: status || 500, error: (error instanceof Error ? error.message : String(error)).slice(0, 500) });
     }
   }
 
