@@ -1,3 +1,4 @@
+import { mlsBlobPath } from './mls-blob-path';
 import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
 import { get, put } from '@vercel/blob';
 import { readMLSCache } from './mls-store';
@@ -225,7 +226,7 @@ function isProvisionedCdnUrl(value: string) {
 function mediaManifestPath(listing: RESOProperty) {
   if (!listing.ModificationTimestamp) return '';
   const key = mediaStorageKey('cdn-manifest:' + listing.ListingId + ':' + listing.ModificationTimestamp);
-  return 'mls/media-manifests/' + key + '.json';
+  return mlsBlobPath('mls/media-manifests/' + key + '.json');
 }
 
 async function readCdnMediaManifest(listing: RESOProperty): Promise<RESOMedia[]> {
@@ -326,7 +327,7 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], e
         }
 
         const key = mediaStorageKey(source + ':' + photo.MediaKey);
-        await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
+        await put(mlsBlobPath('mls/images/' + key + '.image'), await response.arrayBuffer(), {
           access: 'private',
           allowOverwrite: true,
           cacheControlMaxAge: 31536000,
