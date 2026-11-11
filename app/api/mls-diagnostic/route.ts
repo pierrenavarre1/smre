@@ -29,10 +29,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'MLS Grid access token is not configured.' }, { status: 503 });
   }
 
-  const filter = `OriginatingSystemName eq '${source}' and ListingId eq '${listingNumber}'`;
+  const filter = `ListingId eq '${listingNumber}'`;
   const endpoint = 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
     '$filter': filter,
-    '$select': 'ListingId,ListingKey,City,StandardStatus,MlgCanView,ModificationTimestamp,ListOfficeName,PostalCode',
+    '$select': 'ListingId,ListingKey,OriginatingSystemName,OriginatingSystemID,SourceSystemName,City,StandardStatus,MlgCanView,ModificationTimestamp,ListOfficeName,PostalCode',
     '$top': '2'
   }).toString();
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     // Read-only diagnostic: no Blob, sync-state, cache, or public-data writes.
     const page = await fetchMLSGridPage(source, endpoint, false);
     const record = page.value?.[0];
-    if (!record) return NextResponse.json({ ok: true, found: false, source, listingNumber, checkedBy: 'ListingId' });
+    if (!record) return NextResponse.json({ ok: true, found: false, source, listingNumber, checkedBy: 'ListingId', sourceFilterApplied: false });
 
     const city = String(record.City || '');
     const normalizedCity = city.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -61,6 +61,9 @@ export async function GET(request: NextRequest) {
       listingNumber,
       listingId: String(record.ListingId || ''),
       listingKeyPresent: Boolean(record.ListingKey),
+      originatingSystemName: String(record.OriginatingSystemName || ''),
+      originatingSystemId: String(record.OriginatingSystemID || ''),
+      sourceSystemName: String(record.SourceSystemName || ''),
       city,
       inServiceArea: serviceCities.has(normalizedCity),
       standardStatus: String(record.StandardStatus || ''),
