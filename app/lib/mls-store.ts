@@ -1,8 +1,9 @@
+import { mlsBlobPath } from './mls-blob-path';
 import { get, put } from '@vercel/blob';
 import type { RESOProperty } from './mock-properties';
 
-const LISTINGS_PATH = 'mls/listings.json';
-const LISTINGS_SUMMARY_PATH = 'mls/listings-summary.json';
+const LISTINGS_PATH = mlsBlobPath('mls/listings.json');
+const LISTINGS_SUMMARY_PATH = mlsBlobPath('mls/listings-summary.json');
 
 let memoryCache: { listings: RESOProperty[]; expiresAt: number } | null = null;
 let memorySummaryCache: { listings: RESOProperty[]; expiresAt: number } | null = null;
