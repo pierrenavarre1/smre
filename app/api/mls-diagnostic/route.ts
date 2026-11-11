@@ -7,8 +7,6 @@ export const revalidate = 0;
 function authorized(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const cronAuthorized = Boolean(secret && request.headers.get('authorization') === `Bearer ${secret}`);
-  // Preview deployments are protected by Vercel Deployment Protection.
-  // Keep this read-only diagnostic available only on the dedicated test branch.
   const protectedPreview = process.env.VERCEL_ENV === 'preview' &&
     process.env.VERCEL_GIT_COMMIT_REF === 'mls-incremental-sync-preview';
   return cronAuthorized || protectedPreview;
@@ -16,10 +14,9 @@ function authorized(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   if (!authorized(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const source = request.nextUrl.searchParams.get('source') || 'flinthills';
+  const requestedSource = request.nextUrl.searchParams.get('source') || 'flinthills';
   const listingNumber = request.nextUrl.searchParams.get('listingNumber') || '';
-  if (source !== 'flinthills' && source !== 'sunflower') {
+  if (requestedSource !== 'flinthills' && requestedSource !== 'sunflower') {
     return NextResponse.json({ error: 'Unsupported MLS source.' }, { status: 400 });
   }
   if (!/^[A-Za-z0-9-]{1,40}$/.test(listingNumber)) {
@@ -29,53 +26,55 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'MLS Grid access token is not configured.' }, { status: 503 });
   }
 
-  const filter = `ListingId eq '${listingNumber}'`;
-  const endpoint = 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
-    '$filter': filter,
-    '$top': '2'
-  }).toString();
+  const sources = requestedSource === 'flinthills' ? ['flinthills', 'sunflower'] : ['sunflower', 'flinthills'];
+  const serviceCities = new Set([
+    'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka', 'st george', 'saint george',
+    'rossville', 'silver lake', 'auburn', 'willard', 'berryton', 'dover', 'elmont', 'pauline',
+    'tecumseh', 'wakarusa', 'leonardville', 'ogden', 'randolph', 'riley', 'fort riley', 'keats',
+    'zeandale', 'belvue', 'bellevue', 'emmett', 'havensville', 'louisville', 'olsburg', 'onaga',
+    'westmoreland', 'wheaton', 'blaine', 'duluth', 'flush', 'fostoria', 'st clere', 'saint clere',
+    'alma', 'paxico', 'maple hill', 'eskridge', 'harveyville', 'mcfarland', 'junction city',
+    'mayetta', 'holton'
+  ]);
+  const checks: Array<{ source: string; found: boolean; error?: string; status?: number }> = [];
 
-  try {
-    // Read-only diagnostic: no Blob, sync-state, cache, or public-data writes.
-    const page = await fetchMLSGridPage(source, endpoint, false);
-    const record = page.value?.[0];
-    if (!record) return NextResponse.json({ ok: true, found: false, source, listingNumber, checkedBy: 'ListingId', sourceFilterApplied: false });
-
-    const city = String(record.City || '');
-    const normalizedCity = city.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\s+/g, ' ').trim();
-    const serviceCities = new Set([
-      'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka', 'st george', 'saint george',
-      'rossville', 'silver lake', 'auburn', 'willard', 'berryton', 'dover', 'elmont', 'pauline',
-      'tecumseh', 'wakarusa', 'leonardville', 'ogden', 'randolph', 'riley', 'fort riley', 'keats',
-      'zeandale', 'belvue', 'bellevue', 'emmett', 'havensville', 'louisville', 'olsburg', 'onaga',
-      'westmoreland', 'wheaton', 'blaine', 'duluth', 'flush', 'fostoria', 'st clere', 'saint clere',
-      'alma', 'paxico', 'maple hill', 'eskridge', 'harveyville', 'mcfarland', 'junction city',
-      'mayetta', 'holton'
-    ]);
-
-    return NextResponse.json({
-      ok: true,
-      found: true,
-      source,
-      listingNumber,
-      listingId: String(record.ListingId || ''),
-      listingKeyPresent: Boolean(record.ListingKey),
-      originatingSystemName: String(record.OriginatingSystemName || ''),
-      originatingSystemId: String(record.OriginatingSystemID || ''),
-      sourceSystemName: String(record.SourceSystemName || ''),
-      city,
-      inServiceArea: serviceCities.has(normalizedCity),
-      standardStatus: String(record.StandardStatus || ''),
-      canView: record.MlgCanView === true,
-      modificationTimestamp: String(record.ModificationTimestamp || ''),
-      officeNamePresent: Boolean(record.ListOfficeName)
-    });
-  } catch (error) {
-    const status = (error as Error & { status?: number }).status;
-    const message = error instanceof Error ? error.message : String(error);
-    console.error('MLS listing diagnostic failed:', message);
-    return NextResponse.json({ error: 'MLS Grid diagnostic request failed.', status: status || 500, detail: message.slice(0, 700) }, {
-      status: status === 429 ? 429 : 502
-    });
+  for (const source of sources) {
+    const filter = `OriginatingSystemName eq '${source}' and ListingId eq '${listingNumber}'`;
+    const endpoint = 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
+      '$filter': filter,
+      '$top': '2'
+    }).toString();
+    try {
+      // Read-only query. No Blob, sync-state, cache, or public-data writes.
+      const page = await fetchMLSGridPage(source, endpoint, false);
+      const record = page.value?.[0];
+      checks.push({ source, found: Boolean(record) });
+      if (!record) continue;
+      const city = String(record.City || '');
+      const normalizedCity = city.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\\s+/g, ' ').trim();
+      return NextResponse.json({
+        ok: true,
+        found: true,
+        requestedSource,
+        matchedSource: source,
+        listingNumber,
+        listingId: String(record.ListingId || ''),
+        listingKeyPresent: Boolean(record.ListingKey),
+        originatingSystemName: String(record.OriginatingSystemName || ''),
+        originatingSystemId: String(record.OriginatingSystemID || ''),
+        city,
+        inServiceArea: serviceCities.has(normalizedCity),
+        standardStatus: String(record.StandardStatus || ''),
+        canView: record.MlgCanView === true,
+        modificationTimestamp: String(record.ModificationTimestamp || ''),
+        officeNamePresent: Boolean(record.ListOfficeName),
+        checks
+      });
+    } catch (error) {
+      const status = (error as Error & { status?: number }).status;
+      checks.push({ source, found: false, status: status || 500, error: (error instanceof Error ? error.message : String(error)).slice(0, 500) });
+    }
   }
+
+  return NextResponse.json({ ok: checks.every(check => !check.error), found: false, listingNumber, checks });
 }
