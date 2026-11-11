@@ -1,3 +1,4 @@
+import { mlsBlobPath } from './mls-blob-path';
 import { del, get, put } from '@vercel/blob';
 import type { RESOProperty, RESOMedia } from './mock-properties';
 import { fetchMLSGridPage, normalizeMLSGridProperty, dedupeListings, waitForMLSGridSlot } from './mlsgrid';
@@ -22,9 +23,9 @@ type SyncState = {
   startedAt: string;
 };
 
-const STATE_PATH = 'mls/sync-state.json';
-const LOCK_PATH = 'mls/sync-lock.json';
-const STAGING_ROOT = 'mls/sync-staging';
+const STATE_PATH = mlsBlobPath('mls/sync-state.json');
+const LOCK_PATH = mlsBlobPath('mls/sync-lock.json');
+const STAGING_ROOT = mlsBlobPath('mls/sync-staging');
 const LOCK_TTL_MS = 10 * 60 * 1000;
 // A media-download 429 can be a short burst limit, not a full account suspension.
 const RATE_LIMIT_COOLDOWN_MS = 15 * 60 * 1000;
@@ -136,7 +137,7 @@ async function imageExists(mediaUrl: string) {
   if (!mediaUrl.startsWith('smre-blob:')) return false;
   const key = mediaUrl.slice('smre-blob:'.length);
   try {
-    const stored = await get('mls/images/' + key + '.image', { access: 'private', useCache: false });
+    const stored = await get(mlsBlobPath('mls/images/' + key + '.image'), { access: 'private', useCache: false });
     if (!stored || stored.statusCode !== 200 || !stored.stream) return false;
     await stored.stream.cancel();
     return true;
@@ -232,7 +233,7 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
       return;
     }
 
-    await put('mls/images/' + key + '.image', await response.arrayBuffer(), {
+    await put(mlsBlobPath('mls/images/' + key + '.image'), await response.arrayBuffer(), {
       access: 'private',
       allowOverwrite: true,
       cacheControlMaxAge: 31536000,
