@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
   const filter = `ListingId eq '${listingNumber}'`;
   const endpoint = 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
     '$filter': filter,
-    '$select': 'ListingId,ListingKey,OriginatingSystemName,OriginatingSystemID,SourceSystemName,City,StandardStatus,MlgCanView,ModificationTimestamp,ListOfficeName,PostalCode',
     '$top': '2'
   }).toString();
 
@@ -73,8 +72,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     const status = (error as Error & { status?: number }).status;
-    console.error('MLS listing diagnostic failed:', error instanceof Error ? error.message : error);
-    return NextResponse.json({ error: 'MLS Grid diagnostic request failed.', status: status || 500 }, {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('MLS listing diagnostic failed:', message);
+    return NextResponse.json({ error: 'MLS Grid diagnostic request failed.', status: status || 500, detail: message.slice(0, 700) }, {
       status: status === 429 ? 429 : 502
     });
   }
