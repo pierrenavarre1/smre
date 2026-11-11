@@ -379,7 +379,7 @@ export async function runIncrementalMLSGridSync() {
     const watermark = state.incremental ? state.sourceWatermarks?.[source] : undefined;
     const requestUrl = state.nextUrl || (watermark
       ? 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
-          '$filter': \"OriginatingSystemName eq '\" + source + \"' and MlgCanView eq true and StandardStatus in ('Active','Pending') and ModificationTimestamp gt \" + watermark,
+          '$filter': "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and StandardStatus in ('Active','Pending') and ModificationTimestamp gt " + watermark,
           '$top': '5000'
         }).toString()
       : undefined);
