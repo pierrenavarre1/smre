@@ -23,8 +23,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await runIncrementalMLSGridSync();
-    return NextResponse.json({ ...result, storageNamespace: 'preview/mls-incremental-sync-preview' });
+    const steps = [];
+    let result: Awaited<ReturnType<typeof runIncrementalMLSGridSync>> | undefined;
+    for (let i = 0; i < 4; i++) {
+      result = await runIncrementalMLSGridSync();
+      steps.push(result);
+      if (result.status !== 'metadata-page-saved' && result.status !== 'metadata-complete') break;
+    }
+    return NextResponse.json({ ok: true, result, steps, storageNamespace: 'preview/mls-incremental-sync-preview' });
   } catch (error) {
     console.error('Preview MLS sync failed:', error instanceof Error ? error.message : error);
     return NextResponse.json({ error: 'Preview MLS sync failed.' }, { status: 500 });
