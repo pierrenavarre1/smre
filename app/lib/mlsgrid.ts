@@ -285,7 +285,7 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], e
       try {
         // Verify the referenced local image still exists. A previous interrupted
         // cleanup may have removed image blobs while leaving the listing JSON intact.
-        const stored = await get('mls/images/' + oldKey + '.image', { access: 'private', useCache: false });
+        const stored = await get(mlsBlobPath('mls/images/' + oldKey + '.image'), { access: 'private', useCache: false });
         if (stored?.statusCode === 200 && stored.stream) {
           await stored.stream.cancel();
           record.Media = [{ ...preview, MediaURL: oldPreview.MediaURL }];
