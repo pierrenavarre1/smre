@@ -1,3 +1,4 @@
+import { mlsBlobPath } from '../../lib/mls-blob-path';
 import { createHash } from 'node:crypto';
 import { NextRequest } from 'next/server';
 import { get, put } from '@vercel/blob';
@@ -140,7 +141,7 @@ export async function GET(request: NextRequest) {
   }
 
   const key = storedKey || createHash('sha256').update(rawUrl).digest('hex');
-  const pathname = 'mls/images/' + key + '.image';
+  const pathname = mlsBlobPath('mls/images/' + key + '.image');
 
   // Try existing stored bytes first, including during a storage-write cooldown.
   try {
