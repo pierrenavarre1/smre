@@ -453,10 +453,11 @@ export async function fetchMLSGridLiveIndex(): Promise<RESOProperty[]> {
   for (const source of sourceKeys()) {
     if (!sourceToken(source)) continue;
     try {
-      // Emergency page fallback: request metadata only and fetch one page per
-      // MLS. Never expand/download every photo during a public page request.
-      // Full replication and photo downloads belong in the scheduled sync.
-      const page = await fetchMLSGridPage(source);
+      // Preview's isolated Blob cache may not yet contain locally stored
+      // thumbnails. Include the MLS media relationship in the preview fallback
+      // so listing cards receive their primary photo while the cache initializes.
+      // Keep this limited to one metadata page per MLS source.
+      const page = await fetchMLSGridPage(source, undefined, true);
       for (const record of (page.value || []).filter(isInServiceArea)) {
         all.push(normalizeMLSGridProperty(record, source));
       }
