@@ -66,7 +66,7 @@ async function releaseSyncLock(owner: string) {
   }
 }
 const INCREMENTAL_INTERVAL_MS = 15 * 60 * 1000;
-const RECORDS_PER_INVOCATION = 10;
+const RECORDS_PER_INVOCATION = 50;
 const SERVICE_CITIES = new Set([
   'st marys', 'saint marys', 'wamego', 'manhattan', 'topeka',
   'st george', 'saint george', 'rossville', 'silver lake', 'auburn', 'willard',
@@ -426,8 +426,8 @@ export async function runIncrementalMLSGridSync() {
           const ap = syncPriority(a.record.record);
           const bp = syncPriority(b.record.record);
           if (ap.localOffice !== bp.localOffice) return ap.localOffice ? -1 : 1;
+          if (ap.date !== bp.date) return bp.date - ap.date;
           if (ap.localCity !== bp.localCity) return ap.localCity ? -1 : 1;
-          return bp.date - ap.date;
         });
         stagedPage.records = paired.map(item => item.record);
         stagedPage.processed = paired.map(item => item.processed);
