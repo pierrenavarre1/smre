@@ -444,24 +444,36 @@ export async function runIncrementalMLSGridSync() {
     // another batch. Previously, the public listing cache stayed stale until
     // the entire multi-hour initial scan completed, leaving expired MLS media
     // URLs in use even when newer preview images had already been downloaded.
-    if (!state.cacheSeeded) {
+    if (!state.cacheSeeded || !state.indexSeeded) {
       let seededCount = 0;
       for (const stagedPath of state.pagePaths) {
         const stagedPage = await readJson<StagePage>(stagedPath);
         if (!stagedPage) continue;
-        for (const listing of stagedPage.processed) {
-          if (listing) {
-            publishedById.set(listing.ListingId, listing);
-            seededCount++;
+        for (let index = 0; index < stagedPage.records.length; index++) {
+          const staged = stagedPage.records[index];
+          const processed = stagedPage.processed[index];
+          const listing = processed || normalizeMLSGridProperty(staged.record, staged.source);
+          if (!processed) {
+            const existing = existingById.get(listing.ListingId);
+            if (existing?.ModificationTimestamp && existing.ModificationTimestamp === listing.ModificationTimestamp) {
+              listing.Media = existing.Media || [];
+            } else {
+              // Publish the complete searchable listing index immediately.
+              // Photos are filled in by the slower, rate-limited media batches.
+              listing.Media = [];
+            }
           }
+          publishedById.set(listing.ListingId, listing);
+          seededCount++;
         }
       }
       if (seededCount > 0) {
         await writeMLSCache(dedupeListings([...publishedById.values()]));
       }
       state.cacheSeeded = true;
+      state.indexSeeded = true;
       await writeJson(STATE_PATH, state);
-      console.log('MLS sync published previously processed preview batches', { seededCount });
+      console.log('MLS sync published complete searchable index before media processing', { seededCount });
     }
 
     if (state.pageIndex >= state.pagePaths.length) {
