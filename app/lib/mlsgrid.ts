@@ -275,6 +275,14 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], e
       continue;
     }
 
+    // The provisioned MLS Grid CDN is already a durable, public image host.
+    // Keep those URLs directly instead of needlessly downloading them into Blob.
+    // The image route redirects CDN URLs to the original asset.
+    if (isProvisionedCdnUrl(preview.MediaURL)) {
+      record.Media = [preview];
+      continue;
+    }
+
     const originalId = String(record.ListingId || record.ListingKey || '');
     const existing = existingById.get(source + ':' + originalId);
     const oldPreview = existing?.Media?.find(photo => photo.PreferredPhoto) || existing?.Media?.[0];
