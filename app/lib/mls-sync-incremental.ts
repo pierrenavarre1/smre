@@ -1,7 +1,7 @@
 import { mlsBlobPath } from './mls-blob-path';
 import { del, get, put } from '@vercel/blob';
 import type { RESOProperty, RESOMedia } from './mock-properties';
-import { fetchMLSGridPage, normalizeMLSGridProperty, dedupeListings, waitForMLSGridSlot } from './mlsgrid';
+import { fetchMLSGridPage, fetchMLSGridLiveListing, normalizeMLSGridProperty, dedupeListings } from './mlsgrid';
 import { readMLSCache, writeMLSCache } from './mls-store';
 
 type MlsGridRecord = Record<string, any>;
@@ -269,28 +269,6 @@ async function downloadPreview(source: string, record: MlsGridRecord) {
     record.Media = [];
   }
 }
-async function fetchMediaForRecord(source: string, record: MlsGridRecord) {
-  const id = String(record.ListingId || record.ListingKey || '');
-  if (!id) { record.Media = []; return; }
-  const filter = "OriginatingSystemName eq '" + source + "' and MlgCanView eq true and ListingId eq '" + id.replace(/'/g, "''") + "'";
-  let page;
-  try {
-    // Fetch a URL for only this listing, then download it immediately. MLS Grid
-    // URLs are signed and single-use, so batching many URLs before downloading
-    // risks consuming/expiring them before their turn.
-    page = await fetchMLSGridPage(source, 'https://api.mlsgrid.com/v2/Property?' + new URLSearchParams({
-      '$filter': filter, '$expand': 'Media', '$top': '1'
-    }).toString(), true);
-  } catch (error) {
-    const e = error as Error & { status?: number; retryAfterMs?: number };
-    if (e.status === 429 || /: 429\b/.test(e.message || '')) {
-      throw new MLSGridRateLimitError(e.retryAfterMs || RATE_LIMIT_COOLDOWN_MS, e.message || 'MLS Grid returned HTTP 429');
-    }
-    throw error;
-  }
-  const match = (page.value || []).find((item: MlsGridRecord) => String(item.ListingId || item.ListingKey || '') === id);
-  record.Media = match && Array.isArray(match.Media) ? match.Media : [];
-}
 
 async function processBatch(records: StagedRecord[], existingById: Map<string, RESOProperty>) {
   const output: RESOProperty[] = [];
@@ -312,7 +290,10 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
       record.Media = existing!.Media;
     } else {
       try {
-        await fetchMediaForRecord(item.source, record);
+        // Use the same MLS Grid detail/media retrieval path as the working production site.
+        // This keeps media expansion, source-token selection, and CDN URLs consistent.
+        const freshListing = await fetchMLSGridLiveListing(id);
+        record.Media = freshListing?.Media || [];
         await downloadPreview(item.source, record);
       } catch (error) {
         if (error instanceof MLSGridRateLimitError) {
