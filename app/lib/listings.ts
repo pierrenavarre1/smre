@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
+import { listingSlug } from './listing-url';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
 import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, fetchMLSGridLiveListingWithRetry, isMLSGridConfigured } from './mlsgrid';
 
@@ -84,7 +85,7 @@ async function getListingUncached(id: string): Promise<RESOProperty | undefined>
   const decodedId = decodeURIComponent(id);
   const listings = dedupeListings(await readMLSCache());
   if (listings.length) {
-    const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
+    const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId || listingSlug(p) === decodedId);
     if (!listing) return undefined;
     if (isMLSGridConfigured()) {
       const live = await fetchMLSGridLiveListingWithRetry(decodedId).catch((error) => {
@@ -121,7 +122,7 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
   const decodedId = decodeURIComponent(id);
   const cached = unstable_cache(
     () => getListingUncached(decodedId),
-    ['smre-listing-detail-v5', decodedId],
+    ['smre-listing-detail-v6', decodedId],
     { revalidate: 300 }
   );
   return cached();
