@@ -361,7 +361,9 @@ async function downloadAndStoreMedia(source: string, records: MlsGridRecord[], e
       const key = await downloadWithRetry(job.photo);
       job.record.Media = key
         ? [{ ...job.photo, MediaURL: 'smre-blob:' + key }]
-        : [];
+        // If Blob storage/download fails, keep the original MLS media URL.
+        // The image route can fetch it on demand; removing Media hides the photo entirely.
+        : [job.photo];
     }
   });
 
