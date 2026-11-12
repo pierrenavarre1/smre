@@ -1,7 +1,7 @@
 import { mlsBlobPath } from './mls-blob-path';
 import { del, get, put } from '@vercel/blob';
 import type { RESOProperty, RESOMedia } from './mock-properties';
-import { fetchMLSGridPage, fetchMLSGridLiveListing, normalizeMLSGridProperty, dedupeListings } from './mlsgrid';
+import { fetchMLSGridPage, fetchMLSGridLiveListing, normalizeMLSGridProperty, dedupeListings, waitForMLSGridSlot } from './mlsgrid';
 import { readMLSCache, writeMLSCache } from './mls-store';
 
 type MlsGridRecord = Record<string, any>;
