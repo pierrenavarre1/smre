@@ -21,6 +21,7 @@ type SyncState = {
   cacheSeeded?: boolean;
   indexSeeded?: boolean;
   prioritySorted?: boolean;
+  priorityVersion?: number;
   startedAt: string;
   incremental?: boolean;
   sourceWatermarks?: Record<string, string>;
@@ -89,7 +90,7 @@ function syncPriority(record: MlsGridRecord) {
   const office = String(record.ListOfficeName || '').toLowerCase();
   const city = normalizeCity(record.City);
   const localOffice = /st\.?\s*mary['’]?s\s*real\s*estate/.test(office);
-  const localCity = ['st marys', 'saint marys', 'wamego'].includes(city);
+  const localCity = SERVICE_CITIES.has(city);
   const date = Date.parse(String(record.OriginalEntryTimestamp || record.OnMarketDate || record.ModificationTimestamp || '')) || 0;
   return { localOffice, localCity, date };
 }
@@ -415,7 +416,7 @@ export async function runIncrementalMLSGridSync() {
   if (state.phase === 'media') {
     // Sort staged records so the site's most relevant local listings receive
     // working preview images first. Preserve each processed result with its record.
-    if (!state.prioritySorted) {
+    if (state.priorityVersion !== 2) {
       for (const stagedPath of state.pagePaths) {
         const stagedPage = await readJson<StagePage>(stagedPath);
         if (!stagedPage) continue;
@@ -427,8 +428,8 @@ export async function runIncrementalMLSGridSync() {
           const ap = syncPriority(a.record.record);
           const bp = syncPriority(b.record.record);
           if (ap.localOffice !== bp.localOffice) return ap.localOffice ? -1 : 1;
-          if (ap.date !== bp.date) return bp.date - ap.date;
           if (ap.localCity !== bp.localCity) return ap.localCity ? -1 : 1;
+          if (ap.date !== bp.date) return bp.date - ap.date;
           return 0;
         });
         stagedPage.records = paired.map(item => item.record);
@@ -438,6 +439,7 @@ export async function runIncrementalMLSGridSync() {
       state.pageIndex = 0;
       state.recordIndex = 0;
       state.prioritySorted = true;
+      state.priorityVersion = 2;
       await writeJson(STATE_PATH, state);
       console.log('MLS sync prioritized local listings for preview images', { pages: state.pagePaths.length });
     }
