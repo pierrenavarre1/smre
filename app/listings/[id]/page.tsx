@@ -32,7 +32,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const firstPhoto = listing.Media.find(media => media.MediaCategory === 'Photo' && media.MediaURL);
   const imageUrl = firstPhoto && origin ? origin + '/api/mls-image?url=' + encodeURIComponent(firstPhoto.MediaURL) : undefined;
   const title = address + ' | ' + money.format(listing.ListPrice);
-  const description = (listing.PublicRemarks || ('View details, photos, and property information for ' + address + '.')).slice(0, 300);
+  const rawDescription = listing.PublicRemarks || ('View details, photos, and property information for ' + address + '.');
+  const description = rawDescription
+    .replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^)]+)\\)/g, '$1')
+    .replace(/\\*\\*|__|\\*|_|~~|`/g, '')
+    .replace(/\\s+/g, ' ')
+    .trim()
+    .slice(0, 300);
   return {
     title,
     description,
