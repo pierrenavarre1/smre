@@ -19,6 +19,7 @@ type SyncState = {
   lastCompletedAt?: string;
   blockedUntil?: string;
   cacheSeeded?: boolean;
+  indexSeeded?: boolean;
   prioritySorted?: boolean;
   startedAt: string;
   incremental?: boolean;
