@@ -34,9 +34,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const title = address + ' | ' + money.format(listing.ListPrice);
   const rawDescription = listing.PublicRemarks || ('View details, photos, and property information for ' + address + '.');
   const description = rawDescription
-    .replace(/\\[([^\\]]+)\\]\\((https?:\\/\\/[^)]+)\\)/g, '$1')
-    .replace(/\\*\\*|__|\\*|_|~~|`/g, '')
-    .replace(/\\s+/g, ' ')
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .replace(/\*/g, '')
+    .replace(/_/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 300);
   return {
