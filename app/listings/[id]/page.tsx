@@ -1,4 +1,7 @@
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
+import type { Metadata } from 'next';
+import { listingHref } from '../../lib/listing-url';
 import Link from 'next/link';
 import { getListing } from '../../lib/listings';
 import { MLSDisclosure, SourceBadge, MLS_OFFICE, MLS_PHONE } from '../../components/MLSDisclosure';
@@ -15,6 +18,41 @@ function formatListingDate(value?: string) {
   return Number.isFinite(parsed) ? date.format(new Date(parsed)) : value;
 }
 function DetailItem({label,value}:{label:string,value?:string|number}){if(value===undefined||value==='')return null;return <div className="detail-item"><span>{label}</span><strong>{value}</strong></div>}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await getListing(id);
+  if (!listing) return { title: 'Property not found' };
+  const address = [listing.StreetNumber, listing.StreetName, listing.City, listing.StateOrProvince, listing.PostalCode].filter(Boolean).join(' ');
+  const requestHeaders = await headers();
+  const host = requestHeaders.get('x-forwarded-host') || requestHeaders.get('host');
+  const protocol = requestHeaders.get('x-forwarded-proto') || 'https';
+  const origin = host ? protocol + '://' + host : undefined;
+  const canonical = listingHref(listing);
+  const firstPhoto = listing.Media.find(media => media.MediaCategory === 'Photo' && media.MediaURL);
+  const imageUrl = firstPhoto && origin ? origin + '/api/mls-image?url=' + encodeURIComponent(firstPhoto.MediaURL) : undefined;
+  const title = address + ' | ' + money.format(listing.ListPrice);
+  const description = (listing.PublicRemarks || ('View details, photos, and property information for ' + address + '.')).slice(0, 300);
+  return {
+    title,
+    description,
+    alternates: { canonical: origin ? origin + canonical : canonical },
+    openGraph: {
+      type: 'website',
+      url: origin ? origin + canonical : canonical,
+      title,
+      description,
+      siteName: 'St. Mary’s Real Estate',
+      ...(imageUrl ? { images: [{ url: imageUrl, alt: address }] } : {})
+    },
+    twitter: {
+      card: imageUrl ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      ...(imageUrl ? { images: [imageUrl] } : {})
+    }
+  };
+}
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
