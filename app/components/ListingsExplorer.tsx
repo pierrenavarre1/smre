@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { RESOProperty } from '../lib/mock-properties';
 import { compareListingPriority } from '../lib/listings';
+import { listingHref } from '../lib/listing-url';
 
 const PAGE_SIZE = 24;
 
@@ -37,6 +39,7 @@ function filtersFromUrl(): Partial<Filters> {
 }
 
 export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
+  const router = useRouter();
   const [filters, setFilters] = useState<Filters>(() => ({
     type: [],
     status: '',
@@ -170,13 +173,8 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
                   role="option"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
-                    setFilters((current) => ({
-                      ...current,
-                      address: `${p.StreetNumber} ${p.StreetName}, ${p.City}, ${p.StateOrProvince} ${p.PostalCode}`,
-                      city: '',
-                    }));
                     setAddressOpen(false);
-                    setPage(1);
+                    router.push(listingHref(p));
                   }}
                 >
                   <strong>{p.StreetNumber} {p.StreetName}</strong>
