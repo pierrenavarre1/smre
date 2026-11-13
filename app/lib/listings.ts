@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
+import { listingAddressSlug } from './listing-url';
 import { dedupeListings } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
@@ -72,7 +73,7 @@ export async function getListings(): Promise<RESOProperty[]> {
 async function getListingUncached(id: string): Promise<RESOProperty | undefined> {
   const decodedId = decodeURIComponent(id);
   const listings = dedupeListings(await readMLSCache());
-  const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
+  const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId || listingAddressSlug(p) === decodedId);
   if (listing) return listing;
   return process.env.NODE_ENV === 'development' ? getMockProperty(decodedId) : undefined;
 }
@@ -92,7 +93,7 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
 export async function getListingForMetadata(id: string): Promise<RESOProperty | undefined> {
   const decodedId = decodeURIComponent(id);
   const listings = dedupeListings(await readMLSCache());
-  return listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
+  return listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId || listingAddressSlug(p) === decodedId);
 }
 
 export type ListingFilters = { minPrice?:number; maxPrice?:number; beds?:number; propertyType?:string; source?:string; status?:string; sort?:string; };
