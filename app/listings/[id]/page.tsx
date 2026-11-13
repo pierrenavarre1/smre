@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getListing, getListingForMetadata } from '../../lib/listings';
+import { listingHref } from '../../lib/listing-url';
 import { MLSDisclosure, SourceBadge, MLS_OFFICE, MLS_PHONE } from '../../components/MLSDisclosure';
 import { ListingGallery } from '../../components/ListingGallery';
 import { ListingLeadButton } from '../../components/ListingLeadButton';
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       ? `${SITE_URL}/api/mls-image?url=${encodeURIComponent(photo.MediaURL)}`
       : photo.MediaURL;
   }
-  const url = `${SITE_URL}/listings/${encodeURIComponent(id)}`;
+  const url = `${SITE_URL}${listingHref(listing)}`;
   return {
     title,
     description,
