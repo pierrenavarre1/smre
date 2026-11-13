@@ -316,10 +316,16 @@ async function processBatch(records: StagedRecord[], existingById: Map<string, R
 
     const normalized = normalizeMLSGridProperty(record, item.source);
     if (!normalized.Media.length && existing?.Media.length) {
-      const preview = existing.Media.find(photo => photo.PreferredPhoto) || existing.Media[0];
-      if (modification === existingModification && preview && await imageExists(preview.MediaURL)) {
-        normalized.Media = [preview];
+      // A failed/temporarily throttled media refresh must never erase a working
+      // photo from the published cache. Keep valid provisioned CDN URLs or
+      // verified private Blob images until a replacement is successfully saved.
+      const retained: RESOMedia[] = [];
+      for (const photo of existing.Media) {
+        const durableCdn = isProvisionedCdnUrl(photo.MediaURL);
+        const storedBlob = photo.MediaURL.startsWith('smre-blob:') && await imageExists(photo.MediaURL);
+        if (durableCdn || storedBlob) retained.push(photo);
       }
+      if (retained.length) normalized.Media = retained;
     }
     output.push(normalized);
   }

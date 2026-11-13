@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { RESOProperty } from '../lib/mock-properties';
 import { SourceBadge } from './MLSDisclosure';
+import { listingHref } from '../lib/listing-url';
 
 const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 function formatListingDate(value?: string) {
@@ -17,7 +18,7 @@ export function ListingCard({ p }: { p: RESOProperty }) {
   const photoSrc = photo ? `/api/mls-image?url=${encodeURIComponent(photo)}&listingId=${encodeURIComponent(p.ListingId)}&index=0` : '';
 
   return (
-    <Link href={`/listings/${encodeURIComponent(p.ListingId)}`} className="listing-card">
+    <Link href={listingHref(p)} className="listing-card">
       <div className="card-image">
         {photoSrc ? (
           <img className="listing-card-photo" src={photoSrc} alt={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} loading="lazy" />

@@ -1,5 +1,5 @@
 import type { RESOProperty, RESOMedia, PropertyType, MLSSource } from './mock-properties';
-import { get, put } from '@vercel/blob';
+import { del, get, put } from '@vercel/blob';
 import { readMLSCache } from './mls-store';
 
 const API_BASE = process.env.MLSGRID_API_BASE_URL || 'https://api.mlsgrid.com/v2';
@@ -91,18 +91,58 @@ export function isMLSGridConfigured() {
   return sourceKeys().some(source => Boolean(sourceToken(source)));
 }
 
-const MIN_REQUEST_INTERVAL_MS = 1500;
-let lastRequestAt = 0;
-let mlsGridRequestQueue: Promise<void> = Promise.resolve();
+// Coordinate every MLS request across Vercel instances with a shared Blob lock.
+// An in-memory queue is not sufficient: separate serverless instances each have
+// their own queue and can collectively exceed the subscription's account limit.
+const MIN_REQUEST_INTERVAL_MS = 2500;
+const REQUEST_LOCK_PATH = 'mls/request-gate.lock';
+const REQUEST_STATE_PATH = 'mls/request-gate-state.json';
+const REQUEST_LOCK_TTL_MS = 15_000;
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function readRequestGate<T>(pathname: string): Promise<T | null> {
+  try {
+    const result = await get(pathname, { access: 'private', useCache: false });
+    if (!result || result.statusCode !== 200 || !result.stream) return null;
+    return JSON.parse(await new Response(result.stream).text()) as T;
+  } catch {
+    return null;
+  }
+}
 
 export async function waitForMLSGridSlot() {
-  const slot = mlsGridRequestQueue.then(async () => {
-    const wait = Math.max(0, MIN_REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt));
-    if (wait) await new Promise(resolve => setTimeout(resolve, wait));
-    lastRequestAt = Date.now();
-  });
-  mlsGridRequestQueue = slot.catch(() => undefined);
-  await slot;
+  const owner = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  let acquired = false;
+  for (let attempt = 0; attempt < 240; attempt++) {
+    try {
+      await put(REQUEST_LOCK_PATH, JSON.stringify({ owner, expiresAt: Date.now() + REQUEST_LOCK_TTL_MS }), {
+        access: 'private', allowOverwrite: false, cacheControlMaxAge: 0, contentType: 'application/json'
+      });
+      acquired = true;
+      break;
+    } catch {
+      const lock = await readRequestGate<{ owner: string; expiresAt: number }>(REQUEST_LOCK_PATH);
+      if (lock && lock.expiresAt <= Date.now()) {
+        try { await del(REQUEST_LOCK_PATH); } catch {}
+      }
+      await sleep(250);
+    }
+  }
+  if (!acquired) throw new Error('Timed out waiting for the shared MLS Grid request limiter.');
+
+  try {
+    const state = await readRequestGate<{ nextAllowedAt?: number }>(REQUEST_STATE_PATH);
+    const wait = Math.max(0, Number(state?.nextAllowedAt || 0) - Date.now());
+    if (wait) await sleep(wait);
+    await put(REQUEST_STATE_PATH, JSON.stringify({ nextAllowedAt: Date.now() + MIN_REQUEST_INTERVAL_MS }), {
+      access: 'private', allowOverwrite: true, cacheControlMaxAge: 0, contentType: 'application/json'
+    });
+  } finally {
+    const lock = await readRequestGate<{ owner: string }>(REQUEST_LOCK_PATH);
+    if (lock?.owner === owner) {
+      try { await del(REQUEST_LOCK_PATH); } catch {}
+    }
+  }
 }
 
 export async function fetchMLSGridPage(
