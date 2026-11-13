@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { isAdmin } from '../../../../lib/admin-auth';
-import { dedupeListings, fetchMLSGridListingsByNumber } from '../../../../lib/mlsgrid';
-import { readMLSCache, writeMLSCache } from '../../../../lib/mls-store';
-import type { RESOProperty } from '../../../../lib/mock-properties';
+import { isAdmin } from '../../../lib/admin-auth';
+import { dedupeListings, fetchMLSGridListingsByNumber } from '../../../lib/mlsgrid';
+import { readMLSCache, writeMLSCache } from '../../../lib/mls-store';
+import type { RESOProperty } from '../../../lib/mock-properties';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
