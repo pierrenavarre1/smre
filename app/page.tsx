@@ -9,7 +9,7 @@ import { HomeSearch } from './components/HomeSearch';
 import { MLSDisclosure } from './components/MLSDisclosure';
 import { getAdminData } from './lib/admin-store';
 
-const heroImage = '/images/Hero for SMRE Web.png';
+const fallbackHeroImage = '/images/Hero for SMRE Web.png';
 const fallbackAreaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 
 export const revalidate = 60;
@@ -22,6 +22,7 @@ export default async function Home(){
   const headlineKicker=headlineParts.shift()?.trim()||'REAL ESTATE,';
   const headlineMain=headlineParts.join(',').trim()||'Close to Home.';
   const areaImage=settings.localImage||fallbackAreaImage;
+  const heroImage=settings.heroImage||fallbackHeroImage;
   return <>
     <style>{`
       .home-hero-actions{display:flex;gap:10px;margin:-10px 0 30px;flex-wrap:wrap}
@@ -45,7 +46,7 @@ export default async function Home(){
       }
     `}</style>
     <section className="home-hero">
-      <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" className="home-hero-image" />
+      <Image src={heroImage} alt="Kansas countryside and open fields" fill priority sizes="100vw" unoptimized className="home-hero-image" />
       <div className="home-hero-overlay" />
       <div className="container home-hero-inner">
         <h1><span className="hero-heading-kicker">{headlineKicker}{headlineParts.length||settings.homepageHeadline.includes(",")?",":""}</span><span className="hero-heading-main">{headlineMain}</span></h1>
