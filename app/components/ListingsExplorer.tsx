@@ -9,7 +9,9 @@ import { compareListingPriority } from '../lib/listings';
 const PAGE_SIZE = 24;
 
 const normalizeSearch = (value: string) =>
-  value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  value.toLowerCase()
+    .replace(/\b(northwest|northeast|southwest|southeast|north|south|east|west|nw|ne|sw|se)\b/g, '')
+    .replace(/[^a-z0-9]/g, '');
 
 type Filters = {
   type: string[];
