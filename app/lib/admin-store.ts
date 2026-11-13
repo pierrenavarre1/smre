@@ -8,7 +8,7 @@ export type AdminLead={
  status:'new'|'contacted'|'closed';assignedAgent?:string;notes?:string;lastContactedAt?:string;nextFollowUpAt?:string;
 };
 export type SiteSettings={
- phone:string;address:string;email:string;homepageHeadline:string;officeHours:string;facebook:string;instagram:string;youtube:string;googleBusiness:string;
+ heroImage:string;phone:string;address:string;email:string;homepageHeadline:string;officeHours:string;facebook:string;instagram:string;youtube:string;googleBusiness:string;
  defaultTitle:string;defaultDescription:string;ogImage:string;leadNotificationEmail:string;
  heroEyebrow:string;heroDescription:string;localHeading:string;localDescription:string;localImage:string;featuredCount:number;
 };
@@ -18,7 +18,7 @@ const PATH='admin/site-data.json';
 
 const seed:AdminData={
  settings:{
-  phone:'(785) 465-2543',address:'512 W Bertrand Ave, St Marys, KS 66536',email:'admin@smre.info',homepageHeadline:'REAL ESTATE, Close to Home.',
+  heroImage:'',phone:'(785) 465-2543',address:'512 W Bertrand Ave, St Marys, KS 66536',email:'admin@smre.info',homepageHeadline:'REAL ESTATE, Close to Home.',
   officeHours:'By appointment',facebook:'',instagram:'',youtube:'',googleBusiness:'',
   defaultTitle:'St. Mary’s Real Estate | SMRE',defaultDescription:'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.',ogImage:'',leadNotificationEmail:'admin@smre.info',
   heroEyebrow:'LOCAL REAL ESTATE',heroDescription:'Local knowledge, straightforward advice, and real estate experience across Northeast Kansas.',
