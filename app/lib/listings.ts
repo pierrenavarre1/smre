@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
-import { dedupeListings } from './mlsgrid';
+import { dedupeListings, fetchMLSGridLiveIndex, isMLSGridConfigured } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
   return {
