@@ -555,6 +555,18 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
   return record ? normalizeMLSGridProperty(record, source) : undefined;
 }
 
+export async function fetchMLSGridListingsByNumber(mlsNumber: string): Promise<RESOProperty[]> {
+  const number = mlsNumber.trim();
+  if (!number || number.length > 40) return [];
+  const matches: RESOProperty[] = [];
+  for (const source of sourceKeys()) {
+    if (!sourceToken(source)) continue;
+    const listing = await fetchMLSGridLiveListing(source + ':' + number);
+    if (listing && isInServiceArea({ City: listing.City })) matches.push(listing);
+  }
+  return matches;
+}
+
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
   const existingListings = await readMLSCache();
   const existingById = new Map(existingListings.map(listing => [listing.ListingId, listing]));
