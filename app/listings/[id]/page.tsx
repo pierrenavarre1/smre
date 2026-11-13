@@ -7,7 +7,7 @@ import { ListingGallery } from '../../components/ListingGallery';
 import { ListingLeadButton } from '../../components/ListingLeadButton';
 import { ListingMap } from '../../components/ListingMap';
 
-const SITE_URL = 'https://www.smre.info';
+const SITE_URL = process.env.VERCEL_ENV === 'production' ? 'https://www.smre.info' : `https://${process.env.VERCEL_URL || 'www.smre.info'}`;
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
