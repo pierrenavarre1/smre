@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isAdmin } from '../../../lib/admin-auth';
-import { dedupeListings, fetchMLSGridListingsByNumber } from '../../../lib/mlsgrid';
+import { dedupeListings, lookupMLSGridListingsByNumber } from '../../../lib/mlsgrid';
 import { readMLSCache, writeMLSCache } from '../../../lib/mls-store';
 import type { RESOProperty } from '../../../lib/mock-properties';
 
@@ -32,13 +32,28 @@ export async function POST(request: Request) {
   }
 
   try {
-    const matches = await fetchMLSGridListingsByNumber(mlsNumber);
+    const lookup = await lookupMLSGridListingsByNumber(mlsNumber);
+    const matches = lookup.matches;
     if (!matches.length) {
-      return NextResponse.json({ error: 'No matching active or pending listing was found in the configured MLS feeds and service area.' }, { status: 404 });
+      if (lookup.outsideServiceArea.length) {
+        return NextResponse.json({
+          error: 'The listing was found in MLS Grid, but its city is outside the website service area. No cache changes were made.',
+          details: lookup.outsideServiceArea.map(item => ({ city: item.city, source: item.source }))
+        }, { status: 404 });
+      }
+      if (lookup.notEligible.length) {
+        return NextResponse.json({
+          error: 'The listing was found in MLS Grid, but it is not eligible for display (it may be private, withdrawn, closed, or otherwise unavailable). No cache changes were made.',
+          details: lookup.notEligible.map(item => ({ status: item.status, source: item.source }))
+        }, { status: 404 });
+      }
+      return NextResponse.json({
+        error: 'No listing with that MLS number was found in the configured MLS feeds. It may not have reached MLS Grid yet. No cache changes were made.'
+      }, { status: 404 });
     }
     if (matches.length > 1) {
       return NextResponse.json({
-        error: 'This MLS number matched more than one feed. No cache changes were made.',
+        error: 'This MLS number matched more than one listing across the configured feeds. No cache changes were made.',
         matches: matches.map(item => ({ listingId: item.ListingId, source: item.MlsSource, address: [item.StreetNumber, item.StreetName, item.City].filter(Boolean).join(' ') }))
       }, { status: 409 });
     }
