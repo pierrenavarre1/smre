@@ -560,16 +560,18 @@ export type MLSNumberLookupResult = {
 };
 
 export async function lookupMLSGridListingsByNumber(mlsNumber: string): Promise<MLSNumberLookupResult> {
-  const number = mlsNumber.trim().replace(/'/g, "''");
+  const enteredNumber = mlsNumber.trim().replace(/'/g, "''");
   const result: MLSNumberLookupResult = { matches: [], outsideServiceArea: [], notEligible: [] };
-  if (!number || number.length > 40) return result;
+  if (!enteredNumber || enteredNumber.length > 40) return result;
 
   for (const source of sourceKeys()) {
     if (!sourceToken(source)) continue;
-    // ListingId is the RESO field carrying the MLS-assigned number. Also allow
-    // a source/feed prefix before the entered number, while keeping the query
-    // scoped to one originating system to avoid cross-feed false matches.
-    const filter = "OriginatingSystemName eq '" + source + "' and ListingId eq '" + number + "'";
+    // MLS Grid prefixes ListingId with the source MLS key prefix:
+    // SUN for Sunflower MLS and FHR for Flint Hills MLS.
+    const prefix = source === 'sunflower' ? 'SUN' : 'FHR';
+    const number = enteredNumber.replace(new RegExp('^' + prefix + '_?', 'i'), '');
+    const listingId = prefix + number;
+    const filter = "OriginatingSystemName eq '" + source + "' and ListingId eq '" + listingId + "'";
     const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
       '$filter': filter,
       '$expand': 'Media',
