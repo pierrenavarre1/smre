@@ -555,16 +555,50 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
   return record ? normalizeMLSGridProperty(record, source) : undefined;
 }
 
-export async function fetchMLSGridListingsByNumber(mlsNumber: string): Promise<RESOProperty[]> {
-  const number = mlsNumber.trim();
-  if (!number || number.length > 40) return [];
-  const matches: RESOProperty[] = [];
+export type MLSNumberLookupResult = {
+  matches: RESOProperty[];
+  outsideServiceArea: Array<{ source: string; city: string; listingId: string }>;
+  notEligible: Array<{ source: string; status: string; listingId: string }>;
+};
+
+export async function lookupMLSGridListingsByNumber(mlsNumber: string): Promise<MLSNumberLookupResult> {
+  const number = mlsNumber.trim().replace(/'/g, "''");
+  const result: MLSNumberLookupResult = { matches: [], outsideServiceArea: [], notEligible: [] };
+  if (!number || number.length > 40) return result;
+
   for (const source of sourceKeys()) {
     if (!sourceToken(source)) continue;
-    const listing = await fetchMLSGridLiveListing(source + ':' + number);
-    if (listing && isInServiceArea({ City: listing.City })) matches.push(listing);
+    // ListingId is the RESO field carrying the MLS-assigned number. Also allow
+    // a source/feed prefix before the entered number, while keeping the query
+    // scoped to one originating system to avoid cross-feed false matches.
+    const idFilter = "ListingId eq '" + number + "' or endswith(ListingId, '" + number + "')";
+    const filter = "OriginatingSystemName eq '" + source + "' and (" + idFilter + ")";
+    const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
+      '$filter': filter,
+      '$expand': 'Media',
+      '$top': '20'
+    }).toString(), true);
+
+    for (const record of page.value || []) {
+      const listingId = String(record.ListingId || record.ListingKey || '');
+      const status = String(record.StandardStatus || '');
+      if (record.MlgCanView !== true || !['Active', 'Pending'].includes(status)) {
+        result.notEligible.push({ source, status: status || 'Unknown', listingId });
+        continue;
+      }
+      const listing = normalizeMLSGridProperty(record, source);
+      if (!isInServiceArea({ City: listing.City })) {
+        result.outsideServiceArea.push({ source, city: listing.City, listingId });
+        continue;
+      }
+      result.matches.push(listing);
+    }
   }
-  return matches;
+  return result;
+}
+
+export async function fetchMLSGridListingsByNumber(mlsNumber: string): Promise<RESOProperty[]> {
+  return (await lookupMLSGridListingsByNumber(mlsNumber)).matches;
 }
 
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
