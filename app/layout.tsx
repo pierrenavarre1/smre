@@ -14,6 +14,7 @@ import { MobileMenu } from './components/MobileMenu';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.smre.info'),
   title: {
     default: 'St. Mary’s Real Estate | SMRE',
     template: '%s | St. Mary’s Real Estate'
