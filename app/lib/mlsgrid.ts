@@ -173,9 +173,7 @@ export async function fetchMLSGridPage(
 
   if (!response.ok) {
     let detail = '';
-    if (response.status === 429) {
-      try { detail = (await response.text()).slice(0, 500); } catch {}
-    }
+    try { detail = (await response.text()).slice(0, 500); } catch {}
     const error = new Error('MLS Grid request failed for ' + source + ': ' + response.status + ' ' + response.statusText + (detail ? ' - ' + detail : '')) as Error & { status?: number; retryAfterMs?: number };
     error.status = response.status;
     const retryAfter = Number(response.headers.get('retry-after') || '');
@@ -571,8 +569,7 @@ export async function lookupMLSGridListingsByNumber(mlsNumber: string): Promise<
     // ListingId is the RESO field carrying the MLS-assigned number. Also allow
     // a source/feed prefix before the entered number, while keeping the query
     // scoped to one originating system to avoid cross-feed false matches.
-    const idFilter = "ListingId eq '" + number + "' or endswith(ListingId, '" + number + "')";
-    const filter = "OriginatingSystemName eq '" + source + "' and (" + idFilter + ")";
+    const filter = "OriginatingSystemName eq '" + source + "' and ListingId eq '" + number + "'";
     const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
       '$filter': filter,
       '$expand': 'Media',
