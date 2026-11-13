@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const location = [listing.City, listing.StateOrProvince || 'KS', listing.PostalCode].filter(Boolean).join(', ');
   const title = [address, location].filter(Boolean).join(', ');
   const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(listing.ListPrice);
-  const remarks = String(listing.PublicRemarks || '').replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim();
+  const remarks = String(listing.PublicRemarks || '').replace(/<[^>]*>/g, ' ').replace(/\\*\\*/g, '').replace(/\\s+/g, ' ').trim();
   const description = [price, remarks].filter(Boolean).join(' · ').slice(0, 240) || `View this property in ${location} with St. Mary’s Real Estate.`;
   const photo = listing.Media?.find(item => item.PreferredPhoto) || listing.Media?.[0];
   let image: string | undefined;
