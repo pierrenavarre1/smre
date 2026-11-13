@@ -10,7 +10,7 @@ type Settings={phone:string;address:string;email:string;homepageHeadline:string;
 type Data={settings:Settings;agents:Agent[];guides:Guide[];leads:Lead[];testimonials:Testimonial[];updatedAt?:string};
 type Media={url:string;pathname:string;size?:number;uploadedAt?:string};
 
-const tabs=[['dashboard','Dashboard'],['analytics','Analytics'],['leads','Leads'],['agents','Agents'],['guides','Guides'],['testimonials','Testimonials'],['homepage','Homepage'],['media','Media'],['settings','Settings']] as const;
+const tabs=[['dashboard','Dashboard'],['analytics','Analytics'],['leads','Leads'],['agents','Agents'],['guides','Guides'],['testimonials','Testimonials'],['homepage','Homepage'],['media','Media'],['mls','MLS Tools'],['settings','Settings']] as const;
 
 export function AdminDashboard(){
  const [data,setData]=useState<Data|null>(null);const [section,setSection]=useState('dashboard');const [message,setMessage]=useState('');const [selectedLead,setSelectedLead]=useState<string|null>(null);
@@ -31,9 +31,45 @@ export function AdminDashboard(){
    {section==='testimonials'&&<Testimonials data={data} save={save}/>}
    {section==='homepage'&&<Homepage data={data} save={save}/>}
    {section==='media'&&<Media/>}
+   {section==='mls'&&<MLSLookup/>}
    {section==='settings'&&<Settings data={data} save={save}/>}
   </section>
  </div></main>;
+}
+
+
+function MLSLookup(){
+ const [mlsNumber,setMlsNumber]=useState('');
+ const [busy,setBusy]=useState(false);
+ const [message,setMessage]=useState('');
+ const [result,setResult]=useState<{address:string;price:number;status:string;source:string;photoCount:number;photosRefreshed:boolean;listingId:string}|null>(null);
+ async function lookup(){
+  const value=mlsNumber.trim();
+  if(!value){setMessage('Enter an MLS number.');return;}
+  setBusy(true);setMessage('Searching both MLS feeds…');setResult(null);
+  try{
+   const response=await fetch('/api/admin/mls-lookup',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({mlsNumber:value})});
+   const data=await response.json();
+   if(!response.ok) throw new Error(data.error||'MLS lookup failed.');
+   setResult(data.listing);setMessage(data.message||'Listing updated.');
+  }catch(error){setMessage(error instanceof Error?error.message:'MLS lookup failed.');}
+  finally{setBusy(false);}
+ }
+ return <div className="admin-settings">
+  <div className="admin-panel">
+   <p className="eyebrow">MLS GRID</p><h2>Find or refresh a listing</h2>
+   <p className="admin-muted">Enter the MLS number to pull the latest listing details from Sunflower MLS and FHAR MLS and update the website cache. This uses the same shared request limiter as scheduled syncs.</p>
+   <label>MLS number<input value={mlsNumber} onChange={e=>setMlsNumber(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!busy)lookup();}} placeholder="Enter MLS number"/></label>
+   <button className="button button-dark" onClick={lookup} disabled={busy}>{busy?'Searching…':'Pull listing'}</button>
+   {message&&<p className="admin-muted" role="status">{message}</p>}
+   {result&&<div className="admin-panel" style={{marginTop:16}}>
+    <strong>{result.address}</strong>
+    <p>MLS {result.listingId} · {result.source}</p>
+    <p>${result.price.toLocaleString()} · {result.status}</p>
+    <p>{result.photoCount} saved photo{result.photoCount===1?'':'s'}{result.photosRefreshed?' · gallery refreshed from CDN':' · existing saved photos retained'}</p>
+   </div>}
+  </div>
+ </div>;
 }
 
 function Dashboard({data,setSection}:{data:Data;setSection:(s:string)=>void}){
