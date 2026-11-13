@@ -1,10 +1,53 @@
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getListing } from '../../lib/listings';
+import { getListing, getListingForMetadata } from '../../lib/listings';
 import { MLSDisclosure, SourceBadge, MLS_OFFICE, MLS_PHONE } from '../../components/MLSDisclosure';
 import { ListingGallery } from '../../components/ListingGallery';
 import { ListingLeadButton } from '../../components/ListingLeadButton';
 import { ListingMap } from '../../components/ListingMap';
+
+const SITE_URL = 'https://www.smre.info';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await getListingForMetadata(id);
+  if (!listing) return { title: 'Property Listing', description: 'View property listings from St. Mary’s Real Estate.' };
+
+  const address = [listing.StreetNumber, listing.StreetName].filter(Boolean).join(' ');
+  const location = [listing.City, listing.StateOrProvince || 'KS', listing.PostalCode].filter(Boolean).join(', ');
+  const title = [address, location].filter(Boolean).join(', ');
+  const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(listing.ListPrice);
+  const remarks = String(listing.PublicRemarks || '').replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim();
+  const description = [price, remarks].filter(Boolean).join(' · ').slice(0, 240) || `View this property in ${location} with St. Mary’s Real Estate.`;
+  const photo = listing.Media?.find(item => item.PreferredPhoto) || listing.Media?.[0];
+  let image: string | undefined;
+  if (photo?.MediaURL) {
+    image = photo.MediaURL.startsWith('smre-blob:')
+      ? `${SITE_URL}/api/mls-image?url=${encodeURIComponent(photo.MediaURL)}`
+      : photo.MediaURL;
+  }
+  const url = `${SITE_URL}/listings/${encodeURIComponent(id)}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      url,
+      siteName: 'St. Mary’s Real Estate',
+      title,
+      description,
+      ...(image ? { images: [{ url: image, width: 1200, height: 630, alt: title }] } : {})
+    },
+    twitter: {
+      card: image ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      ...(image ? { images: [image] } : {})
+    }
+  };
+}
 
 const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 const number = new Intl.NumberFormat('en-US');
