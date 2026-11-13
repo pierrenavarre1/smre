@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getListing, getListingForMetadata } from '../../lib/listings';
+import { fetchFreshMediaForListing } from '../../lib/mlsgrid';
 import { listingHref } from '../../lib/listing-url';
 import { MLSDisclosure, SourceBadge, MLS_OFFICE, MLS_PHONE } from '../../components/MLSDisclosure';
 import { ListingGallery } from '../../components/ListingGallery';
@@ -64,7 +65,10 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const p = await getListing(id);
   if (!p) notFound();
-  const photos=p.Media.filter(m=>m.MediaCategory==='Photo');
+  // Detail records in the shared listing cache intentionally keep only one preview photo.
+  // Retrieve the full, ordered media list here, using the shared MLS request limiter.
+  const fullMedia = await fetchFreshMediaForListing(p);
+  const photos=fullMedia.filter(m=>m.MediaCategory==='Photo');
   const baths=(p.BathroomsTotalInteger || p.BathroomsFull || 0)+(p.BathroomsHalf?0.5:0);
   const acreage=p.LotSizeAcres || (p.LotSizeSqFt ? p.LotSizeSqFt/43560 : 0);
   return <section className="section container detail">
