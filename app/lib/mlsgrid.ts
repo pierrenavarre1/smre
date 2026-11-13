@@ -755,7 +755,12 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
     PropertyType: propertyType(record.PropertyType),
     PropertySubType: firstString(record.PropertySubType) || '',
     StreetNumber: firstString(record.StreetNumber) || '',
-    StreetName: firstString(record.StreetName) || '',
+    StreetName: [
+      firstString(record.StreetDirPrefix),
+      firstString(record.StreetName),
+      firstString(record.StreetSuffix),
+      firstString(record.StreetDirSuffix)
+    ].filter(Boolean).join(' ') || '',
     City: firstString(record.City) || '',
     StateOrProvince: firstString(record.StateOrProvince) || 'KS',
     PostalCode: firstString(record.PostalCode) || '',
