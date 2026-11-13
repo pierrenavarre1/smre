@@ -173,9 +173,7 @@ export async function fetchMLSGridPage(
 
   if (!response.ok) {
     let detail = '';
-    if (response.status === 429) {
-      try { detail = (await response.text()).slice(0, 500); } catch {}
-    }
+    try { detail = (await response.text()).slice(0, 500); } catch {}
     const error = new Error('MLS Grid request failed for ' + source + ': ' + response.status + ' ' + response.statusText + (detail ? ' - ' + detail : '')) as Error & { status?: number; retryAfterMs?: number };
     error.status = response.status;
     const retryAfter = Number(response.headers.get('retry-after') || '');
@@ -555,6 +553,53 @@ export async function fetchMLSGridLiveListing(internalId: string): Promise<RESOP
   return record ? normalizeMLSGridProperty(record, source) : undefined;
 }
 
+export type MLSNumberLookupResult = {
+  matches: RESOProperty[];
+  outsideServiceArea: Array<{ source: string; city: string; listingId: string }>;
+  notEligible: Array<{ source: string; status: string; listingId: string }>;
+};
+
+export async function lookupMLSGridListingsByNumber(mlsNumber: string): Promise<MLSNumberLookupResult> {
+  const enteredNumber = mlsNumber.trim().replace(/'/g, "''");
+  const result: MLSNumberLookupResult = { matches: [], outsideServiceArea: [], notEligible: [] };
+  if (!enteredNumber || enteredNumber.length > 40) return result;
+
+  for (const source of sourceKeys()) {
+    if (!sourceToken(source)) continue;
+    // MLS Grid prefixes ListingId with the source MLS key prefix:
+    // SUN for Sunflower MLS and FHR for Flint Hills MLS.
+    const prefix = source === 'sunflower' ? 'SUN' : 'FHR';
+    const number = enteredNumber.replace(new RegExp('^' + prefix + '_?', 'i'), '');
+    const listingId = prefix + number;
+    const filter = "OriginatingSystemName eq '" + source + "' and ListingId eq '" + listingId + "'";
+    const page = await fetchMLSGridPage(source, API_BASE + '/Property?' + new URLSearchParams({
+      '$filter': filter,
+      '$expand': 'Media',
+      '$top': '20'
+    }).toString(), true);
+
+    for (const record of page.value || []) {
+      const listingId = String(record.ListingId || record.ListingKey || '');
+      const status = String(record.StandardStatus || '');
+      if (record.MlgCanView !== true || !['Active', 'Pending'].includes(status)) {
+        result.notEligible.push({ source, status: status || 'Unknown', listingId });
+        continue;
+      }
+      const listing = normalizeMLSGridProperty(record, source);
+      if (!isInServiceArea({ City: listing.City })) {
+        result.outsideServiceArea.push({ source, city: listing.City, listingId });
+        continue;
+      }
+      result.matches.push(listing);
+    }
+  }
+  return result;
+}
+
+export async function fetchMLSGridListingsByNumber(mlsNumber: string): Promise<RESOProperty[]> {
+  return (await lookupMLSGridListingsByNumber(mlsNumber)).matches;
+}
+
 export async function fetchMLSGridListings(): Promise<RESOProperty[]> {
   const existingListings = await readMLSCache();
   const existingById = new Map(existingListings.map(listing => [listing.ListingId, listing]));
@@ -710,7 +755,12 @@ export function normalizeMLSGridProperty(record: MlsGridRecord, source = 'sunflo
     PropertyType: propertyType(record.PropertyType),
     PropertySubType: firstString(record.PropertySubType) || '',
     StreetNumber: firstString(record.StreetNumber) || '',
-    StreetName: firstString(record.StreetName) || '',
+    StreetName: [
+      firstString(record.StreetDirPrefix),
+      firstString(record.StreetName),
+      firstString(record.StreetSuffix),
+      firstString(record.StreetDirSuffix)
+    ].filter(Boolean).join(' ') || '',
     City: firstString(record.City) || '',
     StateOrProvince: firstString(record.StateOrProvince) || 'KS',
     PostalCode: firstString(record.PostalCode) || '',

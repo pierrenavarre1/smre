@@ -1,9 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { RESOProperty } from '../lib/mock-properties';
+import { listingHref } from '../lib/listing-url';
 
 export function HomeSearch({ items }: { items: RESOProperty[] }) {
+  const router = useRouter();
   const [address, setAddress] = useState('');
   const [open, setOpen] = useState(false);
 
@@ -47,7 +50,7 @@ export function HomeSearch({ items }: { items: RESOProperty[] }) {
                 role="option"
                 key={p.ListingId}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => { setAddress(selectedAddress(p)); setOpen(false); }}
+                onClick={() => { setOpen(false); router.push(listingHref(p)); }}
               >
                 <strong>{p.StreetNumber} {p.StreetName}</strong>
                 <span>{p.City}, {p.StateOrProvince} {p.PostalCode}</span>
