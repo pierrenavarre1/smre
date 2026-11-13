@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import { mockProperties, getMockProperty, type RESOProperty } from './mock-properties';
 import { readMLSCache, readMLSSummaryCache } from './mls-store';
-import { dedupeListings, fetchFreshMediaForListing, fetchMLSGridLiveIndex, fetchMLSGridLiveListing, fetchMLSGridLiveListingWithRetry, isMLSGridConfigured } from './mlsgrid';
+import { dedupeListings } from './mlsgrid';
 
 function toListingSummary(listing: RESOProperty): RESOProperty {
   return {
@@ -77,37 +77,8 @@ export async function getListings(): Promise<RESOProperty[]> {
 async function getListingUncached(id: string): Promise<RESOProperty | undefined> {
   const decodedId = decodeURIComponent(id);
   const listings = dedupeListings(await readMLSCache());
-  if (listings.length) {
-    const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
-    if (!listing) return undefined;
-    if (isMLSGridConfigured()) {
-      const live = await fetchMLSGridLiveListingWithRetry(decodedId).catch((error) => {
-        console.error('Live MLS listing refresh failed:', error);
-        return undefined;
-      });
-      const refreshed = live ? {
-        ...listing,
-        ListAgentFullName: live.ListAgentFullName || listing.ListAgentFullName,
-        ListAgentEmail: live.ListAgentEmail || listing.ListAgentEmail,
-        ListAgentDirectPhone: live.ListAgentDirectPhone || listing.ListAgentDirectPhone,
-        ListOfficeName: live.ListOfficeName || listing.ListOfficeName,
-        ListOfficeEmail: live.ListOfficeEmail || listing.ListOfficeEmail,
-        ListOfficePhone: live.ListOfficePhone || listing.ListOfficePhone
-      } : listing;
-      // The live detail request already expands the complete Media collection.
-      // Reuse it directly instead of discarding it and making a second request.
-      const detailMedia = live?.Media?.length ? live.Media : await fetchFreshMediaForListing(refreshed);
-      return { ...refreshed, Media: detailMedia };
-    }
-    return listing;
-  }
-  if (isMLSGridConfigured()) {
-    try {
-      return await fetchMLSGridLiveListing(decodedId);
-    } catch (error) {
-      console.error('Live MLS listing detail fallback failed:', error);
-    }
-  }
+  const listing = listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
+  if (listing) return listing;
   return process.env.NODE_ENV === 'development' ? getMockProperty(decodedId) : undefined;
 }
 
@@ -115,10 +86,18 @@ export async function getListing(id: string): Promise<RESOProperty | undefined> 
   const decodedId = decodeURIComponent(id);
   const cached = unstable_cache(
     () => getListingUncached(decodedId),
-    ['smre-listing-detail-v5', decodedId],
+    ['smre-listing-detail-v6', decodedId],
     { revalidate: 300 }
   );
   return cached();
+}
+
+// Metadata crawlers must read the persisted listing cache only. They must never
+// initiate a live MLS Grid request just because Facebook or another bot visits.
+export async function getListingForMetadata(id: string): Promise<RESOProperty | undefined> {
+  const decodedId = decodeURIComponent(id);
+  const listings = dedupeListings(await readMLSCache());
+  return listings.find(p => p.ListingId === decodedId || p.ListingKey === decodedId);
 }
 
 export type ListingFilters = { minPrice?:number; maxPrice?:number; beds?:number; propertyType?:string; source?:string; status?:string; sort?:string; };
