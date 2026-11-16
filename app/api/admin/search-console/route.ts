@@ -1,37 +1,85 @@
 import {NextRequest,NextResponse} from 'next/server';
-import {createSign} from 'crypto';
 import {isAdmin} from '../../../lib/admin-auth';
 
 export const dynamic='force-dynamic';
-function b64(value:string|Buffer){return Buffer.from(value).toString('base64url');}
-async function accessToken(){
- const email=process.env.GSC_CLIENT_EMAIL;
- const key=(process.env.GSC_PRIVATE_KEY||'').replace(/\\n/g,'\n');
- if(!email||!key)return null;
- const now=Math.floor(Date.now()/1000);
- const unsigned=b64(JSON.stringify({alg:'RS256',typ:'JWT'}))+'.'+b64(JSON.stringify({iss:email,scope:'https://www.googleapis.com/auth/webmasters.readonly',aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+3600}));
- const signer=createSign('RSA-SHA256');signer.update(unsigned);signer.end();
- const assertion=unsigned+'.'+signer.sign(key,'base64url');
- const response=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion}),cache:'no-store'});
- if(!response.ok)throw new Error('Google authorization failed: '+(await response.text()).slice(0,500));
- const data=await response.json();return String(data.access_token||'');
+
+type TokenResponse={access_token?:string;error?:string;error_description?:string};
+async function googleAccessToken(request:NextRequest){
+ const projectNumber=process.env.GCP_PROJECT_NUMBER;
+ const poolId=process.env.GCP_WORKLOAD_IDENTITY_POOL_ID;
+ const providerId=process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID;
+ const serviceAccount=process.env.GCP_SERVICE_ACCOUNT_EMAIL;
+ const oidcToken=request.headers.get('x-vercel-oidc-token')||process.env.VERCEL_OIDC_TOKEN;
+ if(!projectNumber||!poolId||!providerId||!serviceAccount||!oidcToken){
+  const missing=[
+   !projectNumber&&'GCP_PROJECT_NUMBER',
+   !poolId&&'GCP_WORKLOAD_IDENTITY_POOL_ID',
+   !providerId&&'GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID',
+   !serviceAccount&&'GCP_SERVICE_ACCOUNT_EMAIL',
+   !oidcToken&&'Vercel OIDC token (x-vercel-oidc-token)'
+  ].filter(Boolean);
+  throw new Error('Workload Identity Federation is not configured: '+missing.join(', '));
+ }
+ const audience='//iam.googleapis.com/projects/'+projectNumber+'/locations/global/workloadIdentityPools/'+poolId+'/providers/'+providerId;
+ const exchange=await fetch('https://sts.googleapis.com/v1/token',{
+  method:'POST',
+  headers:{'Content-Type':'application/x-www-form-urlencoded'},
+  body:new URLSearchParams({
+   grant_type:'urn:ietf:params:oauth:grant-type:token-exchange',
+   audience,
+   requested_token_type:'urn:ietf:params:oauth:token-type:access_token',
+   subject_token_type:'urn:ietf:params:oauth:token-type:jwt',
+   subject_token:oidcToken,
+   scope:'https://www.googleapis.com/auth/cloud-platform'
+  }),
+  cache:'no-store'
+ });
+ const exchangeData=await exchange.json() as TokenResponse;
+ if(!exchange.ok||!exchangeData.access_token)throw new Error('Google STS token exchange failed: '+(exchangeData.error_description||exchangeData.error||exchange.status));
+ const impersonationUrl='https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/'+encodeURIComponent(serviceAccount)+':generateAccessToken';
+ const impersonation=await fetch(impersonationUrl,{
+  method:'POST',
+  headers:{Authorization:'Bearer '+exchangeData.access_token,'Content-Type':'application/json'},
+  body:JSON.stringify({scope:['https://www.googleapis.com/auth/webmasters.readonly'],lifetime:'3600s'}),
+  cache:'no-store'
+ });
+ const impersonationData=await impersonation.json() as TokenResponse;
+ if(!impersonation.ok||!impersonationData.access_token)throw new Error('Google service-account impersonation failed: '+(impersonationData.error_description||impersonationData.error||impersonation.status)+'. Check the service account Workload Identity User binding.');
+ return impersonationData.access_token;
 }
+
 async function query(token:string,site:string,startDate:string,endDate:string,dimensions:string[]){
  const url='https://www.googleapis.com/webmasters/v3/sites/'+encodeURIComponent(site)+'/searchAnalytics/query';
- const response=await fetch(url,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({startDate,endDate,dimensions,rowLimit:50}),cache:'no-store'});
+ const response=await fetch(url,{
+  method:'POST',
+  headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+  body:JSON.stringify({startDate,endDate,dimensions,rowLimit:50}),
+  cache:'no-store'
+ });
  if(!response.ok)throw new Error('Search Console query failed: '+(await response.text()).slice(0,600));
  return response.json();
 }
+
 export async function GET(request:NextRequest){
  if(!(await isAdmin()))return NextResponse.json({error:'Unauthorized'},{status:401});
  const site=process.env.GSC_SITE_URL||'';
- if(!process.env.GSC_CLIENT_EMAIL||!process.env.GSC_PRIVATE_KEY||!site)return NextResponse.json({configured:false,required:['GSC_CLIENT_EMAIL','GSC_PRIVATE_KEY','GSC_SITE_URL']});
+ const required=['GSC_SITE_URL','GCP_PROJECT_NUMBER','GCP_WORKLOAD_IDENTITY_POOL_ID','GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID','GCP_SERVICE_ACCOUNT_EMAIL'];
+ const missing=required.filter(key=>!process.env[key]);
+ if(missing.length||!site)return NextResponse.json({configured:false,required:missing.length?missing:['GSC_SITE_URL']});
  try{
   const days=Math.min(90,Math.max(7,Number(request.nextUrl.searchParams.get('days')||30)));
   const end=new Date(Date.now()-3*86400000),start=new Date(end.getTime()-days*86400000);
-  const iso=(d:Date)=>d.toISOString().slice(0,10),from=iso(start),to=iso(end),token=await accessToken();
-  if(!token)return NextResponse.json({configured:false});
-  const [queries,pages,countries,devices]=await Promise.all([query(token,site,from,to,['query']),query(token,site,from,to,['page']),query(token,site,from,to,['country']),query(token,site,from,to,['device'])]);
+  const iso=(d:Date)=>d.toISOString().slice(0,10);
+  const from=iso(start),to=iso(end),token=await googleAccessToken(request);
+  const [queries,pages,countries,devices]=await Promise.all([
+   query(token,site,from,to,['query']),
+   query(token,site,from,to,['page']),
+   query(token,site,from,to,['country']),
+   query(token,site,from,to,['device'])
+  ]);
   return NextResponse.json({configured:true,startDate:from,endDate:to,queries:queries.rows||[],pages:pages.rows||[],countries:countries.rows||[],devices:devices.rows||[]});
- }catch(error){const detail=error instanceof Error?error.message:'Unknown Search Console error';return NextResponse.json({error:'Unable to load Google Search Console data.',detail},{status:502});}
+ }catch(error){
+  const detail=error instanceof Error?error.message:'Unknown Search Console error';
+  return NextResponse.json({error:'Unable to load Google Search Console data.',detail},{status:502});
+ }
 }
