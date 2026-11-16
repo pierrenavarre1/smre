@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import { track } from '@vercel/analytics';
 
 type LeadType = 'buyer' | 'seller' | 'property' | 'showing';
 
@@ -47,6 +48,7 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId }: 
         }),
       });
       if (!response.ok) throw new Error('Unable to submit');
+      track('Lead Submission',{inquiryType:type,listingId:listingId||'general'});
       setSubmitted(true);
     } catch {
       setError('Something went wrong. Please call us at (785) 465-2543.');

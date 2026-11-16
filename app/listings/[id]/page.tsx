@@ -6,6 +6,7 @@ import { listingHref } from '../../lib/listing-url';
 import { MLSDisclosure, SourceBadge, MLS_OFFICE, MLS_PHONE } from '../../components/MLSDisclosure';
 import { ListingGallery } from '../../components/ListingGallery';
 import { ListingLeadButton } from '../../components/ListingLeadButton';
+import { ListingViewTracker } from '../../components/ListingViewTracker';
 import { ListingMap } from '../../components/ListingMap';
 
 const SITE_URL = process.env.VERCEL_ENV === 'production' ? 'https://www.smre.info' : `https://${process.env.VERCEL_URL || 'www.smre.info'}`;
@@ -68,6 +69,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
   const baths=(p.BathroomsTotalInteger || p.BathroomsFull || 0)+(p.BathroomsHalf?0.5:0);
   const acreage=p.LotSizeAcres || (p.LotSizeSqFt ? p.LotSizeSqFt/43560 : 0);
   return <section className="section container detail">
+    <ListingViewTracker listingId={String(p.ListingId)} city={String(p.City||'')} propertyType={String(p.PropertyType||'')} />
     <Link href="/listings" className="back">← All listings</Link>
     <ListingGallery photos={photos} address={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} listingId={p.ListingId} />
     <div className="detail-grid">
