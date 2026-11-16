@@ -11,7 +11,7 @@ function value(r:Row){return Number(r.value??r.count??r.total??r.pageviews??r.vi
 function label(r:Row){return String(r.key??r.name??r.date??r.requestPath??r.referrerHostname??r.deviceType??r.country??'')}
 export function AdminAnalytics(){
  const [days,setDays]=useState(30);const [data,setData]=useState<any>(null);const [error,setError]=useState('');
- useEffect(()=>{setError('');fetch('/api/admin/analytics?days='+days,{cache:'no-store'}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||'Unable to load analytics');setData(d)}).catch(e=>setError(e.message))},[days]);
+ useEffect(()=>{setError('');fetch('/api/admin/analytics?days='+days,{cache:'no-store'}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.detail||d.error||'Unable to load analytics');setData(d)}).catch(e=>setError(e.message))},[days]);
  const daily=rows(data?.byDay);const pages=rows(data?.byPage).sort((a,b)=>value(b)-value(a)).slice(0,10);const refs=rows(data?.byReferrer).sort((a,b)=>value(b)-value(a)).slice(0,8);const devices=rows(data?.byDevice).sort((a,b)=>value(b)-value(a));const countries=rows(data?.byCountry).sort((a,b)=>value(b)-value(a)).slice(0,8);
  const max=Math.max(1,...daily.map(value));const total=typeof data?.total==='number'?data.total:value(data?.total||{});
  if(!data&&!error)return <div className="admin-analytics"><p className="admin-muted">Loading analytics…</p></div>;
