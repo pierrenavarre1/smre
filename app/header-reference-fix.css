@@ -1,11 +1,38 @@
-export function BrandLogo({ className = '' }: { className?: string }) {
-  return (
-    <img
-      className={className}
-      src="/images/smre-logo-white-clean.png"
-      alt="St. Mary’s Real Estate"
-      width={750}
-      height={118}
-    />
-  );
+/* Desktop header and hero alignment based on the approved reference. */
+@media (min-width: 901px) {
+  .site-header {
+    height: 123px !important;
+    min-height: 123px !important;
+  }
+  .site-header > .container.nav {
+    width: min(1500px, calc(100% - 64px)) !important;
+    max-width: 1500px !important;
+    height: 123px !important;
+    min-height: 123px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .site-header > .container.nav > .brand-logo {
+    display: flex !important;
+    flex: 0 0 460px !important;
+    width: 460px !important;
+    max-width: 460px !important;
+    min-width: 460px !important;
+    height: 74px !important;
+    align-items: center !important;
+  }
+  .site-header .brand-logo .logo-image {
+    display: block !important;
+    width: 460px !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 74px !important;
+    object-fit: contain !important;
+    object-position: left center !important;
+    image-rendering: auto !important;
+  }
+  .site-header .nav-links { margin-left: auto !important; }
 }
