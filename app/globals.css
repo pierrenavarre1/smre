@@ -234,3 +234,17 @@
 @media(max-width:1050px){.admin-analytics-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.admin-analytics-grid{grid-template-columns:1fr}.admin-analytics-chart{height:210px}}
 @media(max-width:520px){.admin-analytics-cards{grid-template-columns:1fr 1fr}.admin-analytics-card{padding:16px}.admin-analytics-card strong{font-size:29px}.admin-analytics-section-title h2{font-size:26px}.admin-analytics-bars{gap:2px}}
+
+
+/* Interactive chart tooltips and uncluttered time axis */
+.admin-analytics-chart-area{padding-bottom:30px}
+.admin-analytics-bars{bottom:30px;padding:0;overflow:visible}
+.admin-analytics-bar-wrap{outline:none;cursor:crosshair}
+.admin-analytics-bar-wrap::after{content:attr(data-tooltip);position:absolute;z-index:5;left:50%;bottom:calc(100% + 8px);transform:translate(-50%,5px);opacity:0;pointer-events:none;white-space:nowrap;background:#101a43;color:#fff;border-radius:4px;padding:8px 10px;font-size:11px;line-height:1.3;box-shadow:0 5px 16px rgba(10,16,45,.2);transition:opacity .12s ease,transform .12s ease}
+.admin-analytics-bar-wrap:hover::after,.admin-analytics-bar-wrap:focus-visible::after{opacity:1;transform:translate(-50%,0)}
+.admin-analytics-bar-wrap:focus-visible .admin-analytics-bar{outline:2px solid #6d80c7;outline-offset:2px}
+.admin-analytics-bar-wrap span{display:none}
+.admin-analytics-chart-area::after{content:"Daily values appear when you hover over or focus a bar";position:absolute;bottom:-22px;left:0;font-size:9px;color:var(--muted)}
+.admin-analytics-row span:first-child{cursor:default}
+.admin-analytics-row:hover .admin-analytics-value{color:#5369a9}
+@media(max-width:700px){.admin-analytics-bar-wrap::after{white-space:normal;width:120px;text-align:center;font-size:10px}.admin-analytics-chart-area::after{content:"Tap a bar to inspect its value";}}
