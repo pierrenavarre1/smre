@@ -7,7 +7,7 @@ import './site-additions.css';
 import './contact-reviews.css';
 import './polish.css';
 import Link from 'next/link';
-import { BrandLogo } from './components/BrandLogo2';
+import { BrandLogo } from './components/BrandLogo';
 import { ChatBubble } from './components/ChatBubble';
 import { MobileMenu } from './components/MobileMenu';
 
