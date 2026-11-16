@@ -1179,3 +1179,48 @@
   .home-hero-inner{padding-top:135px;padding-bottom:40px}
   .home-search{width:100%;max-width:100%}
 }
+
+
+/* Match the supplied desktop homepage reference: compact header and correctly placed hero content. */
+@media (min-width: 901px) {
+  .site-header .nav {
+    min-height: 123px !important;
+    height: 123px;
+    align-items: center;
+  }
+  .site-header .brand-logo {
+    flex: 0 0 480px !important;
+    width: 480px !important;
+    max-width: 480px !important;
+    min-width: 0;
+  }
+  .site-header .logo-image {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    max-height: 72px !important;
+    object-fit: contain;
+    object-position: left center;
+  }
+  .home-hero {
+    min-height: 732px !important;
+    height: 732px;
+    align-items: flex-start;
+  }
+  .home-hero-inner {
+    padding-top: 165px !important;
+    padding-bottom: 0 !important;
+  }
+  .home-hero h1 {
+    margin-bottom: 28px;
+  }
+  .home-hero-actions {
+    margin: -10px 0 37px !important;
+  }
+  .home-search {
+    margin-top: 0 !important;
+    max-width: 1150px !important;
+    width: 100%;
+    grid-template-columns: 2fr 1fr 1fr 1.2fr auto !important;
+  }
+}
