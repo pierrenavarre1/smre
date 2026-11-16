@@ -1,18 +1,14 @@
-/* Desktop header and hero alignment based on the approved reference. */
+/* Desktop header geometry aligned to the approved reference. */
 @media (min-width: 901px) {
-  .site-header {
-    height: 123px !important;
-    min-height: 123px !important;
-  }
+  .site-header { height: 123px !important; min-height: 123px !important; }
   .site-header > .container.nav {
-    width: min(1500px, calc(100% - 64px)) !important;
-    max-width: 1500px !important;
+    width: 100% !important;
+    max-width: none !important;
     height: 123px !important;
     min-height: 123px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    margin: 0 !important;
+    padding-left: max(32px, calc((100vw - 1500px) / 2)) !important;
+    padding-right: max(32px, calc((100vw - 1500px) / 2)) !important;
     box-sizing: border-box !important;
   }
   .site-header > .container.nav > .brand-logo {
