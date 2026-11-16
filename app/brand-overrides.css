@@ -1162,3 +1162,20 @@
     gap: 12px;
   }
 }
+
+
+/* Homepage hero alignment restored to the supplied reference */
+@media (min-width: 901px){
+  .nav{min-height:123px}
+  .home-hero{min-height:calc(100vh - 123px);align-items:flex-start}
+  .home-hero-inner{padding-top:205px;padding-bottom:0}
+  .home-hero h1{max-width:760px}
+  .hero-copy{margin-bottom:40px}
+  .home-hero-actions{margin:-10px 0 30px}
+  .home-search{max-width:1150px;width:100%;grid-template-columns:2fr 1fr 1fr 1.2fr auto;margin-top:0}
+}
+@media (min-width: 701px) and (max-width:900px){
+  .home-hero{align-items:flex-start}
+  .home-hero-inner{padding-top:135px;padding-bottom:40px}
+  .home-search{width:100%;max-width:100%}
+}
