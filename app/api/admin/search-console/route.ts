@@ -3,7 +3,12 @@ import {isAdmin} from '../../../lib/admin-auth';
 
 export const dynamic='force-dynamic';
 
-type TokenResponse={access_token?:string;error?:string;error_description?:string};
+type TokenResponse={access_token?:string;error?:string|{code?:number;message?:string;status?:string;details?:unknown[]};error_description?:string};
+function googleError(data:TokenResponse,status:number){
+ const e=data.error;
+ if(e&&typeof e==='object')return [e.message,e.status,e.details?JSON.stringify(e.details):''].filter(Boolean).join(' | ')||'Google API error '+status;
+ return data.error_description||e||'Google API error '+status;
+}
 async function googleAccessToken(request:NextRequest){
  const projectNumber=process.env.GCP_PROJECT_NUMBER;
  const poolId=process.env.GCP_WORKLOAD_IDENTITY_POOL_ID;
@@ -35,7 +40,7 @@ async function googleAccessToken(request:NextRequest){
   cache:'no-store'
  });
  const exchangeData=await exchange.json() as TokenResponse;
- if(!exchange.ok||!exchangeData.access_token)throw new Error('Google STS token exchange failed: '+(exchangeData.error_description||exchangeData.error||exchange.status));
+ if(!exchange.ok||!exchangeData.access_token)throw new Error('Google STS token exchange failed: '+googleError(exchangeData,exchange.status));
  const impersonationUrl='https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/'+encodeURIComponent(serviceAccount)+':generateAccessToken';
  const impersonation=await fetch(impersonationUrl,{
   method:'POST',
@@ -44,7 +49,7 @@ async function googleAccessToken(request:NextRequest){
   cache:'no-store'
  });
  const impersonationData=await impersonation.json() as TokenResponse;
- if(!impersonation.ok||!impersonationData.access_token)throw new Error('Google service-account impersonation failed: '+(impersonationData.error_description||impersonationData.error||impersonation.status)+'. Check the service account Workload Identity User binding.');
+ if(!impersonation.ok||!impersonationData.access_token)throw new Error('Google service-account impersonation failed: '+googleError(impersonationData,impersonation.status)+'. Check the service account Workload Identity User binding for this Vercel environment.');
  return impersonationData.access_token;
 }
 
