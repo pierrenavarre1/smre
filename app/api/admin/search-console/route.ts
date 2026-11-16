@@ -1,6 +1,6 @@
 import {NextRequest,NextResponse} from 'next/server';
 import {createSign} from 'crypto';
-import {isAdmin} from '../../../../lib/admin-auth';
+import {isAdmin} from '../../../lib/admin-auth';
 
 export const dynamic='force-dynamic';
 function b64(value:string|Buffer){return Buffer.from(value).toString('base64url');}
