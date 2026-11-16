@@ -1256,3 +1256,29 @@
     grid-template-columns: 2fr 1fr 1fr 1.2fr auto !important;
   }
 }
+
+
+/* Header logo alignment and sizing matched to the approved reference. */
+@media (min-width: 901px) {
+  .site-header > .container.nav {
+    width: min(1500px, calc(100% - 64px)) !important;
+    max-width: 1500px !important;
+    margin-inline: auto !important;
+    padding: 0 !important;
+  }
+  .site-header .brand-logo {
+    flex: 0 0 460px !important;
+    width: 460px !important;
+    max-width: 460px !important;
+    min-width: 460px !important;
+  }
+  .site-header .brand-logo .logo-image {
+    width: 460px !important;
+    max-width: 460px !important;
+    max-height: 74px !important;
+    height: auto !important;
+    object-fit: contain !important;
+    object-position: left center !important;
+    image-rendering: auto !important;
+  }
+}
