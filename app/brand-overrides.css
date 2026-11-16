@@ -1199,19 +1199,19 @@
   }
   .site-header .brand-logo {
     display: block !important;
-    flex: 0 0 480px !important;
-    width: 480px !important;
-    max-width: 480px !important;
-    min-width: 480px !important;
-    height: 75px !important;
+    flex: 0 0 390px !important;
+    width: 390px !important;
+    max-width: 390px !important;
+    min-width: 390px !important;
+    height: 62px !important;
     overflow: visible !important;
   }
   .site-header .brand-logo .logo-image {
     display: block !important;
-    width: 480px !important;
-    height: 75px !important;
-    max-width: none !important;
-    max-height: none !important;
+    width: 390px !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 62px !important;
     object-fit: contain !important;
     object-position: left center !important;
     filter: none !important;
@@ -1239,7 +1239,7 @@
     align-items: flex-start !important;
   }
   .home-hero-inner {
-    padding-top: 205px !important;
+    padding-top: 120px !important;
     padding-bottom: 0 !important;
   }
   .home-hero h1 {
