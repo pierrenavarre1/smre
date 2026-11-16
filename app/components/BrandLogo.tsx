@@ -2,10 +2,10 @@ export function BrandLogo({ className = '' }: { className?: string }) {
   return (
     <img
       className={className}
-      src="/images/smre-logo-white-clean.png"
+      src="/images/smre-logo-white-final.png"
       alt="St. Mary’s Real Estate"
-      width={750}
-      height={118}
+      width={1500}
+      height={235}
     />
   );
 }
