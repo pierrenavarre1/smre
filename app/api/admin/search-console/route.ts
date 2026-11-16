@@ -3,7 +3,7 @@ import {isAdmin} from '../../../lib/admin-auth';
 
 export const dynamic='force-dynamic';
 
-type TokenResponse={access_token?:string;error?:string|{code?:number;message?:string;status?:string;details?:unknown[]};error_description?:string};
+type TokenResponse={access_token?:string;accessToken?:string;error?:string|{code?:number;message?:string;status?:string;details?:unknown[]};error_description?:string};
 function googleError(data:TokenResponse,status:number){
  const e=data.error;
  if(e&&typeof e==='object')return [e.message,e.status,e.details?JSON.stringify(e.details):''].filter(Boolean).join(' | ')||'Google API error '+status;
@@ -49,8 +49,9 @@ async function googleAccessToken(request:NextRequest){
   cache:'no-store'
  });
  const impersonationData=await impersonation.json() as TokenResponse;
- if(!impersonation.ok||!impersonationData.access_token)throw new Error('Google service-account impersonation failed: '+googleError(impersonationData,impersonation.status)+'. Check the service account Workload Identity User binding for this Vercel environment.');
- return impersonationData.access_token;
+ const accessToken=impersonationData.accessToken||impersonationData.access_token;
+ if(!impersonation.ok||!accessToken)throw new Error('Google service-account impersonation failed: '+googleError(impersonationData,impersonation.status)+'. Check the service account Workload Identity User binding for this Vercel environment.');
+ return accessToken;
 }
 
 async function query(token:string,site:string,startDate:string,endDate:string,dimensions:string[]){
