@@ -6,8 +6,9 @@ import './brand-overrides.css';
 import './site-additions.css';
 import './contact-reviews.css';
 import './polish.css';
+import './header-reference-fix.css';
 import Link from 'next/link';
-import { BrandLogo } from './components/BrandLogoFixed';
+import { BrandLogo } from './components/BrandLogo';
 import { ChatBubble } from './components/ChatBubble';
 import { MobileMenu } from './components/MobileMenu';
 

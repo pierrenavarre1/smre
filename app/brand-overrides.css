@@ -1162,3 +1162,123 @@
     gap: 12px;
   }
 }
+
+
+/* Homepage hero alignment restored to the supplied reference */
+@media (min-width: 901px){
+  .nav{min-height:123px}
+  .home-hero{min-height:calc(100vh - 123px);align-items:flex-start}
+  .home-hero-inner{padding-top:205px;padding-bottom:0}
+  .home-hero h1{max-width:760px}
+  .hero-copy{margin-bottom:40px}
+  .home-hero-actions{margin:-10px 0 30px}
+  .home-search{max-width:1150px;width:100%;grid-template-columns:2fr 1fr 1fr 1.2fr auto;margin-top:0}
+}
+@media (min-width: 701px) and (max-width:900px){
+  .home-hero{align-items:flex-start}
+  .home-hero-inner{padding-top:135px;padding-bottom:40px}
+  .home-search{width:100%;max-width:100%}
+}
+
+
+/* Desktop header and homepage geometry matched to the supplied reference screenshot. */
+@media (min-width: 901px) {
+  .site-header {
+    height: 123px !important;
+    min-height: 123px !important;
+  }
+  .site-header > .container.nav {
+    width: calc(100% - 140px) !important;
+    max-width: 1568px !important;
+    height: 123px !important;
+    min-height: 123px !important;
+    margin-inline: auto !important;
+    padding: 0 !important;
+    gap: 32px !important;
+    align-items: center !important;
+  }
+  .site-header .brand-logo {
+    display: block !important;
+    flex: 0 0 390px !important;
+    width: 390px !important;
+    max-width: 390px !important;
+    min-width: 390px !important;
+    height: 62px !important;
+    overflow: visible !important;
+  }
+  .site-header .brand-logo .logo-image {
+    display: block !important;
+    width: 390px !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 62px !important;
+    object-fit: contain !important;
+    object-position: left center !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+  }
+  .site-header .nav-links {
+    margin-left: auto !important;
+    gap: 30px !important;
+    flex: 0 0 auto !important;
+  }
+  .site-header .nav-links a {
+    font-size: 18px !important;
+  }
+  .site-header .nav-links .nav-cta {
+    min-width: 122px !important;
+    min-height: 62px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 24px !important;
+  }
+  .home-hero {
+    min-height: 732px !important;
+    height: 732px !important;
+    align-items: flex-start !important;
+  }
+  .home-hero-inner {
+    padding-top: 120px !important;
+    padding-bottom: 0 !important;
+  }
+  .home-hero h1 {
+    max-width: 760px !important;
+    margin-bottom: 28px !important;
+  }
+  .home-hero-actions {
+    margin: -10px 0 37px !important;
+  }
+  .home-search {
+    margin-top: 0 !important;
+    max-width: 1150px !important;
+    width: 100% !important;
+    grid-template-columns: 2fr 1fr 1fr 1.2fr auto !important;
+  }
+}
+
+
+/* Header logo alignment and sizing matched to the approved reference. */
+@media (min-width: 901px) {
+  .site-header > .container.nav {
+    width: min(1500px, calc(100% - 64px)) !important;
+    max-width: 1500px !important;
+    margin-inline: auto !important;
+    padding: 0 !important;
+  }
+  .site-header .brand-logo {
+    flex: 0 0 460px !important;
+    width: 460px !important;
+    max-width: 460px !important;
+    min-width: 460px !important;
+  }
+  .site-header .brand-logo .logo-image {
+    width: 460px !important;
+    max-width: 460px !important;
+    max-height: 74px !important;
+    height: auto !important;
+    object-fit: contain !important;
+    object-position: left center !important;
+    image-rendering: auto !important;
+  }
+}
