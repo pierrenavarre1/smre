@@ -44,12 +44,12 @@ export async function GET(request:NextRequest){
    query('visits/aggregate',{...range,by:'referrerHostname',limit:'100'}),
    query('visits/aggregate',{...range,by:'deviceType',limit:'20'}),
    query('visits/aggregate',{...range,by:'country',limit:'50'}),
-   query('visits/aggregate',{...range,by:'browserName',limit:'20'}),
-   query('visits/aggregate',{...range,by:'osName',limit:'20'}),
+   optionalQuery('visits/aggregate',{...range,by:'browserName',limit:'20'}),
+   optionalQuery('visits/aggregate',{...range,by:'osName',limit:'20'}),
    optionalQuery('events/aggregate',{...range,by:'eventName',limit:'30'}),
-   query('events/aggregate',{...range,by:'eventData/listingId',filter:"eventName eq 'Listing View'",limit:'50'}),
-   query('events/aggregate',{...range,by:'eventData/propertyType',filter:"eventName eq 'Property Search'",limit:'30'}),
-   query('events/aggregate',{...range,by:'eventData/inquiryType',filter:"eventName eq 'Lead Submission'",limit:'20'})
+   optionalQuery('events/aggregate',{...range,by:'eventData/listingId',filter:"eventName eq 'Listing View'",limit:'50'}),
+   optionalQuery('events/aggregate',{...range,by:'eventData/propertyType',filter:"eventName eq 'Property Search'",limit:'30'}),
+   optionalQuery('events/aggregate',{...range,by:'eventData/inquiryType',filter:"eventName eq 'Lead Submission'",limit:'20'})
   ]);
   return NextResponse.json({configured:true,days,total,byDay,byPage,byReferrer,byDevice,byCountry,byBrowser,byOs,byEvents,byListingViews,byPropertySearches,byLeadEvents,customEventsAvailable:Boolean(byEvents||byListingViews||byPropertySearches||byLeadEvents),geographyNote:'Vercel Web Analytics API currently reports country, not city or state.'});
  }catch(error){
