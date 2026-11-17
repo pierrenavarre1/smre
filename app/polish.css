@@ -101,3 +101,36 @@
   box-sizing: border-box;
   width: 100%;
 }
+
+
+/* Production header: use the approved centered desktop logo geometry. */
+@media (min-width: 901px) {
+  .site-header { height: 123px !important; min-height: 123px !important; }
+  .site-header > .container.nav {
+    width: min(1500px, calc(100% - 64px)) !important;
+    max-width: 1500px !important;
+    height: 123px !important;
+    min-height: 123px !important;
+    margin-inline: auto !important;
+    padding-inline: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .site-header > .container.nav > .brand-logo {
+    display: block !important;
+    flex: 0 0 460px !important;
+    width: 460px !important;
+    min-width: 460px !important;
+    max-width: 460px !important;
+    height: 74px !important;
+  }
+  .site-header .brand-logo .logo-image {
+    display: block !important;
+    width: 460px !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 74px !important;
+    object-fit: contain !important;
+    object-position: left center !important;
+  }
+  .site-header .nav-links { margin-left: auto !important; }
+}
