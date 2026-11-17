@@ -101,3 +101,53 @@
   box-sizing: border-box;
   width: 100%;
 }
+
+
+/* Desktop header geometry matched to the approved SMRE reference. */
+@media screen and (min-width: 901px) {
+  header.site-header { height: 123px !important; min-height: 123px !important; }
+  header.site-header > div.container.nav {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 32px !important;
+    width: min(1480px, calc(100% - 64px)) !important;
+    max-width: 1480px !important;
+    height: 123px !important;
+    min-height: 123px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+  header.site-header > div.container.nav > a.brand-logo {
+    display: block !important;
+    flex: 0 0 420px !important;
+    width: 420px !important;
+    min-width: 420px !important;
+    max-width: 420px !important;
+    height: 66px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  header.site-header > div.container.nav > a.brand-logo > img.logo-image {
+    display: block !important;
+    width: 420px !important;
+    min-width: 420px !important;
+    max-width: 420px !important;
+    height: auto !important;
+    max-height: 66px !important;
+    object-fit: contain !important;
+    object-position: left center !important;
+    image-rendering: auto !important;
+  }
+  header.site-header > div.container.nav > nav.nav-links {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 28px !important;
+    margin-left: auto !important;
+    flex: 0 0 auto !important;
+  }
+}
