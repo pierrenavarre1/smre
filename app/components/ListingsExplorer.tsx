@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { track } from '@vercel/analytics';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { RESOProperty } from '../lib/mock-properties';
@@ -189,6 +190,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           type="button"
           className="button button-dark listings-search-button"
           onClick={() => {
+            track('Property Search',{propertyType:filters.type.join(',')||'Any',searchCriteria:[filters.city,filters.address,filters.max?'max '+filters.max:'',filters.beds?'beds '+filters.beds:'',filters.baths?'baths '+filters.baths:'',filters.acreage?'acreage '+filters.acreage:''].filter(Boolean).join(' | ')||'All listings'});
             setAddressOpen(false);
             setPage(1);
           }}
