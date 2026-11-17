@@ -123,21 +123,21 @@
   }
   header.site-header > div.container.nav > a.brand-logo {
     display: block !important;
-    flex: 0 0 460px !important;
-    width: 460px !important;
-    min-width: 460px !important;
-    max-width: 460px !important;
-    height: 72px !important;
+    flex: 0 0 420px !important;
+    width: 420px !important;
+    min-width: 420px !important;
+    max-width: 420px !important;
+    height: 66px !important;
     margin: 0 !important;
     overflow: visible !important;
   }
   header.site-header > div.container.nav > a.brand-logo > img.logo-image {
     display: block !important;
-    width: 460px !important;
-    min-width: 460px !important;
-    max-width: 460px !important;
+    width: 420px !important;
+    min-width: 420px !important;
+    max-width: 420px !important;
     height: auto !important;
-    max-height: 72px !important;
+    max-height: 66px !important;
     object-fit: contain !important;
     object-position: left center !important;
     image-rendering: auto !important;
