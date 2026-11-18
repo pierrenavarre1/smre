@@ -59,7 +59,7 @@ export default async function Home(){
       .home-story-proof{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
       .home-story-proof article{border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:24px;min-height:145px;display:flex;flex-direction:column;justify-content:center}
       .home-story-proof strong{font-family:var(--serif);font-size:clamp(29px,3vw,39px);font-weight:400;line-height:1.05;margin-bottom:9px}
-      .home-story-proof span{font-size:12px;line-height:1.55;color:rgba(255,255,255,.9);font-weight:700}\n      .home-story-proof .proof-stars{color:#f4b400;letter-spacing:2px;font-size:16px;line-height:1.2;margin-left:7px;white-space:nowrap}\n      .home-story-proof .proof-rating{display:flex;align-items:center;flex-wrap:wrap}
+      .home-story-proof span{font-size:14px;line-height:1.55;color:rgba(255,255,255,.92);font-weight:700}\n      .home-story-proof .proof-stars{color:#f4b400;letter-spacing:2px;font-size:16px;line-height:1.2;margin-left:7px;white-space:nowrap}\n      .home-story-proof .proof-rating{display:flex;align-items:center;flex-wrap:wrap}
       .home-seo-team{padding-top:48px;padding-bottom:42px}
       .home-cta-compact{padding-top:42px;padding-bottom:36px}
       .reviews-section.section{padding-top:46px;padding-bottom:64px}
