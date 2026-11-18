@@ -51,7 +51,7 @@ export default async function Home(){
       .home-rural-balanced .home-rural-copy h2{font-family:var(--serif);font-size:clamp(32px,3.2vw,44px);line-height:1.08;font-weight:400;letter-spacing:-.04em;margin:0 0 24px;max-width:600px}
       .home-rural-balanced .home-rural-copy p:not(.eyebrow){color:#fff;opacity:.82;font-size:16px;line-height:1.7;max-width:570px;margin:0 0 32px}
       .home-rural-balanced .home-rural-copy .button{align-self:flex-start}
-      .home-story{background:var(--navy);color:#fff;padding:76px 0 72px}
+      .home-story{background:var(--navy);color:#fff;padding:68px 0 46px}
       .home-story-grid{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:64px;align-items:center}
       .home-story-copy .eyebrow{color:#b8c8ed;margin-bottom:18px}
       .home-story-copy h2{font-family:var(--serif);font-size:clamp(36px,4.2vw,54px);font-weight:400;line-height:1.06;letter-spacing:-.04em;margin:0 0 22px;max-width:650px}
@@ -61,8 +61,10 @@ export default async function Home(){
       .home-story-proof{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
       .home-story-proof article{border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:24px;min-height:145px;display:flex;flex-direction:column;justify-content:center}
       .home-story-proof strong{font-family:var(--serif);font-size:clamp(29px,3vw,39px);font-weight:400;line-height:1.05;margin-bottom:9px}
-      .home-story-proof span{font-size:12px;line-height:1.55;color:rgba(255,255,255,.76)}
-      .home-seo-team{padding-top:78px;padding-bottom:82px}
+      .home-story-proof span{font-size:12px;line-height:1.55;color:rgba(255,255,255,.76)}\n      .home-story-proof .proof-stars{color:#f4b400;letter-spacing:2px;font-size:16px;line-height:1.2;margin-left:7px;white-space:nowrap}\n      .home-story-proof .proof-rating{display:flex;align-items:center;flex-wrap:wrap}
+      .home-seo-team{padding-top:48px;padding-bottom:42px}
+      .home-cta-compact{padding-top:42px;padding-bottom:36px}
+      .reviews-section.section{padding-top:46px;padding-bottom:64px}
       .home-seo-team h2{font-family:var(--serif);font-size:clamp(32px,4vw,44px);font-weight:400;line-height:1.12;letter-spacing:-.035em;margin:0}
       .home-seo-team-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
       .home-seo-agent{border:1px solid var(--line);color:var(--navy);text-decoration:none;display:flex;flex-direction:column;min-width:0;transition:transform .2s ease,box-shadow .2s ease}
@@ -74,7 +76,7 @@ export default async function Home(){
       .home-seo-agent-info span{display:block;font-size:12px;color:var(--muted);line-height:1.5}
       .home-story-areas{display:flex;flex-wrap:wrap;gap:8px 17px;margin-top:25px}
       .home-story-areas a{font-size:12px;color:#fff;text-decoration:underline;text-underline-offset:4px;text-decoration-color:rgba(255,255,255,.45)}
-      @media(max-width:800px){.home-listing-map{margin-top:38px}.home-rural-grid.home-rural-balanced{grid-template-columns:1fr}.home-rural-balanced .home-rural-photo{min-height:320px;max-height:420px}.home-rural-balanced .home-rural-copy{padding:52px 28px 60px}.home-story-grid{grid-template-columns:1fr;gap:36px}.home-story{padding:58px 0}.home-seo-team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:800px){.home-story{padding:54px 0 38px}.home-seo-team{padding-top:38px;padding-bottom:32px}.home-listing-map{margin-top:38px}.home-rural-grid.home-rural-balanced{grid-template-columns:1fr}.home-rural-balanced .home-rural-photo{min-height:320px;max-height:420px}.home-rural-balanced .home-rural-copy{padding:52px 28px 60px}.home-story-grid{grid-template-columns:1fr;gap:36px}.home-story{padding:58px 0}.home-seo-team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
       @media(max-width:480px){.home-story-proof{gap:9px}.home-story-proof article{padding:17px;min-height:125px}.home-seo-team-grid{gap:12px}.home-seo-agent-info{padding:14px}.home-seo-agent-info strong{font-size:19px}}
     `}</style>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(businessSchema).replace(/</g,'\\u003c')}} />
@@ -95,13 +97,6 @@ export default async function Home(){
       {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings} searchAreaNavigate/></div>}
     </section>
 
-    <section className="home-rural-strip">
-      <div className="home-rural-grid home-rural-balanced">
-        <div className="home-rural-photo"><img src={areaImage} alt="Kansas farm at sunset with a barn, fields and a country road" loading="lazy" /></div>
-        <div className="home-rural-copy"><h2>LOCAL KNOWLEDGE. PERSONAL SERVICE.</h2><p>Our local agents work with buyers and sellers throughout Northeast Kansas, bringing practical market knowledge, straightforward advice, and a personal approach to every transaction. Get to know our team, how we work, and the communities we serve.</p><Link href="/about" className="button button-light">About SMRE</Link></div>
-      </div>
-    </section>
-
     <section className="home-story">
       <div className="container home-story-grid">
         <div className="home-story-copy">
@@ -114,11 +109,11 @@ export default async function Home(){
           </div>
           <Link href="/about" className="button button-light">More about our company</Link>
         </div>
-        <div className="home-story-proof" aria-label="About St. Mary’s Real Estate">
-          <article><strong>20+ years</strong><span>Locally owned and serving Northeast Kansas</span></article>
-          <article><strong>Second generation</strong><span>A family business carried forward by the next generation</span></article>
-          <article><strong>St. Marys, Kansas</strong><span>Our home base, with service from Topeka to Manhattan</span></article>
-          <article><strong>People first</strong><span>Personal guidance, clear communication, and local knowledge</span></article>
+        <div className="home-story-proof" aria-label="St. Mary’s Real Estate experience and reputation">
+          <article><strong>20+ years</strong><span>Family-owned and serving Northeast Kansas</span></article>
+          <article><strong>400+</strong><span>Verified real estate closings</span></article>
+          <article><strong className="proof-rating">5.0 <span className="proof-stars" aria-label="5 out of 5 stars">★★★★★</span></strong><span>Rated on Google</span></article>
+          <article><strong>Second generation</strong><span>A family business built to serve local communities</span></article>
         </div>
       </div>
     </section>
@@ -133,7 +128,7 @@ export default async function Home(){
       </div>
     </section>
 
-    <section className="section container cta-grid">
+    <section className="section container cta-grid home-cta-compact">
       <Link href="/valuation" className="cta-card"><span className="eyebrow">SELLING</span><h3>What is your home worth in today’s market?</h3><span className="text-link">Request a home value</span></Link>
       <Link href="/contact" className="cta-card"><span className="eyebrow">BUYING OR SELLING</span><h3>Have a property, a question, or a plan?</h3><span className="text-link">Talk with SMRE</span></Link>
     </section>
