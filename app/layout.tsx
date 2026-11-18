@@ -16,11 +16,11 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.VERCEL_ENV === 'production' ? 'https://www.smre.info' : `https://${process.env.VERCEL_URL || 'www.smre.info'}`),
   title: {
-    default: 'St. Mary’s Real Estate | Homes, Land & Acreage in Northeast Kansas',
+    default: 'St. Mary’s Real Estate | Homes, Land & Acreage',
     template: '%s | St. Mary’s Real Estate'
   },
   description:
-    'St. Mary’s Real Estate is a local Kansas brokerage serving St. Marys, Wamego, Topeka, Manhattan and nearby communities. Explore homes, land and acreage or connect with our agents.',
+    'Find homes, land and acreage in St. Marys, Wamego, Topeka and Manhattan, Kansas. Connect with St. Mary’s Real Estate for local guidance.',
   applicationName: 'St. Mary’s Real Estate',
   icons: {
     icon: '/icon.svg',
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: 'St. Mary’s Real Estate',
     title: 'St. Mary’s Real Estate | Northeast Kansas',
-    description: 'Local real estate agents serving St. Marys, Wamego, Topeka, Manhattan and surrounding Northeast Kansas communities.',
+    description: 'Find homes, land and acreage in St. Marys, Wamego, Topeka and Manhattan, Kansas. Connect with St. Mary’s Real Estate for local guidance.',
     url: 'https://www.smre.info'
   },
   twitter: {
