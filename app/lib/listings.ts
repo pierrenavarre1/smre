@@ -104,7 +104,7 @@ function normalizeCity(value: string) {
   return value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function listingTimestamp(p: RESOProperty) {
+function listingTimestamp(p: Pick<RESOProperty, 'ListingDate' | 'ModificationTimestamp'>) {
   const listingTime = p.ListingDate ? Date.parse(p.ListingDate) : NaN;
   if (Number.isFinite(listingTime)) return listingTime;
   const modificationTime = p.ModificationTimestamp ? Date.parse(p.ModificationTimestamp) : NaN;
