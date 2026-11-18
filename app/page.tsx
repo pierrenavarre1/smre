@@ -11,7 +11,7 @@ import { getAdminData } from './lib/admin-store';
 
 const heroImage = '/images/Hero for SMRE Web.png';
 const fallbackAreaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
-const serviceAreas = ['St. Marys', 'Wamego', 'Rossville', 'Silver Lake', 'Manhattan', 'Topeka', 'St. George', 'Alma', 'Emmett', 'Maple Hill'];
+const serviceAreas = [{name:'St. Marys',slug:'st-marys'},{name:'Wamego',slug:'wamego'},{name:'Rossville',slug:'rossville'},{name:'Silver Lake',slug:'silver-lake'},{name:'Manhattan',slug:'manhattan'},{name:'Topeka',slug:'topeka'}];
 
 export const revalidate = 60;
 
@@ -32,7 +32,7 @@ export default async function Home(){
     url:'https://www.smre.info',
     telephone:'+1-785-465-2543',
     address:{'@type':'PostalAddress',streetAddress:'512 W Bertrand Ave',addressLocality:'St. Marys',addressRegion:'KS',postalCode:'66536',addressCountry:'US'},
-    areaServed:serviceAreas.map(name=>({'@type':'City',name,containedInPlace:{'@type':'State',name:'Kansas'}})),
+    areaServed:serviceAreas.map(area=>({'@type':'City',name:area.name,containedInPlace:{'@type':'State',name:'Kansas'}})),
     employee:visibleAgents.map(agent=>({'@type':'RealEstateAgent',name:agent.name,jobTitle:agent.role,url:'https://www.smre.info/agents/'+agent.slug,telephone:agent.phone})),
     knowsAbout:['Residential real estate','Land and acreage','Rural properties','New construction','Commercial real estate','Real estate investments']
   };
@@ -99,7 +99,7 @@ export default async function Home(){
         <p>Whether you are moving to the area, selling a longtime home, purchasing your first property, or considering land outside town, we aim to make the process clear and manageable. We stay involved, answer questions, and help clients understand the local factors that can affect a real estate decision.</p>
       </div>
       <ul className="seo-areas" aria-label="Communities served">
-        {serviceAreas.map(area=><li key={area}><Link href="/about">{area}, KS</Link></li>)}
+        {serviceAreas.map(area=><li key={area.slug}><Link href={"/communities/"+area.slug}>{area.name}, KS</Link></li>)}
       </ul>
     </section>
 
