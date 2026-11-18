@@ -43,7 +43,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       <div className="container nav">
         <Link href="/" className="brand-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
         <nav className="nav-links" aria-label="Main navigation">
-          <a className="header-phone" href={`tel:${phone.replace(/\\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
+          <a className="header-phone" href={`tel:${phone.replace(/\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
           <Link href="/listings">Listings</Link>
           <Link href="/valuation">Home Value</Link>
           <Link href="/about">About</Link>
@@ -57,7 +57,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       <div className="container footer-grid">
         <div className="footer-brand-block">
           <Link href="/" className="brand-logo footer-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
-          <p>{address.split(',')[0]}<br />{address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${phone.replace(/\\D/g,'')}`} style={{color:'#fff'}}>{phone}</a></p>
+          <p>{address.split(',')[0]}<br />{address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${phone.replace(/\D/g,'')}`} style={{color:'#fff'}}>{phone}</a></p>
         </div>
         <div className="footer-links">
           <strong>Explore</strong>
