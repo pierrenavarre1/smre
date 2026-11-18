@@ -75,6 +75,37 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
   };
   const listingsHref=`/listings?city=${encodeURIComponent(community.name)}`;
   return <section className="section container community-page">
+    <style>{`
+      .community-page{padding-top:76px;padding-bottom:82px}
+      .community-page .page-intro{max-width:900px;margin-bottom:44px}
+      .community-page .page-intro p:not(.eyebrow){font-size:17px;line-height:1.75;max-width:800px}
+      .community-reading{display:grid;grid-template-columns:1fr 1fr;gap:54px;max-width:1060px;margin:0 auto 48px}
+      .community-reading section{min-width:0}
+      .community-reading h2,.community-listings-cta h2{font-family:var(--serif);font-size:clamp(28px,3vw,36px);font-weight:400;line-height:1.12;letter-spacing:-.03em;margin:0 0 14px}
+      .community-reading .eyebrow{margin-bottom:12px}
+      .community-reading p:not(.eyebrow){font-size:15px;line-height:1.8;color:var(--muted);margin:0}
+      .community-listings-cta{display:flex;align-items:center;justify-content:space-between;gap:30px;padding:30px 34px;background:var(--wash);border:1px solid var(--line);margin:0 0 34px}
+      .community-listings-cta .eyebrow{margin-bottom:9px}
+      .community-listings-cta h2{margin-bottom:7px}
+      .community-listings-cta p:not(.eyebrow){margin:0;color:var(--muted);font-size:14px}
+      .community-listings-cta .button{flex:0 0 auto;min-height:50px;padding:14px 22px}
+      .community-next-steps{display:grid;grid-template-columns:1fr 1fr;gap:30px;padding:0 0 36px;border-bottom:1px solid var(--line)}
+      .community-next-steps .about-local-point{padding:14px 0}
+      .community-next-steps .about-local-point p:not(.eyebrow){color:var(--muted);font-size:14px;line-height:1.65;margin:0 0 10px}
+      .community-more{padding-top:38px}
+      .community-more .section-head{margin-bottom:16px}
+      .community-more .section-head h2{font-family:var(--serif);font-weight:400;font-size:32px;margin:0}
+      .community-more .lead{font-size:14px;margin-top:28px}
+      @media(max-width:700px){
+        .community-page{padding-top:48px;padding-bottom:56px}
+        .community-page .page-intro{margin-bottom:34px}
+        .community-reading{grid-template-columns:1fr;gap:28px;margin-bottom:34px}
+        .community-listings-cta{align-items:flex-start;flex-direction:column;gap:20px;padding:24px}
+        .community-listings-cta .button{width:100%}
+        .community-next-steps{gap:20px}
+      }
+      @media(max-width:480px){.community-next-steps{grid-template-columns:1fr;gap:12px}.community-next-steps .about-local-point{padding:10px 0}}
+    `}</style>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}} />
     <div className="page-intro">
       <p className="eyebrow">NORTHEAST KANSAS REAL ESTATE</p>
