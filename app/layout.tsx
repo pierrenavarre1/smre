@@ -32,6 +32,11 @@ export const metadata: Metadata = {
     title: 'St. Mary’s Real Estate | Northeast Kansas',
     description: 'Local real estate agents serving St. Marys, Wamego, Topeka, Manhattan and surrounding Northeast Kansas communities.',
     url: 'https://www.smre.info'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'St. Mary’s Real Estate | Northeast Kansas',
+    description: 'Local real estate agents serving St. Marys, Wamego, Topeka, Manhattan and surrounding Northeast Kansas communities.'
   }
 };
 
