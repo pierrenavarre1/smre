@@ -111,7 +111,7 @@ function listingTimestamp(p: RESOProperty) {
   return Number.isFinite(modificationTime) ? modificationTime : 0;
 }
 
-function isSMRE(p: RESOProperty) {
+function isSMRE(p: Pick<RESOProperty, 'ListOfficeName'>) {
   return /st\.?\s*mary['’]?s\s*real\s*estate/i.test(p.ListOfficeName || '');
 }
 
