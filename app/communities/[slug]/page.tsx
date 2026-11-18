@@ -6,16 +6,46 @@ type Community = {
   slug:string;
   intro:string;
   localFocus:string;
-  propertyFocus:string;
+  smreFit:string;
 };
 
 const communities:Community[] = [
-  {name:'St. Marys',slug:'st-marys',intro:'St. Marys is home to St. Mary’s Real Estate. Our brokerage is based here, and our agents work with buyers and sellers considering homes, land, and rural properties in the community and nearby areas.',localFocus:'For buyers moving to St. Marys, it helps to look beyond the home itself. Property location, access, utilities, condition, and proximity to the services you use every day can all shape whether a property is the right fit.',propertyFocus:'Our team works with residential properties, rural homes, land and acreage, investment opportunities, and new construction in and around St. Marys.'},
-  {name:'Wamego',slug:'wamego',intro:'St. Mary’s Real Estate serves buyers and sellers in Wamego and the surrounding communities. We help clients compare homes, evaluate property details, and understand the practical considerations involved in a purchase or sale.',localFocus:'When evaluating a Wamego property, consider its location, condition, utility arrangements, lot characteristics, and how it fits your plans. Buyers comparing in-town homes with properties outside town may have different due-diligence needs.',propertyFocus:'We assist with residential real estate as well as rural homes, land, acreage, and investment properties in the Wamego area.'},
-  {name:'Manhattan',slug:'manhattan',intro:'St. Mary’s Real Estate works with clients looking to buy or sell property in Manhattan and the communities between Manhattan and St. Marys. Our service area follows the Topeka-to-Manhattan corridor, with a focus on practical local guidance.',localFocus:'Manhattan buyers and sellers may be weighing different property types, locations, and timelines. A clear understanding of condition, pricing, financing, and the details of each property helps make comparisons more useful.',propertyFocus:'Our agents work with residential homes, land and acreage, new construction, and investment opportunities.'},
-  {name:'Topeka',slug:'topeka',intro:'St. Mary’s Real Estate serves buyers and sellers in Topeka and nearby Northeast Kansas communities. We provide hands-on help with residential property decisions and work with clients considering a range of property types.',localFocus:'When buying or selling in the Topeka area, property-specific factors matter. Location, condition, improvements, lot size, and comparable sales all help inform a sound decision.',propertyFocus:'Our brokerage handles residential real estate, land and acreage, rural properties, commercial property, and investment opportunities.'},
-  {name:'Rossville',slug:'rossville',intro:'St. Mary’s Real Estate works with buyers and sellers in Rossville and the surrounding area. As a St. Marys-based brokerage, we serve smaller communities throughout the region as well as the larger Topeka and Manhattan markets.',localFocus:'For properties in and around Rossville, buyers may want to pay particular attention to lot characteristics, outbuildings, utility service, access, and the condition of major systems. The right questions depend on the individual property.',propertyFocus:'We help clients with homes, rural properties, land and acreage, and property sales in the Rossville area.'},
-  {name:'Silver Lake',slug:'silver-lake',intro:'St. Mary’s Real Estate serves Silver Lake and surrounding communities in Northeast Kansas. Our agents help clients navigate the purchase and sale of homes and other property, with local knowledge and straightforward communication.',localFocus:'A useful property comparison considers more than the asking price. Location, property condition, lot size, improvements, and recent comparable sales can all influence value and suitability.',propertyFocus:'Our team works with residential properties, rural homes, land and acreage, and investment opportunities.'}
+  {
+    name:'St. Marys',slug:'st-marys',
+    intro:'St. Marys is home to St. Mary’s Real Estate. We know this community not just as a place where we do business, but as the place our family brokerage has called home for more than 20 years. Whether you are looking for a home in town, a place with room to spread out, or land for a future project, we can help you understand the options.',
+    localFocus:'Real estate in and around St. Marys can look different from one property to the next. In-town homes, rural residences, and acreage each bring their own questions about location, utilities, access, property condition, and future plans. Taking time to understand those details is an important part of making a confident decision.',
+    smreFit:'Our roots are here, and our work reaches throughout the surrounding area. As a second-generation, family-owned brokerage, we bring local perspective, straightforward communication, and hands-on guidance to buyers and sellers. We work with residential homes, land, acreage, rural properties, new construction, and investment opportunities.'
+  },
+  {
+    name:'Wamego',slug:'wamego',
+    intro:'Wamego offers buyers and sellers a distinct small-community market within the greater Topeka-to-Manhattan area. St. Mary’s Real Estate works with clients considering homes and property in Wamego, whether they are moving into the area, making a change locally, or weighing a property outside town.',
+    localFocus:'When comparing Wamego properties, think about more than the list price. The home’s condition, lot, access, utility arrangements, and location in relation to your day-to-day needs all matter. Buyers looking at homes in town may have different questions than those considering rural homes or acreage nearby.',
+    smreFit:'Our St. Marys office is close to Wamego, and our agents regularly work across this part of Northeast Kansas. We can help you evaluate the details, understand the local market context, and navigate the steps involved in buying or selling. Our experience includes homes, land, acreage, rural properties, and investment real estate.'
+  },
+  {
+    name:'Manhattan',slug:'manhattan',
+    intro:'Manhattan is an important part of the Northeast Kansas real estate market, and St. Mary’s Real Estate serves clients looking to buy or sell here and in the communities between Manhattan and St. Marys. We help people consider the right property, location, and next step for their circumstances.',
+    localFocus:'Manhattan offers a range of property types and locations, so a useful search starts with your priorities. Consider commute and access, property condition, neighborhood setting, lot characteristics, and how the home or property fits your plans. Sellers also benefit from understanding comparable properties and how buyers are likely to view their home.',
+    smreFit:'Our brokerage serves the broader Topeka-to-Manhattan corridor, bringing a practical perspective to residential sales as well as land, acreage, rural properties, and new construction. You will work with a local agent who takes the time to understand your goals and communicate clearly throughout the process.'
+  },
+  {
+    name:'Topeka',slug:'topeka',
+    intro:'St. Mary’s Real Estate serves buyers and sellers in Topeka and the surrounding Northeast Kansas communities. Whether you are searching for a home, preparing to sell, or exploring land and other property, our team can help you make sense of the options and the details that matter.',
+    localFocus:'Topeka has a broad mix of homes and property, and each decision calls for its own set of questions. Buyers should consider location, condition, improvements, lot size, and the costs that may come with a property. Sellers need a clear view of comparable sales, current competition, and how to position their property in the market.',
+    smreFit:'We combine the personal service of a family-owned brokerage with experience across a range of property types. Our agents help with residential real estate, land and acreage, rural properties, commercial opportunities, and investment property, with straightforward advice from the first conversation through closing.'
+  },
+  {
+    name:'Rossville',slug:'rossville',
+    intro:'Rossville is one of the smaller communities served by St. Mary’s Real Estate. Our St. Marys-based team works with buyers and sellers throughout the surrounding area, including people looking for a home in town or more space outside of it.',
+    localFocus:'In and around Rossville, property details can make a meaningful difference. Depending on the property, it may be important to look closely at lot size, outbuildings, access, utility service, and the condition of major systems. The right due diligence starts with understanding how you plan to use the property.',
+    smreFit:'We understand the practical questions that come with buying and selling in smaller communities and rural areas. Our team works with homes, acreage, land, and rural properties, and we aim to make the process clear, responsive, and grounded in the details of the property rather than a one-size-fits-all sales pitch.'
+  },
+  {
+    name:'Silver Lake',slug:'silver-lake',
+    intro:'St. Mary’s Real Estate serves Silver Lake and nearby communities as part of our broader Northeast Kansas service area. Whether you are buying your next home, selling a property, or looking for more room, our agents can help you evaluate your options and plan the next steps.',
+    localFocus:'A good property decision involves more than comparing asking prices. Location, condition, improvements, lot size, access, and recent comparable sales all help shape a clearer picture of a property’s value and suitability. For rural properties, utility arrangements and other site-specific details may also deserve attention.',
+    smreFit:'Our family-owned brokerage is based in nearby St. Marys, and our agents work with buyers and sellers throughout the region. We offer practical guidance across residential homes, rural properties, land, acreage, and investment opportunities, with direct communication and attention to the details that can affect a transaction.'
+  }
 ];
 
 export function generateStaticParams(){return communities.map(({slug})=>({slug}));}
@@ -43,27 +73,42 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
     url:'https://www.smre.info',
     areaServed:{'@type':'City',name:community.name,containedInPlace:{'@type':'State',name:'Kansas'}}
   };
-  return <section className="section container">
+  const listingsHref=`/listings?city=${encodeURIComponent(community.name)}`;
+  return <section className="section container community-page">
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}} />
     <div className="page-intro">
       <p className="eyebrow">NORTHEAST KANSAS REAL ESTATE</p>
-      <h1>{community.name}, Kansas Real Estate</h1>
-      <p>{community.intro}</p>
+      <h1>${community.name}, Kansas Real Estate</h1>
+      <p>${community.intro}</p>
     </div>
-    <div className="about-copy">
-      <h2>Local real estate guidance in {community.name}</h2>
-      <p>{community.localFocus}</p>
-      <h2>Homes, land and property</h2>
-      <p>{community.propertyFocus}</p>
-      <p>St. Mary’s Real Estate is a family-owned brokerage based at 512 W Bertrand Ave in St. Marys, Kansas. Our agents serve clients across the Topeka-to-Manhattan area and can help you understand the next steps whether you are buying, selling, or exploring your options.</p>
+    <div className="community-reading">
+      <section>
+        <p className="eyebrow">GET TO KNOW THE AREA</p>
+        <h2>Buying or selling in ${community.name}</h2>
+        <p>${community.localFocus}</p>
+      </section>
+      <section>
+        <p className="eyebrow">WHY WORK WITH SMRE</p>
+        <h2>Local guidance, personal service</h2>
+        <p>${community.smreFit}</p>
+      </section>
     </div>
-    <div className="about-local-points">
-      <div className="about-local-point"><p className="eyebrow">SEARCH</p><p>Browse current homes and properties in our service area.</p><Link className="text-link" href="/listings">View available listings</Link></div>
-      <div className="about-local-point"><p className="eyebrow">SELL</p><p>Get a local perspective on your property's value and the selling process.</p><Link className="text-link" href="/valuation">Request a home value</Link></div>
-      <div className="about-local-point"><p className="eyebrow">CONNECT</p><p>Talk with a member of the St. Mary’s Real Estate team.</p><Link className="text-link" href="/contact">Contact SMRE</Link></div>
+    <div className="community-listings-cta">
+      <div>
+        <p className="eyebrow">EXPLORE AVAILABLE PROPERTY</p>
+        <h2>Looking in ${community.name}?</h2>
+        <p>See current homes and properties listed in ${community.name}, Kansas.</p>
+      </div>
+      <Link className="button button-dark" href={listingsHref}>See Listings in ${community.name}</Link>
     </div>
-    <div className="section-head compact"><div><p className="eyebrow">MORE COMMUNITIES</p><h2>Explore nearby areas</h2></div></div>
-    <div className="tag-list">{communities.filter(item=>item.slug!==community.slug).map(item=><Link key={item.slug} href={`/communities/${item.slug}`}>{item.name}, KS</Link>)}</div>
-    <p className="lead" style={{marginTop:40}}>Learn more about <Link href="/about">St. Mary’s Real Estate</Link> and the agents who serve Northeast Kansas.</p>
+    <div className="community-next-steps">
+      <div className="about-local-point"><p className="eyebrow">SELLING</p><p>Get a local perspective on your property’s value and the selling process.</p><Link className="text-link" href="/valuation">Request a home value</Link></div>
+      <div className="about-local-point"><p className="eyebrow">CONNECT</p><p>Talk with a member of the St. Mary’s Real Estate team about your plans.</p><Link className="text-link" href="/contact">Contact SMRE</Link></div>
+    </div>
+    <div className="community-more">
+      <div className="section-head compact"><div><p className="eyebrow">MORE COMMUNITIES</p><h2>Explore nearby areas</h2></div></div>
+      <div className="tag-list">{communities.filter(item=>item.slug!==community.slug).map(item=><Link key={item.slug} href={`/communities/${item.slug}`}>{item.name}, KS</Link>)}</div>
+      <p className="lead">Learn more about <Link href="/about">St. Mary’s Real Estate</Link> and the agents who serve Northeast Kansas.</p>
+    </div>
   </section>;
 }
