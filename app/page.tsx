@@ -121,7 +121,7 @@ export default async function Home(){
       <div className="home-seo-team-grid">
         {visibleAgents.map(agent=><Link className="home-seo-agent" href={`/agents/${agent.slug}`} key={agent.slug}>
           <div className="home-seo-agent-photo"><Image src={agent.photo} alt={`${agent.name}, ${agent.role} at St. Mary’s Real Estate`} width={600} height={675} sizes="(max-width: 480px) 46vw, (max-width: 800px) 46vw, 25vw" /></div>
-          <div className="home-seo-agent-info"><strong>{agent.name}</strong><span>{agent.role}</span><span>{agent.market}</span></div>
+          <div className="home-seo-agent-info"><strong>{agent.name}</strong><span>{agent.role}</span></div>
         </Link>)}
       </div>
     </section>
