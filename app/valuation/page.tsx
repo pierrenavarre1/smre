@@ -7,9 +7,9 @@ export const metadata = {
 };
 
 const steps = [
-  { number: '01', title: 'We review your property', text: 'We start with the details you provide and take a closer look at the features, condition, and location of your home.' },
-  { number: '02', title: 'We research the local market', text: 'We review recent comparable sales and the homes currently competing for buyers in your area.' },
-  { number: '03', title: 'We discuss the results', text: 'An SMRE agent will follow up to walk through a realistic pricing range and answer your questions, with no pressure to list.' },
+  { number: '1.', title: 'We review your property', text: 'We start with the details you provide and take a closer look at the features, condition, and location of your home.' },
+  { number: '2.', title: 'We research the local market', text: 'We review recent comparable sales and the homes currently competing for buyers in your area.' },
+  { number: '3.', title: 'We discuss the results', text: 'An SMRE agent will follow up to walk through a realistic pricing range and answer your questions, with no pressure to list.' },
 ];
 
 const questions = [
@@ -39,14 +39,14 @@ export default function Valuation() {
 
       <section className={styles.intro}>
         <div className={styles.introCopy}>
-          <p className={styles.eyebrowDark}>UNDERSTANDING YOUR HOME’S VALUE</p>
+          
           <h2>What is your home worth right now?</h2>
           <p>If you have ever entered your address into Zillow or another online home value estimator, you may have noticed that the number does not always seem quite right. That is because an online estimate cannot walk through your property. It does not know about the kitchen you renovated, the condition of the roof, the extra garage space, or the features that make your property different from the one down the road.</p>
           <p>A Comparative Market Analysis, or CMA, takes a closer look. It is an agent-prepared evaluation of what buyers are actually paying for homes like yours in your area. We review recent MLS sales, consider your property’s features, and look at the homes currently competing for buyers to develop a pricing range grounded in the local market.</p>
           <p>Share a few details about your property and an SMRE agent will prepare a personalized analysis, completely free and with no pressure to sell.</p>
         </div>
         <aside className={styles.accuracyCard}>
-          <span className={styles.accuracyMark}>01</span>
+          
           <h3>Why pricing accuracy matters</h3>
           <p>Pricing a property correctly from the start can make a meaningful difference. A price that is too high can cause a home to sit on the market, while a thoughtful price helps attract qualified buyers and puts you in a better position to evaluate offers.</p>
           <p>A local market analysis gives you information you can use to make a more informed decision.</p>
@@ -55,7 +55,7 @@ export default function Valuation() {
 
       <section className={styles.requestSection} id="request-analysis">
         <div className={styles.requestIntro}>
-          <p className={styles.eyebrow}>START WITH A FEW DETAILS</p>
+          <p className={styles.eyebrowDark}>REQUEST YOUR HOME VALUE</p>
           <h2>Request your free home market analysis.</h2>
           <p>Tell us a little about yourself and your property. The more detail you can share, the better we can understand what makes your home unique.</p>
           <ul>
@@ -66,7 +66,7 @@ export default function Valuation() {
         </div>
         <div className={styles.formPanel}>
           <div className={styles.formPanelHead}>
-            <span>SMRE HOME VALUE REQUEST</span>
+            
             <h3>Tell us about your property</h3>
           </div>
           <LeadForm kind="valuation" />
@@ -75,8 +75,7 @@ export default function Valuation() {
 
       <section className={styles.process}>
         <div className={styles.sectionHeading}>
-          <p className={styles.eyebrowDark}>WHAT HAPPENS NEXT</p>
-          <h2>A straightforward process.</h2>
+          <h2>What Happens Next</h2>
           <p>Once you send your request, here is what you can expect.</p>
         </div>
         <div className={styles.steps}>
@@ -88,7 +87,7 @@ export default function Valuation() {
 
       <section className={styles.why}>
         <div>
-          <p className={styles.eyebrow}>LOCAL KNOWLEDGE MATTERS</p>
+          
           <h2>Your property deserves more than an automated estimate.</h2>
         </div>
         <div className={styles.whyCopy}>
@@ -100,7 +99,7 @@ export default function Valuation() {
 
       <section className={styles.faq}>
         <div className={styles.sectionHeading}>
-          <p className={styles.eyebrowDark}>COMMON QUESTIONS</p>
+          
           <h2>Home value questions, answered.</h2>
         </div>
         <div className={styles.questions}>
@@ -111,7 +110,7 @@ export default function Valuation() {
       </section>
 
       <section className={styles.finalCta}>
-        <p className={styles.eyebrow}>NO COST. NO OBLIGATION.</p>
+        
         <h2>Ready to find out what your home may be worth?</h2>
         <p>Send us a few details about your property and let the SMRE team help you understand the local market.</p>
         <a href="#request-analysis">Request your free analysis</a>
