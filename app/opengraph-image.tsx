@@ -7,8 +7,8 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function OpenGraphImage() {
-  const logo = await readFile(join(process.cwd(), 'public/images/smre-logo-white-1500x235.png'));
-  const logoSrc = `data:image/png;base64,${logo.toString('base64')}`;
+  const logo = await readFile(join(process.cwd(), 'public/images/smre-logo-white-vector.svg'));
+  const logoSrc = `data:image/svg+xml;base64,${logo.toString('base64')}`;
 
   return new ImageResponse(
     (
