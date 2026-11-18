@@ -115,7 +115,7 @@ function isSMRE(p: RESOProperty) {
   return /st\.?\s*mary['’]?s\s*real\s*estate/i.test(p.ListOfficeName || '');
 }
 
-export function compareListingPriority(a: RESOProperty, b: RESOProperty) {
+export function compareListingPriority(a: Pick<RESOProperty, 'ListOfficeName' | 'City' | 'ListingDate' | 'ModificationTimestamp'>, b: Pick<RESOProperty, 'ListOfficeName' | 'City' | 'ListingDate' | 'ModificationTimestamp'>) {
   const aSMRE = isSMRE(a);
   const bSMRE = isSMRE(b);
   if (aSMRE !== bSMRE) return aSMRE ? -1 : 1;
