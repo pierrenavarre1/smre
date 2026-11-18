@@ -58,7 +58,7 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
       <p>St. Mary’s Real Estate is a family-owned brokerage based at 512 W Bertrand Ave in St. Marys, Kansas. Our agents serve clients across the Topeka-to-Manhattan area and can help you understand the next steps whether you are buying, selling, or exploring your options.</p>
     </div>
     <div className="about-local-points">
-      <div className="about-local-point"><p className="eyebrow">SEARCH</p><p>Browse current homes and properties in our service area.</p><Link className="text-link" href={`/listings?city=${encodeURIComponent(community.name)}`}>View available listings</Link></div>
+      <div className="about-local-point"><p className="eyebrow">SEARCH</p><p>Browse current homes and properties in our service area.</p><Link className="text-link" href="/listings">View available listings</Link></div>
       <div className="about-local-point"><p className="eyebrow">SELL</p><p>Get a local perspective on your property's value and the selling process.</p><Link className="text-link" href="/valuation">Request a home value</Link></div>
       <div className="about-local-point"><p className="eyebrow">CONNECT</p><p>Talk with a member of the St. Mary’s Real Estate team.</p><Link className="text-link" href="/contact">Contact SMRE</Link></div>
     </div>
