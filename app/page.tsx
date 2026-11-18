@@ -41,7 +41,7 @@ export default async function Home(){
       .home-hero-actions{display:flex;gap:10px;margin:-10px 0 30px;flex-wrap:wrap}
       .home-hero-actions .button{min-width:145px}
       @media(max-width:600px){.home-hero-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:430px}.home-hero-actions .button{min-width:0;width:100%}}
-      .home-listing-map{margin-top:52px}
+      .home-listing-map{margin-top:52px}\n      .home-listings-intro{max-width:760px;margin:-12px 0 24px;color:var(--muted);font-size:15px;line-height:1.7}
       .home-rural-strip{padding:0;background:var(--navy);color:#fff}
       .home-rural-grid.home-rural-balanced{width:100%;max-width:none;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);min-height:500px}
       .home-rural-balanced .home-rural-photo{min-height:500px;overflow:hidden;position:relative}
@@ -92,7 +92,7 @@ export default async function Home(){
     </section>
 
     <section className="section container">
-      <div className="section-head"><div><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">Browse available homes and land</Link></div>
+      <div className="section-head"><div><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">Browse available homes and land</Link></div>\n      <p className="home-listings-intro">Looking for real estate close to home? Explore current homes, land and acreage across St. Marys, Wamego, Topeka, Manhattan and nearby Northeast Kansas communities.</p>
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
       {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={homeMapItems} searchAreaNavigate/></div>}
     </section>
