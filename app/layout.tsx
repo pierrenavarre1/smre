@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   applicationName: 'St. Mary’s Real Estate',
   icons: {
     icon: '/icon.svg',
-    apple: '/apple-touch-icon.svg'
+    apple: '/icon.svg'
   },
   openGraph: {
     type: 'website',
