@@ -16,11 +16,23 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.VERCEL_ENV === 'production' ? 'https://www.smre.info' : `https://${process.env.VERCEL_URL || 'www.smre.info'}`),
   title: {
-    default: 'St. Mary’s Real Estate | SMRE',
+    default: 'St. Mary’s Real Estate | Homes, Land & Acreage in Northeast Kansas',
     template: '%s | St. Mary’s Real Estate'
   },
   description:
-    'St. Mary’s Real Estate serves St. Marys, Wamego, and the surrounding Topeka–Manhattan market.'
+    'St. Mary’s Real Estate is a local Kansas brokerage serving St. Marys, Wamego, Topeka, Manhattan and nearby communities. Explore homes, land and acreage or connect with our agents.',
+  applicationName: 'St. Mary’s Real Estate',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-touch-icon.svg'
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'St. Mary’s Real Estate',
+    title: 'St. Mary’s Real Estate | Northeast Kansas',
+    description: 'Local real estate agents serving St. Marys, Wamego, Topeka, Manhattan and surrounding Northeast Kansas communities.',
+    url: 'https://www.smre.info'
+  }
 };
 
 export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){
@@ -31,7 +43,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       <div className="container nav">
         <Link href="/" className="brand-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
         <nav className="nav-links" aria-label="Main navigation">
-          <a className="header-phone" href={`tel:${phone.replace(/\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
+          <a className="header-phone" href={`tel:${phone.replace(/\\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
           <Link href="/listings">Listings</Link>
           <Link href="/valuation">Home Value</Link>
           <Link href="/about">About</Link>
@@ -45,7 +57,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       <div className="container footer-grid">
         <div className="footer-brand-block">
           <Link href="/" className="brand-logo footer-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
-          <p>{address.split(',')[0]}<br />{address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${phone.replace(/\D/g,'')}`} style={{color:'#fff'}}>{phone}</a></p>
+          <p>{address.split(',')[0]}<br />{address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${phone.replace(/\\D/g,'')}`} style={{color:'#fff'}}>{phone}</a></p>
         </div>
         <div className="footer-links">
           <strong>Explore</strong>
