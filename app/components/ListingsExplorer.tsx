@@ -17,7 +17,7 @@ const normalizeSearch = (value: string) =>
     .replace(/[^a-z0-9]/g, '');
 
 const normalizeCity = (value: string) =>
-  value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\\s+/g, ' ').trim();
+  value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\s+/g, ' ').trim();
 
 const cityMatches = (listingCity: string, requestedCity: string) => {
   const listing = normalizeCity(listingCity);
