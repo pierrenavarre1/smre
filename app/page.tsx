@@ -55,11 +55,11 @@ export default async function Home(){
       .home-story-copy h2{font-family:var(--serif);font-size:clamp(36px,4.2vw,54px);font-weight:400;line-height:1.06;letter-spacing:-.04em;margin:0 0 22px;max-width:650px}
       .home-story-copy h2 em{color:#a9c4f2;font-weight:400}
       .home-story-copy p:not(.eyebrow){color:rgba(255,255,255,.84);font-size:16px;line-height:1.8;max-width:620px;margin:0 0 16px}
-      .home-story-copy .button{margin-top:12px}
+      .home-story-copy .button{margin-top:22px;padding:14px 24px;min-height:50px}
       .home-story-proof{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
       .home-story-proof article{border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:24px;min-height:145px;display:flex;flex-direction:column;justify-content:center}
       .home-story-proof strong{font-family:var(--serif);font-size:clamp(29px,3vw,39px);font-weight:400;line-height:1.05;margin-bottom:9px}
-      .home-story-proof span{font-size:12px;line-height:1.55;color:rgba(255,255,255,.76)}\n      .home-story-proof .proof-stars{color:#f4b400;letter-spacing:2px;font-size:16px;line-height:1.2;margin-left:7px;white-space:nowrap}\n      .home-story-proof .proof-rating{display:flex;align-items:center;flex-wrap:wrap}
+      .home-story-proof span{font-size:12px;line-height:1.55;color:rgba(255,255,255,.9);font-weight:700}\n      .home-story-proof .proof-stars{color:#f4b400;letter-spacing:2px;font-size:16px;line-height:1.2;margin-left:7px;white-space:nowrap}\n      .home-story-proof .proof-rating{display:flex;align-items:center;flex-wrap:wrap}
       .home-seo-team{padding-top:48px;padding-bottom:42px}
       .home-cta-compact{padding-top:42px;padding-bottom:36px}
       .reviews-section.section{padding-top:46px;padding-bottom:64px}
@@ -99,9 +99,9 @@ export default async function Home(){
       <div className="container home-story-grid">
         <div className="home-story-copy">
           <p className="eyebrow">A FAMILY BROKERAGE, ROOTED HERE</p>
-          <h2>Real estate is personal. <em>So is the way we do business.</em></h2>
-          <p>We’re St. Mary’s Real Estate, a second-generation, family-owned brokerage based in the community we call home. More than 20 years ago, our first broker, Kevin Kirby, started the business with a simple idea: people deserve honest guidance from someone who knows the area and cares about the outcome.</p>
-          <p>Today, the next generation carries that approach forward. We’re still a local team, still close to the communities we serve, and still committed to being there from the first conversation through closing day. Whether you’re buying a home, selling a property, or looking for land, you’ll work with people who take the details seriously and treat you like a neighbor.</p>
+          <h2>Real estate is personal.<br /><em>So is the way we do business.</em></h2>
+          <p>We’re St. Mary’s Real Estate, a second-generation, family-owned brokerage serving St. Marys and communities across Northeast Kansas. Our first broker, Kevin Kirby, started the business more than 20 years ago with a straightforward belief: real estate decisions deserve honest advice from people who know the area.</p>
+          <p>Today, the next generation carries that approach forward. We help buyers and sellers with homes, land, acreage, rural properties, and more, offering practical local guidance from the first conversation through closing.</p>
           <div className="home-story-areas" aria-label="Communities served">
             {serviceAreas.map(area=><Link href={"/communities/"+area.slug} key={area.slug}>{area.name}, KS</Link>)}
           </div>
@@ -111,7 +111,7 @@ export default async function Home(){
           <article><strong>20+ years</strong><span>Family-owned and serving Northeast Kansas</span></article>
           <article><strong>400+</strong><span>Verified real estate closings</span></article>
           <article><strong className="proof-rating">5.0 <span className="proof-stars" aria-label="5 out of 5 stars">★★★★★</span></strong><span>Rated on Google</span></article>
-          <article><strong>Second generation</strong><span>A family business built to serve local communities</span></article>
+          <article><strong>Nearly $70M</strong><span>Total sales volume</span></article>
         </div>
       </div>
     </section>
