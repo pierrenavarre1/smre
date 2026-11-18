@@ -10,7 +10,6 @@ import { MLSDisclosure } from './components/MLSDisclosure';
 import { getAdminData } from './lib/admin-store';
 
 const heroImage = '/images/Hero for SMRE Web.png';
-const fallbackAreaImage = '/images/ChatGPT Image Sep 30, 2026, 02_28_25 PM.png';
 const serviceAreas = [{name:'St. Marys',slug:'st-marys'},{name:'Wamego',slug:'wamego'},{name:'Rossville',slug:'rossville'},{name:'Silver Lake',slug:'silver-lake'},{name:'Manhattan',slug:'manhattan'},{name:'Topeka',slug:'topeka'}];
 
 export const revalidate = 60;
@@ -22,7 +21,6 @@ export default async function Home(){
   const headlineParts=settings.homepageHeadline.split(',');
   const headlineKicker=headlineParts.shift()?.trim()||'REAL ESTATE,';
   const headlineMain=headlineParts.join(',').trim()||'Close to Home.';
-  const areaImage=settings.localImage||fallbackAreaImage;
   const visibleAgents=agents.filter(agent=>!agent.hidden).sort((a,b)=>(a.sort??99)-(b.sort??99));
   const businessSchema={
     '@context':'https://schema.org',
