@@ -104,18 +104,18 @@ function normalizeCity(value: string) {
   return value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-function listingTimestamp(p: RESOProperty) {
+function listingTimestamp(p: Pick<RESOProperty, 'ListingDate' | 'ModificationTimestamp'>) {
   const listingTime = p.ListingDate ? Date.parse(p.ListingDate) : NaN;
   if (Number.isFinite(listingTime)) return listingTime;
   const modificationTime = p.ModificationTimestamp ? Date.parse(p.ModificationTimestamp) : NaN;
   return Number.isFinite(modificationTime) ? modificationTime : 0;
 }
 
-function isSMRE(p: RESOProperty) {
+function isSMRE(p: Pick<RESOProperty, 'ListOfficeName'>) {
   return /st\.?\s*mary['’]?s\s*real\s*estate/i.test(p.ListOfficeName || '');
 }
 
-export function compareListingPriority(a: RESOProperty, b: RESOProperty) {
+export function compareListingPriority(a: Pick<RESOProperty, 'ListOfficeName' | 'City' | 'ListingDate' | 'ModificationTimestamp'>, b: Pick<RESOProperty, 'ListOfficeName' | 'City' | 'ListingDate' | 'ModificationTimestamp'>) {
   const aSMRE = isSMRE(a);
   const bSMRE = isSMRE(b);
   if (aSMRE !== bSMRE) return aSMRE ? -1 : 1;

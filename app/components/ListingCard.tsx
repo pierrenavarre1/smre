@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { RESOProperty } from '../lib/mock-properties';
+import type { ListingIndexProperty } from '../lib/mock-properties';
 import { SourceBadge } from './MLSDisclosure';
 import { listingHref } from '../lib/listing-url';
 
@@ -10,7 +10,7 @@ function formatListingDate(value?: string) {
   return Number.isFinite(timestamp) ? dateFormatter.format(new Date(timestamp)) : value;
 }
 
-export function ListingCard({ p }: { p: RESOProperty }) {
+export function ListingCard({ p }: { p: ListingIndexProperty }) {
   const baths = p.BathroomsTotalInteger || p.BathroomsFull || 0;
   const bathCount = baths + (p.BathroomsHalf ? 0.5 : 0);
   const acreage = p.LotSizeAcres || (p.LotSizeSqFt ? p.LotSizeSqFt / 43560 : 0);
@@ -21,7 +21,7 @@ export function ListingCard({ p }: { p: RESOProperty }) {
     <Link href={listingHref(p)} className="listing-card">
       <div className="card-image">
         {photoSrc ? (
-          <img className="listing-card-photo" src={photoSrc} alt={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} loading="lazy" />
+          <img className="listing-card-photo" src={photoSrc} alt={`Home for sale at ${p.StreetNumber} ${p.StreetName} in ${p.City}, Kansas`} loading="lazy" />
         ) : (
           <div className="card-image-placeholder">No photo available</div>
         )}

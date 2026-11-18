@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
-import type { RESOProperty } from '../lib/mock-properties';
+import type { ListingIndexProperty } from '../lib/mock-properties';
 import { compareListingPriority } from '../lib/listings';
 import { listingHref } from '../lib/listing-url';
 
@@ -15,6 +15,18 @@ const normalizeSearch = (value: string) =>
   value.toLowerCase()
     .replace(/\b(northwest|northeast|southwest|southeast|north|south|east|west|nw|ne|sw|se)\b/g, '')
     .replace(/[^a-z0-9]/g, '');
+
+const normalizeCity = (value: string) =>
+  value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\s+/g, ' ').trim();
+
+const cityMatches = (listingCity: string, requestedCity: string) => {
+  const listing = normalizeCity(listingCity);
+  const requested = normalizeCity(requestedCity);
+  if (requested === 'st marys' || requested === 'saint marys') {
+    return listing === 'st marys' || listing === 'saint marys';
+  }
+  return listing.includes(requested);
+};
 
 type Filters = {
   type: string[];
@@ -39,7 +51,7 @@ function filtersFromUrl(): Partial<Filters> {
   };
 }
 
-export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
+export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
   const router = useRouter();
   const [filters, setFilters] = useState<Filters>(() => ({
     type: [],
@@ -54,6 +66,21 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   }));
   const [sort, setSort] = useState('priority');
   const [page, setPage] = useState(1);
+
+  // Read query filters after hydration. A lazy state initializer cannot read
+  // window during server rendering, so URL filters must be applied client-side.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const city = params.get('city') || '';
+    const address = params.get('address') || '';
+    const beds = params.get('beds') || '';
+    const baths = params.get('baths') || '';
+    const max = params.get('max') || '';
+    if (city || address || beds || baths || max) {
+      setFilters((current) => ({ ...current, city, address, beds, baths, max }));
+      setPage(1);
+    }
+  }, []);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
@@ -82,7 +109,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           (!filters.max || p.ListPrice <= Number(filters.max)) &&
           (!filters.acreage || (p.LotSizeAcres || 0) >= Number(filters.acreage)) &&
           (!filters.city ||
-            p.City.toLowerCase().includes(filters.city.toLowerCase().trim()) ||
+            cityMatches(p.City, filters.city) ||
             p.PostalCode.includes(filters.city.trim())) &&
           (!filters.address ||
             normalizeSearch(
@@ -345,7 +372,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
       {shown.length > 0 ? (
         <div className="listings-search-layout">
           <div className="listings-map-column">
-            <ListingMap listings={shown} onSearchArea={setMapBounds} />
+            <ListingMap listings={shown} onSearchArea={setMapBounds} fitToListings={Boolean(filters.city)} />
           </div>
 
           <div className="listings-results-column">

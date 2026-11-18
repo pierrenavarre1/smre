@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { RESOProperty } from '../lib/mock-properties';
+import type { HomeSearchProperty } from '../lib/mock-properties';
 import { listingHref } from '../lib/listing-url';
 
-export function HomeSearch({ items }: { items: RESOProperty[] }) {
+export function HomeSearch({ items }: { items: HomeSearchProperty[] }) {
   const router = useRouter();
   const [address, setAddress] = useState('');
   const [open, setOpen] = useState(false);
@@ -19,7 +19,7 @@ export function HomeSearch({ items }: { items: RESOProperty[] }) {
     }).slice(0, 6);
   }, [items, address]);
 
-  const selectedAddress = (p: RESOProperty) =>
+  const selectedAddress = (p: HomeSearchProperty) =>
     `${p.StreetNumber} ${p.StreetName}, ${p.City}, ${p.StateOrProvince} ${p.PostalCode}`;
 
   return (
