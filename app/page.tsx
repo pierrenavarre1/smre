@@ -18,6 +18,8 @@ export default async function Home(){
   const activeListings=sortListingsByPriority((await getListings()).filter(p=>p.StandardStatus==='Active')).map((p) => ({ ...p, Media: p.Media.slice(0, 1) }));
   const {settings,agents}=await getAdminData();
   const listings=activeListings.slice(0,settings.featuredCount||6);
+  const homeSearchItems=activeListings.map(({ListingId,StreetNumber,StreetName,City,StateOrProvince,PostalCode})=>({ListingId,StreetNumber,StreetName,City,StateOrProvince,PostalCode}));
+  const homeMapItems=activeListings.map(({ListingId,ListPrice,BedroomsTotal,BathroomsTotalInteger,StreetNumber,StreetName,City,LivingArea,Media,Latitude,Longitude})=>({ListingId,ListPrice,BedroomsTotal,BathroomsTotalInteger,StreetNumber,StreetName,City,LivingArea,Media,Latitude,Longitude}));
   const headlineParts=settings.homepageHeadline.split(',');
   const headlineKicker=headlineParts.shift()?.trim()||'REAL ESTATE,';
   const headlineMain=headlineParts.join(',').trim()||'Close to Home.';
@@ -85,14 +87,14 @@ export default async function Home(){
         <h1><span className="hero-heading-kicker">{headlineKicker}{headlineParts.length||settings.homepageHeadline.includes(",")?",":""}</span><span className="hero-heading-main">{headlineMain}</span></h1>
         <p className="hero-copy">{settings.heroDescription}</p>
         <HomeLeadButtons />
-        <HomeSearch items={activeListings} />
+        <HomeSearch items={homeSearchItems} />
       </div>
     </section>
 
     <section className="section container">
       <div className="section-head"><div><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">Browse available homes and land</Link></div>
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
-      {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={activeListings} searchAreaNavigate/></div>}
+      {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={homeMapItems} searchAreaNavigate/></div>}
     </section>
 
     <section className="home-story">
