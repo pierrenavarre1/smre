@@ -55,10 +55,25 @@ export async function generateMetadata({params}:{params:Promise<{slug:string}>})
   const {slug}=await params;
   const community=communities.find(item=>item.slug===slug);
   if(!community)return {};
+  const title=`${community.name}, KS Real Estate | Homes & Land`;
+  const description=`Buy or sell a home, rural property, land or acreage in ${community.name}, Kansas with St. Mary’s Real Estate. Local service from our St. Marys-based team.`;
+  const url=`https://www.smre.info/communities/${community.slug}`;
   return {
-    title:`${community.name}, KS Real Estate | Homes & Land`,
-    description:`Buy or sell a home, rural property, land or acreage in ${community.name}, Kansas with St. Mary’s Real Estate. Local service from our St. Marys-based team.`,
-    alternates:{canonical:`/communities/${community.slug}`}
+    title,
+    description,
+    alternates:{canonical:url},
+    openGraph:{
+      type:'website',
+      siteName:'St. Mary’s Real Estate',
+      title,
+      description,
+      url
+    },
+    twitter:{
+      card:'summary',
+      title,
+      description
+    }
   };
 }
 
@@ -90,7 +105,8 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
       .community-listings-cta p:not(.eyebrow){margin:0;color:var(--muted);font-size:14px}
       .community-listings-cta .button{flex:0 0 auto;min-height:50px;padding:14px 22px}
       .community-next-steps{display:grid;grid-template-columns:1fr 1fr;gap:30px;padding:0 0 36px;border-bottom:1px solid var(--line)}
-      .community-next-steps .about-local-point{padding:14px 0}\n      .community-next-steps .about-local-point+.about-local-point{padding-left:28px}
+      .community-next-steps .about-local-point{padding:14px 0}
+      .community-next-steps .about-local-point+.about-local-point{padding-left:28px}
       .community-next-steps .about-local-point p:not(.eyebrow){color:var(--muted);font-size:14px;line-height:1.65;margin:0 0 10px}
       .community-more{padding-top:38px}
       .community-more .section-head{margin-bottom:16px}
