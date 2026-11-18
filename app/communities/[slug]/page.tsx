@@ -90,7 +90,7 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
       .community-listings-cta p:not(.eyebrow){margin:0;color:var(--muted);font-size:14px}
       .community-listings-cta .button{flex:0 0 auto;min-height:50px;padding:14px 22px}
       .community-next-steps{display:grid;grid-template-columns:1fr 1fr;gap:30px;padding:0 0 36px;border-bottom:1px solid var(--line)}
-      .community-next-steps .about-local-point{padding:14px 0}
+      .community-next-steps .about-local-point{padding:14px 0}\n      .community-next-steps .about-local-point+.about-local-point{padding-left:28px}
       .community-next-steps .about-local-point p:not(.eyebrow){color:var(--muted);font-size:14px;line-height:1.65;margin:0 0 10px}
       .community-more{padding-top:38px}
       .community-more .section-head{margin-bottom:16px}
