@@ -65,6 +65,10 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
           <Link href="/guides">Guides</Link>
           <Link href="/about">About SMRE</Link>
           <Link href="/testimonials">Testimonials</Link>
+          <Link href="/communities/st-marys">St. Marys Real Estate</Link>
+          <Link href="/communities/wamego">Wamego Real Estate</Link>
+          <Link href="/communities/manhattan">Manhattan Real Estate</Link>
+          <Link href="/communities/topeka">Topeka Real Estate</Link>
         </div>
         <div className="footer-links">
           <strong>Buying &amp; Selling</strong>
