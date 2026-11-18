@@ -100,7 +100,6 @@ export default async function Home(){
     <section className="home-story">
       <div className="container home-story-grid">
         <div className="home-story-copy">
-          <p className="eyebrow">A FAMILY BROKERAGE, ROOTED HERE</p>
           <h2>Real estate is personal.<br /><em>So is the way we do business.</em></h2>
           <p>We’re St. Mary’s Real Estate, a second-generation, family-owned brokerage serving St. Marys and communities across Northeast Kansas. Our first broker, Kevin Kirby, started the business more than 20 years ago with a straightforward belief: real estate decisions deserve honest advice from people who know the area.</p>
           <p>Today, the next generation carries that approach forward. We help buyers and sellers with homes, land, acreage, rural properties, and more, offering practical local guidance from the first conversation through closing.</p>
