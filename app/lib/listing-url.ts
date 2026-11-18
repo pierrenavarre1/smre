@@ -12,7 +12,7 @@ export function listingAddressSlug(listing: Pick<RESOProperty, 'StreetNumber' | 
     .replace(/^-+|-+$/g, '');
 }
 
-export function listingHref(listing: RESOProperty) {
+export function listingHref(listing: Pick<RESOProperty, 'ListingId' | 'StreetNumber' | 'StreetName' | 'City' | 'StateOrProvince'>) {
   const slug = listingAddressSlug(listing);
   return `/listings/${slug || encodeURIComponent(listing.ListingId)}`;
 }
