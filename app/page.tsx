@@ -19,7 +19,7 @@ export default async function Home(){
   const {settings,agents}=await getAdminData();
   const listings=activeListings.slice(0,settings.featuredCount||6);
   const homeSearchItems=activeListings.map(({ListingId,StreetNumber,StreetName,City,StateOrProvince,PostalCode})=>({ListingId,StreetNumber,StreetName,City,StateOrProvince,PostalCode}));
-  const homeMapItems=activeListings.map(({ListingId,ListPrice,BedroomsTotal,BathroomsTotalInteger,StreetNumber,StreetName,City,LivingArea,Media,Latitude,Longitude})=>({ListingId,ListPrice,BedroomsTotal,BathroomsTotalInteger,StreetNumber,StreetName,City,LivingArea,Media,Latitude,Longitude}));
+  const homeMapItems=activeListings.map(({ListingId,ListPrice,BedroomsTotal,BathroomsTotalInteger,StreetNumber,StreetName,City,StateOrProvince,LivingArea,Media,Latitude,Longitude})=>({ListingId,ListPrice,BedroomsTotal,BathroomsTotalInteger,StreetNumber,StreetName,City,LivingArea,Media,Latitude,Longitude}));
   const headlineParts=settings.homepageHeadline.split(',');
   const headlineKicker=headlineParts.shift()?.trim()||'REAL ESTATE,';
   const headlineMain=headlineParts.join(',').trim()||'Close to Home.';
