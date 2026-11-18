@@ -111,9 +111,9 @@ export default async function Home(){
         </div>
         <div className="home-story-proof" aria-label="St. Mary’s Real Estate experience and reputation">
           <article><strong>20+ years</strong><span>Family-owned and serving Northeast Kansas</span></article>
-          <article><strong>Homes & land</strong><span>Residential real estate, acreage and rural property</span></article>
-          <article><strong>Local team</strong><span>Personal guidance and straightforward communication</span></article>
-          <article><strong>Northeast Kansas</strong><span>Serving communities from Topeka to Manhattan</span></article>
+          <article><strong>400+</strong><span>Verified real estate closings</span></article>
+          <article><strong className="proof-rating">5.0 <span className="proof-stars" aria-label="5 out of 5 stars">★★★★★</span></strong><span>Rated on Google</span></article>
+          <article><strong>Nearly $70M</strong><span>Total sales volume</span></article>
         </div>
       </div>
     </section>
