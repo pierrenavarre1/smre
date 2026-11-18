@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
-import type { RESOProperty } from '../lib/mock-properties';
+import type { ListingIndexProperty } from '../lib/mock-properties';
 import { compareListingPriority } from '../lib/listings';
 import { listingHref } from '../lib/listing-url';
 
@@ -51,7 +51,7 @@ function filtersFromUrl(): Partial<Filters> {
   };
 }
 
-export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
+export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
   const router = useRouter();
   const [filters, setFilters] = useState<Filters>(() => ({
     type: [],
