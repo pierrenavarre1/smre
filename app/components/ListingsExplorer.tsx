@@ -66,6 +66,21 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
   }));
   const [sort, setSort] = useState('priority');
   const [page, setPage] = useState(1);
+
+  // Read query filters after hydration. A lazy state initializer cannot read
+  // window during server rendering, so URL filters must be applied client-side.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const city = params.get('city') || '';
+    const address = params.get('address') || '';
+    const beds = params.get('beds') || '';
+    const baths = params.get('baths') || '';
+    const max = params.get('max') || '';
+    if (city || address || beds || baths || max) {
+      setFilters((current) => ({ ...current, city, address, beds, baths, max }));
+      setPage(1);
+    }
+  }, []);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
