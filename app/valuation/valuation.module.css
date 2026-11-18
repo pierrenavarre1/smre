@@ -1,0 +1,64 @@
+.page{color:var(--navy)}
+.hero{background:var(--navy);color:#fff;padding:94px 28px 88px}
+.heroInner{max-width:1120px;margin:0 auto}
+.eyebrow,.eyebrowDark{font-size:10px;line-height:1.3;letter-spacing:.2em;font-weight:700;margin:0 0 18px}
+.eyebrow{color:rgba(255,255,255,.75)}
+.eyebrowDark{color:var(--navy)}
+.hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(46px,6vw,76px);line-height:1.02;letter-spacing:-.045em;max-width:850px;margin:0 0 24px}
+.heroLead{font-size:18px;line-height:1.7;color:rgba(255,255,255,.86);max-width:690px;margin:0}
+.trustLine{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:28px 0 30px;color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em}
+.trustLine i{width:4px;height:4px;border-radius:50%;background:#a9c4f2}
+.heroButton,.finalCta a{display:inline-flex;align-items:center;justify-content:center;padding:14px 22px;background:#fff;color:var(--navy);font-size:12px;font-weight:700;text-decoration:none;min-height:48px}
+.intro{width:min(1120px,calc(100% - 56px));margin:0 auto;padding:88px 0;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:74px;align-items:center}
+.introCopy h2,.sectionHeading h2{font-family:var(--serif);font-size:clamp(36px,4vw,48px);line-height:1.08;font-weight:400;letter-spacing:-.035em;margin:0 0 22px}
+.introCopy p:not(.eyebrowDark){font-size:15px;line-height:1.85;color:var(--muted);margin:0 0 16px}
+.accuracyCard{background:#f4f5f9;padding:34px;border-top:3px solid var(--navy)}
+.accuracyMark{font-family:var(--serif);font-size:42px;color:#9aa5ca}
+.accuracyCard h3{font-family:var(--serif);font-size:29px;line-height:1.12;font-weight:400;margin:16px 0}
+.accuracyCard p{font-size:14px;line-height:1.75;color:var(--muted);margin:0 0 13px}
+.requestSection{background:#f4f5f9;padding:84px max(28px,calc((100% - 1120px)/2));display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:70px;align-items:start}
+.requestIntro{padding-top:24px}
+.requestIntro h2,.why h2{font-family:var(--serif);font-size:clamp(38px,4vw,50px);line-height:1.06;letter-spacing:-.035em;font-weight:400;margin:0 0 20px}
+.requestIntro>p:not(.eyebrow){font-size:15px;line-height:1.8;color:var(--muted);margin:0 0 24px}
+.requestIntro ul{padding:0 0 0 18px;margin:0;color:var(--navy);font-size:13px;line-height:2}
+.formPanel{background:var(--navy);color:#fff;padding:36px 38px}
+.formPanelHead{padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.2)}
+.formPanelHead span{font-size:9px;font-weight:700;letter-spacing:.17em;color:rgba(255,255,255,.68)}
+.formPanelHead h3{font-family:var(--serif);font-size:31px;font-weight:400;margin:8px 0 0}
+.formPanel :global(.lead-form){margin-top:24px;gap:15px}
+.formPanel :global(.lead-form label){font-size:11px;color:rgba(255,255,255,.9)}
+.formPanel :global(.lead-form input),.formPanel :global(.lead-form textarea),.formPanel :global(.lead-form select){padding:11px 0;border:0;border-bottom:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;font:inherit;font-size:14px;min-width:0;width:100%;border-radius:0}
+.formPanel :global(.lead-form select option){color:var(--navy);background:#fff}
+.formPanel :global(.lead-form input:focus),.formPanel :global(.lead-form textarea:focus),.formPanel :global(.lead-form select:focus){outline:0;border-bottom-color:#fff}
+.formPanel :global(.lead-form input::placeholder),.formPanel :global(.lead-form textarea::placeholder){color:rgba(255,255,255,.55)}
+.formPanel :global(.lead-form textarea){min-height:88px}
+.formPanel :global(.lead-form .button){background:#fff;color:var(--navy);margin-top:8px;width:100%;min-height:50px}
+.formPanel :global(.lead-form .form-row){gap:16px}
+.formPanel :global(.lead-form-error){color:#ffd6d6;font-size:12px}
+.formPanel :global(.success){background:#fff;color:var(--navy)}
+.process{width:min(1120px,calc(100% - 56px));margin:0 auto;padding:88px 0}
+.sectionHeading{text-align:center;max-width:680px;margin:0 auto 42px}
+.sectionHeading>p:last-child{font-size:15px;color:var(--muted);margin:0}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.step{border:1px solid var(--line);padding:28px;min-height:210px}
+.step>span{font-family:var(--serif);font-size:34px;color:#9aa5ca}
+.step h3{font-family:var(--serif);font-size:24px;font-weight:400;margin:12px 0 9px}
+.step p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
+.why{background:var(--navy);color:#fff;padding:78px max(28px,calc((100% - 1120px)/2));display:grid;grid-template-columns:1fr 1fr;gap:75px;align-items:start}
+.why h2{max-width:490px}
+.whyCopy p{font-size:14px;line-height:1.8;color:rgba(255,255,255,.82);margin:0 0 16px}
+.faq{width:min(900px,calc(100% - 56px));margin:0 auto;padding:88px 0}
+.faq .sectionHeading{text-align:left;margin:0 0 28px}
+.questions{border-top:1px solid var(--line)}
+.questions details{border-bottom:1px solid var(--line);padding:19px 0}
+.questions summary{cursor:pointer;list-style:none;font-family:var(--serif);font-size:22px;padding-right:30px;position:relative}
+.questions summary::-webkit-details-marker{display:none}
+.questions summary:after{content:'+';position:absolute;right:4px;top:0;font-family:Arial,sans-serif;font-size:23px}
+.questions details[open] summary:after{content:'−'}
+.questions details p{font-size:14px;line-height:1.8;color:var(--muted);max-width:760px;margin:14px 0 0}
+.finalCta{background:#f4f5f9;text-align:center;padding:72px 28px}
+.finalCta h2{font-family:var(--serif);font-size:clamp(35px,4vw,48px);font-weight:400;line-height:1.08;max-width:760px;margin:0 auto 16px}
+.finalCta>p:not(.eyebrow){font-size:14px;color:var(--muted);max-width:600px;margin:0 auto 25px}
+.finalCta a{background:var(--navy);color:#fff}
+@media(max-width:800px){.hero{padding:72px 26px}.intro{grid-template-columns:1fr;gap:34px;padding:64px 0}.requestSection{grid-template-columns:1fr;gap:30px;padding:62px 26px}.requestIntro{padding-top:0}.why{grid-template-columns:1fr;gap:24px;padding:62px 26px}.steps{grid-template-columns:1fr}.step{min-height:0}.process,.faq{padding:64px 0}}
+@media(max-width:520px){.hero{padding:60px 22px}.hero h1{font-size:45px}.heroLead{font-size:16px}.trustLine{gap:9px;font-size:9px}.intro,.process,.faq{width:calc(100% - 44px)}.intro{padding:54px 0}.accuracyCard{padding:25px}.requestSection{padding:52px 22px}.formPanel{padding:27px 22px}.formPanel :global(.lead-form .form-row){grid-template-columns:1fr}.why{padding:54px 22px}.finalCta{padding:58px 22px}}
