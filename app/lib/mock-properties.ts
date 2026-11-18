@@ -4,7 +4,28 @@ export interface RESOMedia { MediaKey:string; MediaURL:string; MediaCategory:'Ph
 export interface RESOProperty {
  ListingId:string; ModificationTimestamp?:string; StandardStatus:'Active'|'Pending'|'Closed'; ListPrice:number; BedroomsTotal:number; BathroomsTotalInteger:number; PropertyType:PropertyType; PropertySubType:string; StreetNumber:string; StreetName:string; City:string; StateOrProvince:string; PostalCode:string; LivingArea:number; LotSizeAcres:number; YearBuilt:number; PublicRemarks:string; Media:RESOMedia[]; ListingKey:string; ListAgentFullName:string; ListAgentMlsId:string; ListOfficeName:string; MlsSource:MLSSource; Latitude:number; Longitude:number;
  ListOfficeEmail?:string; ListOfficePhone?:string; ListAgentEmail?:string; ListAgentDirectPhone?:string; BathroomsFull?:number; BathroomsHalf?:number; PricePerSqFt?:number; AnnualTaxes?:number; TaxYear?:number; LotSizeSqFt?:number; GarageSpaces?:number; ParkingFeatures?:string; Basement?:string; Foundation?:string; Roof?:string; Exterior?:string; Flooring?:string; Appliances?:string; Heating?:string; Cooling?:string; WaterSource?:string; Sewer?:string; HOA?:string; Schools?:string; Directions?:string; ArchitecturalStyle?:string; ListingDate?:string; MLSNumber?:string; ParcelNumber?:string; OtherStructures?:string; Features?:string[];
+
 }
+
+export type ListingIndexProperty = Pick<RESOProperty,
+  | 'ListingId' | 'StandardStatus' | 'ListPrice' | 'BedroomsTotal'
+  | 'BathroomsTotalInteger' | 'BathroomsFull' | 'BathroomsHalf'
+  | 'PropertyType' | 'StreetNumber' | 'StreetName' | 'City'
+  | 'StateOrProvince' | 'PostalCode' | 'LivingArea' | 'LotSizeAcres'
+  | 'LotSizeSqFt' | 'Media' | 'ListOfficeName' | 'MlsSource'
+  | 'Latitude' | 'Longitude' | 'ListingDate' | 'ModificationTimestamp'
+>;
+
+export type ListingMapProperty = Pick<ListingIndexProperty,
+  | 'ListingId' | 'ListPrice' | 'BedroomsTotal' | 'BathroomsTotalInteger'
+  | 'StreetNumber' | 'StreetName' | 'City' | 'LivingArea'
+  | 'Media' | 'Latitude' | 'Longitude'
+>;
+
+export type HomeSearchProperty = Pick<RESOProperty,
+  'ListingId' | 'StreetNumber' | 'StreetName' | 'City' | 'StateOrProvince' | 'PostalCode'
+>;
+
 const photos=['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=88','https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1600&q=88','https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1600&q=88'];
 export const mockProperties:RESOProperty[]=[
  {ListingId:'244039',ListingKey:'244039',StandardStatus:'Active',ListPrice:290000,BedroomsTotal:3,BathroomsTotalInteger:2,BathroomsFull:2,BathroomsHalf:1,PropertyType:'Residential',PropertySubType:'Single Family Residence',StreetNumber:'802',StreetName:'W Bertrand Ave',City:'St. Marys',StateOrProvince:'KS',PostalCode:'66536',LivingArea:2382,LotSizeAcres:.30,LotSizeSqFt:13068,YearBuilt:1920,PricePerSqFt:122,AnnualTaxes:2265.68,TaxYear:2025,PublicRemarks:'Welcome to this versatile 3 bedroom, 2.5 bath home with a detached studio ADU, offering flexibility for guests, extended family, a home office or rental income. The main home features hardwood floors, an updated kitchen, a new half bath downstairs and two full baths upstairs. The main-level laundry room includes additional workspace, and the basement includes a storm shelter. Outside, a patio opens to a private backyard.',Media:photos.map((url,j)=>({MediaKey:`244039-${j}`,MediaURL:url,MediaCategory:'Photo'})),ListAgentFullName:'Thomas Kirby',ListAgentMlsId:'T-1002',ListOfficeName:'St. Mary’s Real Estate',MlsSource:'Sunflower MLS',Latitude:39.1917,Longitude:-96.0660,GarageSpaces:0,ParkingFeatures:'Off-street parking',Basement:'Concrete, full, unfinished, storm shelter',Foundation:'Concrete',Roof:'Composition',Exterior:'Frame, vinyl siding',Flooring:'Hardwood, ceramic tile, carpet',Appliances:'Electric range, dishwasher, refrigerator',Heating:'Forced gas',Cooling:'Central air',WaterSource:'Public',Sewer:'Public sewer',HOA:'No HOA',Schools:'St. Marys Elementary · St. Marys Middle · St. Marys High',Directions:'See MLS directions',ArchitecturalStyle:'Two story',ListingDate:'2026-04-17',MLSNumber:'244039',ParcelNumber:'272-09-0-40-01-003.01-0',OtherStructures:'Detached studio ADU',Features:['No HOA','Fireplace','Patio','Formal dining room','Thermal pane windows','Main-level laundry','Storm shelter','Detached studio ADU']},
