@@ -16,6 +16,18 @@ const normalizeSearch = (value: string) =>
     .replace(/\b(northwest|northeast|southwest|southeast|north|south|east|west|nw|ne|sw|se)\b/g, '')
     .replace(/[^a-z0-9]/g, '');
 
+const normalizeCity = (value: string) =>
+  value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\\s+/g, ' ').trim();
+
+const cityMatches = (listingCity: string, requestedCity: string) => {
+  const listing = normalizeCity(listingCity);
+  const requested = normalizeCity(requestedCity);
+  if (requested === 'st marys' || requested === 'saint marys') {
+    return listing === 'st marys' || listing === 'saint marys';
+  }
+  return listing.includes(requested);
+};
+
 type Filters = {
   type: string[];
   status: string;
@@ -82,7 +94,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
           (!filters.max || p.ListPrice <= Number(filters.max)) &&
           (!filters.acreage || (p.LotSizeAcres || 0) >= Number(filters.acreage)) &&
           (!filters.city ||
-            p.City.toLowerCase().includes(filters.city.toLowerCase().trim()) ||
+            cityMatches(p.City, filters.city) ||
             p.PostalCode.includes(filters.city.trim())) &&
           (!filters.address ||
             normalizeSearch(
