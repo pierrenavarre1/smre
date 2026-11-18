@@ -13,7 +13,6 @@
 .introCopy h2,.sectionHeading h2{font-family:var(--serif);font-size:clamp(36px,4vw,48px);line-height:1.08;font-weight:400;letter-spacing:-.035em;margin:0 0 22px}
 .introCopy p:not(.eyebrowDark){font-size:15px;line-height:1.85;color:var(--muted);margin:0 0 16px}
 .accuracyCard{background:#f4f5f9;padding:34px;border-top:3px solid var(--navy)}
-.accuracyMark{font-family:var(--serif);font-size:42px;color:#9aa5ca}
 .accuracyCard h3{font-family:var(--serif);font-size:29px;line-height:1.12;font-weight:400;margin:16px 0}
 .accuracyCard p{font-size:14px;line-height:1.75;color:var(--muted);margin:0 0 13px}
 .requestSection{background:#f4f5f9;padding:84px max(28px,calc((100% - 1120px)/2));display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:70px;align-items:start}
@@ -44,9 +43,9 @@
 .step>span{font-family:var(--serif);font-size:34px;color:#9aa5ca}
 .step h3{font-family:var(--serif);font-size:24px;font-weight:400;margin:12px 0 9px}
 .step p{font-size:13px;line-height:1.7;color:var(--muted);margin:0}
-.why{background:var(--navy);color:#fff;padding:78px max(28px,calc((100% - 1120px)/2));display:grid;grid-template-columns:1fr 1fr;gap:75px;align-items:start}
+.why{background:#fff;color:var(--navy);padding:78px max(28px,calc((100% - 1120px)/2));display:grid;grid-template-columns:1fr 1fr;gap:75px;align-items:start;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .why h2{max-width:490px}
-.whyCopy p{font-size:14px;line-height:1.8;color:rgba(255,255,255,.82);margin:0 0 16px}
+.whyCopy p{font-size:14px;line-height:1.8;color:var(--muted);margin:0 0 16px}
 .faq{width:min(900px,calc(100% - 56px));margin:0 auto;padding:88px 0}
 .faq .sectionHeading{text-align:left;margin:0 0 28px}
 .questions{border-top:1px solid var(--line)}
@@ -62,3 +61,18 @@
 .finalCta a{background:var(--navy);color:#fff}
 @media(max-width:800px){.hero{padding:72px 26px}.intro{grid-template-columns:1fr;gap:34px;padding:64px 0}.requestSection{grid-template-columns:1fr;gap:30px;padding:62px 26px}.requestIntro{padding-top:0}.why{grid-template-columns:1fr;gap:24px;padding:62px 26px}.steps{grid-template-columns:1fr}.step{min-height:0}.process,.faq{padding:64px 0}}
 @media(max-width:520px){.hero{padding:60px 22px}.hero h1{font-size:45px}.heroLead{font-size:16px}.trustLine{gap:9px;font-size:9px}.intro,.process,.faq{width:calc(100% - 44px)}.intro{padding:54px 0}.accuracyCard{padding:25px}.requestSection{padding:52px 22px}.formPanel{padding:27px 22px}.formPanel :global(.lead-form .form-row){grid-template-columns:1fr}.why{padding:54px 22px}.finalCta{padding:58px 22px}}
+
+/* Simplified valuation page hierarchy and optional property details */
+.introCopy p:not(.eyebrowDark){line-height:1.72;margin-bottom:13px}
+.accuracyCard h3{margin-top:0}
+.formPanelHead{padding-bottom:18px}
+.formPanelHead h3{margin:0}
+.formPanel :global(.lead-form .optional-details){border-top:1px solid rgba(255,255,255,.22);padding-top:16px;margin-top:2px}
+.formPanel :global(.lead-form .optional-details summary){cursor:pointer;list-style:none;font-size:12px;font-weight:700;letter-spacing:.02em;padding:5px 0 10px}
+.formPanel :global(.lead-form .optional-details summary::-webkit-details-marker){display:none}
+.formPanel :global(.lead-form .optional-details summary:after){content:'+';float:right;font-size:17px;font-weight:400}
+.formPanel :global(.lead-form .optional-details[open] summary:after){content:'−'}
+.formPanel :global(.lead-form .optional-details-content){display:grid;gap:15px;padding-top:8px}
+.formPanel :global(.lead-form .contact-note){font-size:11px;line-height:1.5;color:rgba(255,255,255,.68);margin:0}
+.step>span{font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:var(--navy);display:block;margin-bottom:10px}
+.sectionHeading h2{margin-bottom:14px}
