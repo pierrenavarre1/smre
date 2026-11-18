@@ -51,19 +51,31 @@ export default async function Home(){
       .home-rural-balanced .home-rural-copy h2{font-family:var(--serif);font-size:clamp(32px,3.2vw,44px);line-height:1.08;font-weight:400;letter-spacing:-.04em;margin:0 0 24px;max-width:600px}
       .home-rural-balanced .home-rural-copy p:not(.eyebrow){color:#fff;opacity:.82;font-size:16px;line-height:1.7;max-width:570px;margin:0 0 32px}
       .home-rural-balanced .home-rural-copy .button{align-self:flex-start}
-      .home-seo-intro{padding-top:72px;padding-bottom:76px}
-      .home-seo-intro .seo-copy{max-width:850px;color:var(--muted);font-size:16px;line-height:1.8}
-      .home-seo-intro h2,.home-seo-team h2{font-family:var(--serif);font-size:clamp(32px,4vw,44px);font-weight:400;line-height:1.12;letter-spacing:-.035em;margin:0 0 20px}
-      .home-seo-intro .seo-areas{display:flex;flex-wrap:wrap;gap:9px 18px;margin:24px 0 0;padding:0;list-style:none}
-      .home-seo-intro .seo-areas a{color:var(--navy);font-size:13px;font-weight:700;text-decoration:underline;text-underline-offset:4px}
-      .home-seo-team{padding-top:0}
+      .home-story{background:var(--navy);color:#fff;padding:76px 0 72px}
+      .home-story-grid{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:64px;align-items:center}
+      .home-story-copy .eyebrow{color:#b8c8ed;margin-bottom:18px}
+      .home-story-copy h2{font-family:var(--serif);font-size:clamp(36px,4.2vw,54px);font-weight:400;line-height:1.06;letter-spacing:-.04em;margin:0 0 22px;max-width:650px}
+      .home-story-copy h2 em{color:#a9c4f2;font-weight:400}
+      .home-story-copy p:not(.eyebrow){color:rgba(255,255,255,.84);font-size:16px;line-height:1.8;max-width:620px;margin:0 0 16px}
+      .home-story-copy .button{margin-top:12px}
+      .home-story-proof{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+      .home-story-proof article{border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:24px;min-height:145px;display:flex;flex-direction:column;justify-content:center}
+      .home-story-proof strong{font-family:var(--serif);font-size:clamp(29px,3vw,39px);font-weight:400;line-height:1.05;margin-bottom:9px}
+      .home-story-proof span{font-size:12px;line-height:1.55;color:rgba(255,255,255,.76)}
+      .home-seo-team{padding-top:78px;padding-bottom:82px}
+      .home-seo-team h2{font-family:var(--serif);font-size:clamp(32px,4vw,44px);font-weight:400;line-height:1.12;letter-spacing:-.035em;margin:0}
       .home-seo-team-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
-      .home-seo-agent{border:1px solid var(--line);padding:22px;color:var(--navy);text-decoration:none;display:flex;flex-direction:column;gap:8px}
-      .home-seo-agent strong{font-family:var(--serif);font-size:22px;font-weight:400}
-      .home-seo-agent span{font-size:12px;color:var(--muted)}
-      .home-seo-agent:hover{background:var(--wash)}
-      @media(max-width:800px){.home-listing-map{margin-top:38px}.home-rural-grid.home-rural-balanced{grid-template-columns:1fr}.home-rural-balanced .home-rural-photo{min-height:320px;max-height:420px}.home-rural-balanced .home-rural-copy{padding:52px 28px 60px}.home-seo-team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-      @media(max-width:480px){.home-seo-team-grid{grid-template-columns:1fr}}
+      .home-seo-agent{border:1px solid var(--line);color:var(--navy);text-decoration:none;display:flex;flex-direction:column;min-width:0;transition:transform .2s ease,box-shadow .2s ease}
+      .home-seo-agent:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(15,20,71,.1)}
+      .home-seo-agent-photo{position:relative;width:100%;aspect-ratio:4/4.5;background:var(--wash);overflow:hidden}
+      .home-seo-agent-photo img{width:100%;height:100%;object-fit:cover;object-position:center 28%;display:block}
+      .home-seo-agent-info{padding:18px 18px 20px}
+      .home-seo-agent-info strong{display:block;font-family:var(--serif);font-size:22px;font-weight:400;margin-bottom:4px}
+      .home-seo-agent-info span{display:block;font-size:12px;color:var(--muted);line-height:1.5}
+      .home-story-areas{display:flex;flex-wrap:wrap;gap:8px 17px;margin-top:25px}
+      .home-story-areas a{font-size:12px;color:#fff;text-decoration:underline;text-underline-offset:4px;text-decoration-color:rgba(255,255,255,.45)}
+      @media(max-width:800px){.home-listing-map{margin-top:38px}.home-rural-grid.home-rural-balanced{grid-template-columns:1fr}.home-rural-balanced .home-rural-photo{min-height:320px;max-height:420px}.home-rural-balanced .home-rural-copy{padding:52px 28px 60px}.home-story-grid{grid-template-columns:1fr;gap:36px}.home-story{padding:58px 0}.home-seo-team-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+      @media(max-width:480px){.home-story-proof{gap:9px}.home-story-proof article{padding:17px;min-height:125px}.home-seo-team-grid{gap:12px}.home-seo-agent-info{padding:14px}.home-seo-agent-info strong{font-size:19px}}
     `}</style>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(businessSchema).replace(/</g,'\\u003c')}} />
     <section className="home-hero">
@@ -90,23 +102,34 @@ export default async function Home(){
       </div>
     </section>
 
-    <section className="section container home-seo-intro">
-      <p className="eyebrow">ST. MARYS, KANSAS REAL ESTATE</p>
-      <h2>Real Estate, Close to Home in Northeast Kansas</h2>
-      <div className="seo-copy">
-        <p>St. Mary’s Real Estate is a family-owned brokerage based in St. Marys, Kansas. Our agents work with buyers and sellers across the Topeka-to-Manhattan area, combining local knowledge with straightforward advice and personal attention. We help people navigate the details of buying or selling a home, evaluating land, and making decisions about rural and investment properties.</p>
-        <p>Our team includes principal broker Joseph Kirby, agent Thomas Kirby, associate broker James Frazier, and agent Michael Kirby. Together, they work with a range of property needs, including residential homes, land and acreage, rural properties, new construction, commercial real estate, and investments. You can learn more about each agent, their experience, and the areas they serve on our team profiles.</p>
-        <p>Whether you are moving to the area, selling a longtime home, purchasing your first property, or considering land outside town, we aim to make the process clear and manageable. We stay involved, answer questions, and help clients understand the local factors that can affect a real estate decision.</p>
+    <section className="home-story">
+      <div className="container home-story-grid">
+        <div className="home-story-copy">
+          <p className="eyebrow">A FAMILY BROKERAGE, ROOTED HERE</p>
+          <h2>Real estate is personal. <em>So is the way we do business.</em></h2>
+          <p>We’re St. Mary’s Real Estate, a second-generation, family-owned brokerage based in the community we call home. More than 20 years ago, our first broker, Kevin Kirby, started the business with a simple idea: people deserve honest guidance from someone who knows the area and cares about the outcome.</p>
+          <p>Today, the next generation carries that approach forward. We’re still a local team, still close to the communities we serve, and still committed to being there from the first conversation through closing day. Whether you’re buying a home, selling a property, or looking for land, you’ll work with people who take the details seriously and treat you like a neighbor.</p>
+          <div className="home-story-areas" aria-label="Communities served">
+            {serviceAreas.map(area=><Link href={"/communities/"+area.slug} key={area.slug}>{area.name}, KS</Link>)}
+          </div>
+          <Link href="/about" className="button button-light">More about our company</Link>
+        </div>
+        <div className="home-story-proof" aria-label="About St. Mary’s Real Estate">
+          <article><strong>20+ years</strong><span>Locally owned and serving Northeast Kansas</span></article>
+          <article><strong>Second generation</strong><span>A family business carried forward by the next generation</span></article>
+          <article><strong>St. Marys, Kansas</strong><span>Our home base, with service from Topeka to Manhattan</span></article>
+          <article><strong>People first</strong><span>Personal guidance, clear communication, and local knowledge</span></article>
+        </div>
       </div>
-      <ul className="seo-areas" aria-label="Communities served">
-        {serviceAreas.map(area=><li key={area.slug}><Link href={"/communities/"+area.slug}>{area.name}, KS</Link></li>)}
-      </ul>
     </section>
 
     <section className="section container home-seo-team">
-      <div className="section-head"><div><p className="eyebrow">MEET THE AGENTS</p><h2>Local agents. Practical guidance.</h2></div><Link href="/agents" className="text-link">Meet the SMRE team</Link></div>
+      <div className="section-head"><div><p className="eyebrow">THE PEOPLE BEHIND SMRE</p><h2>A local team you can get to know.</h2></div><Link href="/agents" className="text-link">Meet the full team</Link></div>
       <div className="home-seo-team-grid">
-        {visibleAgents.map(agent=><Link className="home-seo-agent" href={`/agents/${agent.slug}`} key={agent.slug}><strong>{agent.name}</strong><span>{agent.role}</span><span>{agent.market}</span></Link>)}
+        {visibleAgents.map(agent=><Link className="home-seo-agent" href={`/agents/${agent.slug}`} key={agent.slug}>
+          <div className="home-seo-agent-photo"><Image src={agent.photo} alt={`${agent.name}, ${agent.role} at St. Mary’s Real Estate`} width={600} height={675} sizes="(max-width: 480px) 46vw, (max-width: 800px) 46vw, 25vw" /></div>
+          <div className="home-seo-agent-info"><strong>{agent.name}</strong><span>{agent.role}</span><span>{agent.market}</span></div>
+        </Link>)}
       </div>
     </section>
 
