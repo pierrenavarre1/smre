@@ -202,3 +202,90 @@
  .photo-lightbox-count{position:absolute!important;top:16px!important;right:16px!important;left:auto!important;bottom:auto!important;transform:none!important;z-index:20!important;padding:7px 11px;border-radius:18px;background:rgba(12,15,28,.78);color:#fff!important;font-size:13px;font-weight:800;letter-spacing:0;}
  .photo-lightbox-tour{z-index:6}
 }
+
+
+/* Refined SMRE analytics dashboard */
+.admin-analytics{gap:24px}
+.admin-analytics-toolbar{padding-bottom:18px;border-bottom:1px solid var(--line)}
+.admin-analytics-updated{font-size:10px;color:var(--muted);margin:5px 0 0}
+.admin-analytics-section-title{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-top:4px}
+.admin-analytics-section-title h2{font-family:var(--serif);font-size:30px;font-weight:400;margin:3px 0 0}
+.admin-analytics-section-title>span{font-size:11px;color:var(--muted)}
+.admin-analytics-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.admin-analytics-card{padding:20px 22px;min-width:0;box-shadow:0 2px 10px rgba(14,20,64,.035)}
+.admin-analytics-card strong{font-size:36px;line-height:1.15;overflow-wrap:anywhere}
+.admin-analytics-card small{font-size:10px;color:var(--muted);margin-top:3px}
+.admin-analytics-panel{padding:24px;box-shadow:0 2px 10px rgba(14,20,64,.025)}
+.admin-analytics-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.admin-analytics-panel h2{font-size:25px}
+.admin-analytics-chart{display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;height:245px}
+.admin-analytics-y-labels{display:flex;flex-direction:column;justify-content:space-between;padding:0 0 30px;text-align:right;font-size:10px;color:var(--muted)}
+.admin-analytics-chart-area{position:relative;min-width:0}
+.admin-analytics-gridlines{position:absolute;inset:0 0 30px;display:flex;flex-direction:column;justify-content:space-between}
+.admin-analytics-gridlines i{display:block;border-top:1px solid var(--line)}
+.admin-analytics-bars{position:absolute;inset:0;display:flex;align-items:stretch;gap:5px;border:0;padding:0 0 30px;height:auto;overflow:hidden}
+.admin-analytics-bar-wrap{flex:1;min-width:0;position:relative;display:flex;align-items:end;justify-content:center}
+.admin-analytics-bar{width:min(100%,22px);min-height:2px;background:var(--navy);border-radius:2px 2px 0 0;opacity:.88;position:relative;z-index:1}
+.admin-analytics-bar-wrap span{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted);white-space:nowrap}
+.admin-analytics-list{gap:14px}
+.admin-analytics-row{font-size:12px}
+.admin-analytics-meter{height:4px}
+.admin-analytics-footnote{font-size:11px;color:var(--muted);line-height:1.5;margin:0}
+@media(max-width:1050px){.admin-analytics-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.admin-analytics-grid{grid-template-columns:1fr}.admin-analytics-chart{height:210px}}
+@media(max-width:520px){.admin-analytics-cards{grid-template-columns:1fr 1fr}.admin-analytics-card{padding:16px}.admin-analytics-card strong{font-size:29px}.admin-analytics-section-title h2{font-size:26px}.admin-analytics-bars{gap:2px}}
+
+
+/* Interactive chart tooltips and uncluttered time axis */
+.admin-analytics-chart-area{padding-bottom:30px}
+.admin-analytics-bars{bottom:30px;padding:0;overflow:visible}
+.admin-analytics-bar-wrap{outline:none;cursor:crosshair}
+.admin-analytics-bar-wrap::after{content:attr(data-tooltip);position:absolute;z-index:5;left:50%;bottom:calc(100% + 8px);transform:translate(-50%,5px);opacity:0;pointer-events:none;white-space:nowrap;background:#101a43;color:#fff;border-radius:4px;padding:8px 10px;font-size:11px;line-height:1.3;box-shadow:0 5px 16px rgba(10,16,45,.2);transition:opacity .12s ease,transform .12s ease}
+.admin-analytics-bar-wrap:hover::after,.admin-analytics-bar-wrap:focus-visible::after{opacity:1;transform:translate(-50%,0)}
+.admin-analytics-bar-wrap:focus-visible .admin-analytics-bar{outline:2px solid #6d80c7;outline-offset:2px}
+.admin-analytics-bar-wrap span{display:none}
+.admin-analytics-chart-area::after{content:"Daily values appear when you hover over or focus a bar";position:absolute;bottom:-22px;left:0;font-size:9px;color:var(--muted)}
+.admin-analytics-row span:first-child{cursor:default}
+.admin-analytics-row:hover .admin-analytics-value{color:#5369a9}
+@media(max-width:700px){.admin-analytics-bar-wrap::after{white-space:normal;width:120px;text-align:center;font-size:10px}.admin-analytics-chart-area::after{content:"Tap a bar to inspect its value";}}
+
+/* Expanded analytics tables and controls */
+.admin-analytics-controls{display:flex;align-items:center;gap:8px}
+.admin-analytics-controls .button{padding:9px 12px;font-size:11px}
+.admin-analytics-small{font-size:11px!important;word-break:break-word}
+.admin-analytics-table-wrap{width:100%;overflow-x:auto}
+.admin-analytics-table{width:100%;border-collapse:collapse;font-size:10px;min-width:460px}
+.admin-analytics-table th{text-align:left;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;padding:8px 7px;border-bottom:1px solid var(--line)}
+.admin-analytics-table td{padding:10px 7px;border-bottom:1px solid var(--line);vertical-align:top}
+.admin-analytics-table td:first-child{max-width:220px;overflow-wrap:anywhere;color:var(--navy)}
+.admin-analytics-table th:not(:first-child),.admin-analytics-table td:not(:first-child){text-align:right;white-space:nowrap}
+.admin-analytics-setup .admin-analytics-small{color:var(--muted)}
+@media(max-width:600px){.admin-analytics-controls{width:100%;justify-content:space-between}.admin-analytics-controls select{flex:1;min-width:0}.admin-analytics-panel{padding:18px}.admin-analytics-table{min-width:430px}}
+
+/* Homepage hero: increase desktop hierarchy without changing tablet or mobile layouts. */
+@media screen and (min-width: 901px) {
+  .home-hero-inner > h1 {
+    font-size: clamp(68px, 6.8vw, 96px);
+    max-width: 1040px;
+    margin-bottom: 32px;
+  }
+  .home-hero-inner > .hero-copy {
+    font-size: 20px;
+    max-width: 680px;
+    margin-bottom: 42px;
+  }
+  .home-hero-inner > .home-search {
+    max-width: 1080px;
+    padding: 9px;
+  }
+  .home-hero-inner > .home-search input,
+  .home-hero-inner > .home-search select {
+    padding: 17px 18px;
+    font-size: 15px;
+  }
+  .home-hero-inner > .home-search .button {
+    min-height: 54px;
+    padding-inline: 25px;
+    font-size: 13px;
+  }
+}
