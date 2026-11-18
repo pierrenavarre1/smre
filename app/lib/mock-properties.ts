@@ -18,7 +18,7 @@ export type ListingIndexProperty = Pick<RESOProperty,
 
 export type ListingMapProperty = Pick<ListingIndexProperty,
   | 'ListingId' | 'ListPrice' | 'BedroomsTotal' | 'BathroomsTotalInteger'
-  | 'StreetNumber' | 'StreetName' | 'City' | 'LivingArea'
+  | 'StreetNumber' | 'StreetName' | 'City' | 'StateOrProvince' | 'LivingArea'
   | 'Media' | 'Latitude' | 'Longitude'
 >;
 
