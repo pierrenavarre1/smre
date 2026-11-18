@@ -357,7 +357,7 @@ export function ListingsExplorer({ items }: { items: RESOProperty[] }) {
       {shown.length > 0 ? (
         <div className="listings-search-layout">
           <div className="listings-map-column">
-            <ListingMap listings={shown} onSearchArea={setMapBounds} />
+            <ListingMap listings={shown} onSearchArea={setMapBounds} fitToListings={Boolean(filters.city)} />
           </div>
 
           <div className="listings-results-column">
