@@ -41,14 +41,14 @@ export default function Valuation() {
         <div className={styles.introCopy}>
           
           <h2>What is your home worth right now?</h2>
-          <p>If you have ever entered your address into Zillow or another online home value estimator, you may have noticed that the number does not always seem quite right. That is because an online estimate cannot walk through your property. It does not know about the kitchen you renovated, the condition of the roof, the extra garage space, or the features that make your property different from the one down the road.</p>
-          <p>A Comparative Market Analysis, or CMA, takes a closer look. It is an agent-prepared evaluation of what buyers are actually paying for homes like yours in your area. We review recent MLS sales, consider your property’s features, and look at the homes currently competing for buyers to develop a pricing range grounded in the local market.</p>
+          <p>If you have ever entered your address into Zillow or another online estimator, you may have noticed that the number does not always seem quite right. An online estimate cannot see the updates you have made, evaluate your property’s condition, or account for the features that make your home unique.</p>
+          <p>A Comparative Market Analysis, or CMA, takes a closer look. We review recent comparable sales, your property’s features, and the homes currently competing for buyers to develop a realistic pricing range based on your local market.</p>
           <p>Share a few details about your property and an SMRE agent will prepare a personalized analysis, completely free and with no pressure to sell.</p>
         </div>
         <aside className={styles.accuracyCard}>
           
           <h3>Why pricing accuracy matters</h3>
-          <p>Pricing a property correctly from the start can make a meaningful difference. A price that is too high can cause a home to sit on the market, while a thoughtful price helps attract qualified buyers and puts you in a better position to evaluate offers.</p>
+          <p>Pricing too high can cause a home to sit on the market. A thoughtful price helps attract qualified buyers and gives you a better position from which to evaluate offers.</p>
           <p>A local market analysis gives you information you can use to make a more informed decision.</p>
         </aside>
       </section>
