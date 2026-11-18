@@ -41,7 +41,8 @@ export default async function Home(){
       .home-hero-actions{display:flex;gap:10px;margin:-10px 0 30px;flex-wrap:wrap}
       .home-hero-actions .button{min-width:145px}
       @media(max-width:600px){.home-hero-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;max-width:430px}.home-hero-actions .button{min-width:0;width:100%}}
-      .home-listing-map{margin-top:52px}\n      .home-listings-intro{max-width:760px;margin:-12px 0 24px;color:var(--muted);font-size:15px;line-height:1.7}
+      .home-listing-map{margin-top:52px}
+      .home-listings-intro{max-width:760px;margin:-12px 0 24px;color:var(--muted);font-size:15px;line-height:1.7}
       .home-rural-strip{padding:0;background:var(--navy);color:#fff}
       .home-rural-grid.home-rural-balanced{width:100%;max-width:none;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);min-height:500px}
       .home-rural-balanced .home-rural-photo{min-height:500px;overflow:hidden;position:relative}
@@ -61,7 +62,9 @@ export default async function Home(){
       .home-story-proof{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
       .home-story-proof article{border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:24px;min-height:145px;display:flex;flex-direction:column;justify-content:center}
       .home-story-proof strong{font-family:var(--serif);font-size:clamp(29px,3vw,39px);font-weight:400;line-height:1.05;margin-bottom:9px}
-      .home-story-proof span{font-size:14px;line-height:1.55;color:rgba(255,255,255,.92);font-weight:700}\n      .home-story-proof .proof-stars{color:#f4b400;letter-spacing:2px;font-size:16px;line-height:1.2;margin-left:7px;white-space:nowrap}\n      .home-story-proof .proof-rating{display:flex;align-items:center;flex-wrap:wrap}
+      .home-story-proof span{font-size:14px;line-height:1.55;color:rgba(255,255,255,.92);font-weight:700}
+      .home-story-proof .proof-stars{color:#f4b400;letter-spacing:2px;font-size:16px;line-height:1.2;margin-left:7px;white-space:nowrap}
+      .home-story-proof .proof-rating{display:flex;align-items:center;flex-wrap:wrap}
       .home-seo-team{padding-top:48px;padding-bottom:42px}
       .home-cta-compact{padding-top:42px;padding-bottom:36px}
       .reviews-section.section{padding-top:46px;padding-bottom:64px}
@@ -92,7 +95,8 @@ export default async function Home(){
     </section>
 
     <section className="section container">
-      <div className="section-head"><div><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">Browse available homes and land</Link></div>\n      <p className="home-listings-intro">Looking for real estate close to home? Explore current homes, land and acreage across St. Marys, Wamego, Topeka, Manhattan and nearby Northeast Kansas communities.</p>
+      <div className="section-head"><div><h2>Homes and properties in the area.</h2></div><Link href="/listings" className="text-link">Browse available homes and land</Link></div>
+      <p className="home-listings-intro">Looking for real estate close to home? Explore current homes, land and acreage across St. Marys, Wamego, Topeka, Manhattan and nearby Northeast Kansas communities.</p>
       <div className="featured-grid home-featured-grid">{listings.map(p=><ListingCard key={p.ListingId} p={p}/>)}</div><div className="home-all-listings-link"><Link href="/listings" className="button button-dark">See all listings</Link></div>
       {activeListings.length>0&&<div className="home-listing-map"><ListingMap listings={homeMapItems} searchAreaNavigate/></div>}
     </section>
