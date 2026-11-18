@@ -41,9 +41,9 @@ export default function Valuation() {
         <div className={styles.introCopy}>
           
           <h2>What is your home worth right now?</h2>
-          <p>If you have ever entered your address into Zillow or another online estimator, you may have noticed that the number does not always seem quite right. An online estimate cannot see the updates you have made, evaluate your property’s condition, or account for the features that make your home unique.</p>
-          <p>A Comparative Market Analysis, or CMA, takes a closer look. We review recent comparable sales, your property’s features, and the homes currently competing for buyers to develop a realistic pricing range based on your local market.</p>
-          <p>Share a few details about your property and an SMRE agent will prepare a personalized analysis, completely free and with no pressure to sell.</p>
+          <p>If you’ve ever typed your address into Zillow or an online home value estimator, you already know the number it spits back can feel a little… off. That’s because algorithms don’t walk through your property. They don’t know about the kitchen you renovated, the mature trees in the backyard, the new shop out back, or how your road compares to the rest of the local market.</p>
+          <p>A Comparative Market Analysis, or CMA, is different. It’s a real, agent-prepared evaluation of what buyers are actually paying for homes like yours in St. Marys, Wamego, Topeka, Manhattan, and the surrounding Northeast Kansas communities. It draws on recent MLS sales, accounts for your property’s unique features, and gives you a pricing range grounded in what’s happening in the market right now.</p>
+          <p>Fill out the form below and we’ll prepare a personalized CMA for your property, completely free, with no pressure and no sales pitch attached.</p>
         </div>
         <aside className={styles.accuracyCard}>
           
