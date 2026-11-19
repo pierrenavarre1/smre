@@ -1,14 +1,32 @@
 'use client';
-
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { HomeSearchProperty } from '../lib/mock-properties';
 import { listingHref } from '../lib/listing-url';
 
-export function HomeSearch({ items }: { items: HomeSearchProperty[] }) {
+export function HomeSearch() {
   const router = useRouter();
   const [address, setAddress] = useState('');
   const [open, setOpen] = useState(false);
+  const [items, setItems] = useState<HomeSearchProperty[]>([]);
+  const loaded = useRef(false);
+  const loading = useRef(false);
+
+  async function loadSearchItems() {
+    if (loaded.current || loading.current) return;
+    loading.current = true;
+    try {
+      const response = await fetch('/api/home-search');
+      if (!response.ok) throw new Error('Unable to load address suggestions');
+      const data = await response.json();
+      setItems(data.value || []);
+      loaded.current = true;
+    } catch {
+      // The search form still works by submitting the address directly.
+    } finally {
+      loading.current = false;
+    }
+  }
 
   const suggestions = useMemo(() => {
     const q = address.trim().toLowerCase();
@@ -19,9 +37,6 @@ export function HomeSearch({ items }: { items: HomeSearchProperty[] }) {
     }).slice(0, 6);
   }, [items, address]);
 
-  const selectedAddress = (p: HomeSearchProperty) =>
-    `${p.StreetNumber} ${p.StreetName}, ${p.City}, ${p.StateOrProvince} ${p.PostalCode}`;
-
   return (
     <form action="/listings" className="search-panel home-search" onSubmit={(e) => {
       if (address.trim()) {
@@ -30,28 +45,18 @@ export function HomeSearch({ items }: { items: HomeSearchProperty[] }) {
       }
     }}>
       <div className="home-search-location">
-        <input
-          name="address"
-          value={address}
+        <input name="address" value={address}
           onChange={(e) => { setAddress(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setOpen(false);
-          }}
+          onFocus={() => { setOpen(true); void loadSearchItems(); }}
+          onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}
           placeholder="Address, city, ZIP code, or area"
-          aria-label="Address, city, ZIP code, or area"
-          autoComplete="off"
-        />
+          aria-label="Address, city, ZIP code, or area" autoComplete="off" />
         {open && suggestions.length > 0 && (
           <div className="listings-address-suggestions home-search-suggestions" role="listbox" aria-label="Matching properties">
             {suggestions.map((p) => (
-              <button
-                type="button"
-                role="option"
-                key={p.ListingId}
+              <button type="button" role="option" key={p.ListingId}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => { setOpen(false); router.push(listingHref(p)); }}
-              >
+                onClick={() => { setOpen(false); router.push(listingHref(p)); }}>
                 <strong>{p.StreetNumber} {p.StreetName}</strong>
                 <span>{p.City}, {p.StateOrProvince} {p.PostalCode}</span>
               </button>
