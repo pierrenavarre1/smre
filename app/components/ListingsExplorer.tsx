@@ -8,8 +8,6 @@ import { ListingMap } from './ListingMap';
 import type { ListingIndexProperty } from '../lib/mock-properties';
 import { listingHref } from '../lib/listing-url';
 
-const PAGE_SIZE = 24;
-
 const normalizeSearch = (value: string) =>
   value.toLowerCase()
     .replace(/\b(northwest|northeast|southwest|southeast|north|south|east|west|nw|ne|sw|se)\b/g, '')
@@ -166,9 +164,16 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [filters.address]);
 
-  const shown = pageItems;
   const mapShown = mapItems;
   const currentPage = Math.min(page, pageCount);
+  const changePage = (nextPage: number) => {
+    setPage(nextPage);
+    // Keep pagination from leaving the visitor at the bottom of the results.
+    document.querySelector('.listings-results-toolbar')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
   const update = (key: keyof Filters, value: string) => {
     setFilters((current) => ({ ...current, [key]: value }));
     setPage(1);
@@ -421,11 +426,11 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
 
             {pageCount > 1 && (
               <nav className="pagination" aria-label="Listings pagination">
-                <button className="button button-light" disabled={currentPage === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                <button className="button button-light" disabled={currentPage === 1} onClick={() => changePage(Math.max(1, currentPage - 1))}>
                   Previous
                 </button>
                 <span>Page {currentPage} of {pageCount}</span>
-                <button className="button button-light" disabled={currentPage === pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>
+                <button className="button button-light" disabled={currentPage === pageCount} onClick={() => changePage(Math.min(pageCount, currentPage + 1))}>
                   Next
                 </button>
               </nav>
