@@ -6,8 +6,13 @@ export const metadata = { title: 'Listings' };
 export const dynamic = 'force-dynamic';
 export const revalidate = 60;
 
-export default async function Listings() {
-  const listings = await getListings();
+const INITIAL_MAP_TILE = 'https://tile.openstreetmap.org/12/954/1562.png';
+
+export default async function Listings({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const [listings, params] = await Promise.all([getListings(), searchParams]);
+  // The unfiltered listings map starts at SERVICE_AREA_DEFAULT (39.1947, -96.0715, z12).
+  // Preload only its nearest-to-center OSM tile; filtered views choose a different center client-side.
+  const preloadInitialMapTile = listings.length > 1 && Object.keys(params).length === 0;
 
   // The explorer only needs one MLS-selected preview image per card/map marker.
   // The individual listing page reads the full media set independently.
@@ -41,13 +46,16 @@ export default async function Listings() {
   });
 
   return (
-    <section className="section container listings-page">
+    <>
+      {preloadInitialMapTile && <link rel="preload" as="image" href={INITIAL_MAP_TILE} fetchPriority="high" />}
+      <section className="section container listings-page">
       <div className="page-intro">
         <p className="eyebrow">PROPERTY SEARCH</p>
         <h1>Find a property.</h1>
       </div>
       <ListingsExplorer items={items} />
       <MLSDisclosure />
-    </section>
+      </section>
+    </>
   );
 }
