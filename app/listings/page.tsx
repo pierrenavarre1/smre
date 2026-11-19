@@ -57,4 +57,5 @@ export default async function Listings({ searchParams }: { searchParams: Promise
       <MLSDisclosure />
       </section>
     </>
+  );
 }
