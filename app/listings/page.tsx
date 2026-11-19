@@ -11,7 +11,7 @@ export default async function Listings() {
 
   // The explorer only needs one MLS-selected preview image per card/map marker.
   // The individual listing page reads the full media set independently.
-  const items = listings.map((p) => {
+  const items = listings.slice(0, 24).map((p) => {
     const preview = p.Media.find((photo) => photo.PreferredPhoto) || p.Media[0];
     return {
       ListingId: p.ListingId,

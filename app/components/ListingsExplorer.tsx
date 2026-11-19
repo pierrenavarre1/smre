@@ -1,15 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { ListingIndexProperty } from '../lib/mock-properties';
-import { compareListingPriority } from '../lib/listings';
 import { listingHref } from '../lib/listing-url';
-
-const PAGE_SIZE = 24;
 
 const normalizeSearch = (value: string) =>
   value.toLowerCase()
@@ -94,63 +91,89 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [mapBounds, setMapBounds] = useState<{ minLat:number; maxLat:number; minLon:number; maxLon:number } | null>(() => { if(typeof window==='undefined')return null; const q=new URLSearchParams(window.location.search); const keys=['minLat','maxLat','minLon','maxLon'] as const; const values=keys.map(k=>Number(q.get(k))); return values.every(Number.isFinite)&&keys.every(k=>q.has(k))?{minLat:values[0],maxLat:values[1],minLon:values[2],maxLon:values[3]}:null; });
 
-  const shown = useMemo(() => {
-    const normalize = (value: string) =>
-      value.toLowerCase().replace(/[.'’,-]/g, ' ').replace(/\\s+/g, ' ').trim();
+  const [pageItems, setPageItems] = useState<ListingIndexProperty[]>(items);
+  const [mapItems, setMapItems] = useState<ListingIndexProperty[]>([]);
+  const [addressSuggestions, setAddressSuggestions] = useState<Array<{ListingId:string;StreetNumber:string;StreetName:string;City:string;StateOrProvince:string;PostalCode:string}>>([]);
+  const [totalCount, setTotalCount] = useState(items.length);
+  const [pageCount, setPageCount] = useState(1);
+  const [loadingResults, setLoadingResults] = useState(false);
 
-    return items
-      .filter((p) => {
-        const baths = p.BathroomsTotalInteger + (p.BathroomsHalf ? 0.5 : 0);
-        return (
-          (filters.type.length === 0 || filters.type.includes(p.PropertyType)) &&
-          (!filters.status || p.StandardStatus === filters.status) &&
-          (!filters.beds || p.BedroomsTotal >= Number(filters.beds)) &&
-          (!filters.baths || baths >= Number(filters.baths)) &&
-          (!filters.max || p.ListPrice <= Number(filters.max)) &&
-          (!filters.acreage || (p.LotSizeAcres || 0) >= Number(filters.acreage)) &&
-          (!filters.city ||
-            cityMatches(p.City, filters.city) ||
-            p.PostalCode.includes(filters.city.trim())) &&
-          (!filters.address ||
-            normalizeSearch(
-              `${p.StreetNumber} ${p.StreetName} ${p.City} ${p.StateOrProvince} ${p.PostalCode}`
-            ).includes(normalizeSearch(filters.address)))
-        );
+  const queryString = (mode: string, pageNumber = page) => {
+    const params = new URLSearchParams();
+    params.set('mode', mode);
+    if (mode === 'page') {
+      params.set('page', String(pageNumber));
+      params.set('sort', sort);
+      if (filters.status) params.set('status', filters.status);
+      if (filters.beds) params.set('beds', filters.beds);
+      if (filters.baths) params.set('baths', filters.baths);
+      if (filters.max) params.set('max', filters.max);
+      if (filters.acreage) params.set('acreage', filters.acreage);
+      if (filters.city) params.set('city', filters.city);
+      if (filters.address) params.set('address', filters.address);
+      filters.type.forEach(type => params.append('type', type));
+      if (mapBounds) Object.entries(mapBounds).forEach(([key, value]) => params.set(key, String(value)));
+    } else {
+      if (filters.status) params.set('status', filters.status);
+      if (filters.beds) params.set('beds', filters.beds);
+      if (filters.baths) params.set('baths', filters.baths);
+      if (filters.max) params.set('max', filters.max);
+      if (filters.acreage) params.set('acreage', filters.acreage);
+      if (filters.city) params.set('city', filters.city);
+      if (filters.address) params.set('address', filters.address);
+      filters.type.forEach(type => params.append('type', type));
+    }
+    return params.toString();
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingResults(true);
+    fetch(`/api/listings?${queryString('page')}`, { cache: 'no-store' })
+      .then(response => { if (!response.ok) throw new Error('Unable to load listings'); return response.json(); })
+      .then(data => {
+        if (cancelled) return;
+        setPageItems(data.items || []);
+        setTotalCount(data.total || 0);
+        setPageCount(data.pageCount || 1);
       })
-      .sort((a, b) => {
-        if (sort === 'price-desc') return b.ListPrice - a.ListPrice;
-        if (sort === 'price-asc') return a.ListPrice - b.ListPrice;
-        if (sort === 'newest') {
-          const aDate = Date.parse(a.ListingDate || a.ModificationTimestamp || '');
-          const bDate = Date.parse(b.ListingDate || b.ModificationTimestamp || '');
-          return (Number.isFinite(bDate) ? bDate : 0) - (Number.isFinite(aDate) ? aDate : 0);
-        }
-        return compareListingPriority(a, b);
-      });
-  }, [items, filters, sort]);
+      .catch(() => { if (!cancelled) { setPageItems([]); setTotalCount(0); setPageCount(1); } })
+      .finally(() => { if (!cancelled) setLoadingResults(false); });
+    return () => { cancelled = true; };
+  }, [filters, sort, page, mapBounds]);
 
-  const mapShown = useMemo(() => {
-    if (!mapBounds) return shown;
-    return shown.filter((p) => Number.isFinite(p.Latitude) && Number.isFinite(p.Longitude) && p.Latitude >= mapBounds.minLat && p.Latitude <= mapBounds.maxLat && p.Longitude >= mapBounds.minLon && p.Longitude <= mapBounds.maxLon);
-  }, [shown, mapBounds]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/listings?${queryString('map')}`, { cache: 'no-store' })
+      .then(response => response.ok ? response.json() : Promise.reject())
+      .then(data => { if (!cancelled) setMapItems(data.items || []); })
+      .catch(() => { if (!cancelled) setMapItems([]); });
+    return () => { cancelled = true; };
+  }, [filters]);
 
-  const addressSuggestions = useMemo(() => {
+  useEffect(() => {
     const query = normalizeSearch(filters.address);
-    if (!query) return [];
-    return items
-      .filter((p) => {
-        const full = normalizeSearch(
-          `${p.StreetNumber} ${p.StreetName} ${p.City} ${p.StateOrProvince} ${p.PostalCode}`
-        );
-        return full.includes(query);
-      })
-      .slice(0, 6);
-  }, [items, filters.address]);
+    if (!query) { setAddressSuggestions([]); return; }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      fetch(`/api/listings?mode=suggest&q=${encodeURIComponent(filters.address)}`)
+        .then(response => response.ok ? response.json() : Promise.reject())
+        .then(data => { if (!cancelled) setAddressSuggestions(data.items || []); })
+        .catch(() => { if (!cancelled) setAddressSuggestions([]); });
+    }, 160);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [filters.address]);
 
-  const pageCount = Math.max(1, Math.ceil(mapShown.length / PAGE_SIZE));
+  const mapShown = mapItems;
   const currentPage = Math.min(page, pageCount);
-  const paged = mapShown.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
+  const changePage = (nextPage: number) => {
+    setPage(nextPage);
+    // Keep pagination from leaving the visitor at the bottom of the results.
+    document.querySelector('.listings-results-toolbar')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
   const update = (key: keyof Filters, value: string) => {
     setFilters((current) => ({ ...current, [key]: value }));
     setPage(1);
@@ -364,15 +387,15 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
               <select aria-label="Acreage" value={filters.acreage} onChange={(e) => update('acreage', e.target.value)}><option value="">Acreage</option><option value="0.25">¼+ acre</option><option value="0.5">½+ acre</option><option value="1">1+ acre</option><option value="2">2+ acres</option><option value="5">5+ acres</option><option value="10">10+ acres</option><option value="20">20+ acres</option><option value="40">40+ acres</option></select>
               <select aria-label="Status" value={filters.status} onChange={(e) => update('status', e.target.value)}><option value="">Active &amp; Pending</option><option value="Active">Active only</option><option value="Pending">Pending</option></select>
             </div>
-            <div className="listings-mobile-filter-actions"><button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button><button type="button" className="button button-dark" onClick={() => setMobileFiltersOpen(false)}>View {shown.length} {shown.length === 1 ? 'home' : 'homes'}</button></div>
+            <div className="listings-mobile-filter-actions"><button type="button" className="button button-light" onClick={clearFilters}>Clear filters</button><button type="button" className="button button-dark" onClick={() => setMobileFiltersOpen(false)}>View {totalCount} {totalCount === 1 ? 'home' : 'homes'}</button></div>
           </div>
         </div>
       )}
 
-      {shown.length > 0 ? (
+      {totalCount > 0 ? (
         <div className="listings-search-layout">
           <div className="listings-map-column">
-            <ListingMap listings={shown} onSearchArea={setMapBounds} fitToListings={Boolean(filters.city)} />
+            <ListingMap listings={mapShown} onSearchArea={setMapBounds} fitToListings={Boolean(filters.city)} />
           </div>
 
           <div className="listings-results-column">
@@ -396,18 +419,18 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
             </div>
 
             <div className="listing-grid">
-              {mapShown.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((p) => (
+              {pageItems.map((p) => (
                 <ListingCard key={p.ListingId} p={p} />
               ))}
             </div>
 
             {pageCount > 1 && (
               <nav className="pagination" aria-label="Listings pagination">
-                <button className="button button-light" disabled={currentPage === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                <button className="button button-light" disabled={currentPage === 1} onClick={() => changePage(Math.max(1, currentPage - 1))}>
                   Previous
                 </button>
                 <span>Page {currentPage} of {pageCount}</span>
-                <button className="button button-light" disabled={currentPage === pageCount} onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>
+                <button className="button button-light" disabled={currentPage === pageCount} onClick={() => changePage(Math.min(pageCount, currentPage + 1))}>
                   Next
                 </button>
               </nav>
