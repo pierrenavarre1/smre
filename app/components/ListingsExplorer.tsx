@@ -419,8 +419,8 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
             </div>
 
             <div className="listing-grid">
-              {pageItems.map((p) => (
-                <ListingCard key={p.ListingId} p={p} />
+              {pageItems.map((p, index) => (
+                <ListingCard key={p.ListingId} p={p} priority={index < 2 && page === 1} />
               ))}
             </div>
 
