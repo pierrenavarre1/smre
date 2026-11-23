@@ -45,9 +45,15 @@ const ADMIN_CACHE_MS=60_000;
 let adminMemoryCache:{data:AdminData;expiresAt:number}|null=null;
 
 async function read(){
- // Only a confirmed missing Blob may initialize the seed data. Do not turn
- // transient storage/network/permission errors into an empty database.
+ // Cached reads are suitable for page rendering, but never for lead writes.
+ // A stale function cache must not overwrite a newer lead archive.
  const result=await get(PATH,{access:'private',useCache:true});
+ if(!result)return null;
+ return JSON.parse(await new Response(result.stream).text()) as AdminData;
+}
+async function readFresh(){
+ // Bypass Blob's fetch cache for read-modify-write operations.
+ const result=await get(PATH,{access:'private',useCache:false});
  if(!result)return null;
  return JSON.parse(await new Response(result.stream).text()) as AdminData;
 }
@@ -57,12 +63,27 @@ export async function getAdminData(){
  const existing=await readCached();
  if(existing){const data=normalize(existing);adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};return data;}
  const data={...seed,updatedAt:new Date().toISOString()};
- try{await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});}catch{}
+ await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});
  adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};
  return data;
 }
-export async function saveAdminData(input:AdminData){const data=normalize({...input,updatedAt:new Date().toISOString()});await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});revalidateTag('smre-admin-data');adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};return data}
+export async function saveAdminData(input:AdminData){
+ const current=await readFresh();
+ const incoming=normalize(input);
+ const currentLeads=normalize(current||seed).leads;
+ const incomingIds=new Set(incoming.leads.map(lead=>lead.id));
+ // Admin edits are full-document saves. Preserve leads created after the admin
+ // page loaded so an older browser snapshot cannot silently erase new inquiries.
+ const leads=[...incoming.leads,...currentLeads.filter(lead=>!incomingIds.has(lead.id))].slice(0,1000);
+ const data=normalize({...incoming,leads,updatedAt:new Date().toISOString()});
+ await put(PATH,JSON.stringify(data),{access:'private',allowOverwrite:true});
+ revalidateTag('smre-admin-data');adminMemoryCache={data,expiresAt:Date.now()+ADMIN_CACHE_MS};return data;
+}
 export async function addLead(input:Omit<AdminLead,'id'|'createdAt'|'status'>){
- const data=await getAdminData();const lead:AdminLead={...input,id:crypto.randomUUID(),createdAt:new Date().toISOString(),status:'new'};
- data.leads=[lead,...data.leads].slice(0,1000);await saveAdminData(data);return lead;
+ const current=await readFresh();
+ const data=normalize(current||seed);
+ const lead:AdminLead={...input,id:crypto.randomUUID(),createdAt:new Date().toISOString(),status:'new'};
+ data.leads=[lead,...data.leads].slice(0,1000);
+ await saveAdminData(data);
+ return lead;
 }
