@@ -27,13 +27,16 @@ export async function POST(request: Request) {
     }
 
     const { firstName, lastName } = splitName(name);
-    const eventType = lead.type === 'seller' || lead.type === 'valuation'
+    const inquiryType = lead.type === 'seller' || lead.type === 'valuation'
       ? 'Seller Inquiry'
       : lead.type === 'showing'
-        ? 'Property Inquiry'
+        ? 'Showing Request'
         : lead.type === 'property'
           ? 'Property Inquiry'
-          : 'General Inquiry';
+          : 'Buyer Inquiry';
+    const eventType = inquiryType === 'Seller Inquiry' ? 'Seller Inquiry'
+      : inquiryType === 'Showing Request' || inquiryType === 'Property Inquiry' ? 'Property Inquiry'
+      : 'General Inquiry';
 
     const rawListingId = lead.listingId ? String(lead.listingId) : '';
     const listingId = rawListingId.includes(':') ? rawListingId.split(':').pop() || rawListingId : rawListingId;
@@ -87,7 +90,7 @@ export async function POST(request: Request) {
     // unavailable; otherwise a retry could create a duplicate CRM event.
     try {
       await addLead({
-        type: eventType,
+        type: inquiryType,
         name,
         email: email || undefined,
         phone: phone || undefined,
