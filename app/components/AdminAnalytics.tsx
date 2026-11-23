@@ -6,7 +6,35 @@ type SearchRow={keys?:string[];clicks?:number;impressions?:number;ctr?:number;po
 function rows(input:any):Row[]{if(!input)return [];const v=input.data??input.rows??input.results??input;if(Array.isArray(v))return v;if(v&&typeof v==='object')return Object.entries(v).map(([key,x])=>typeof x==='number'?{key,value:x}:{key,...(x as object)});return []}
 function metric(input:any,key:string):number{const v=input?.data?.[key]??input?.[key]??input?.data?.[0]?.[key]??input?.[0]?.[key];return Number(v??0)||0}
 function count(r:Row):number{return Number(r.pageviews??r.value??r.count??r.total??r.visitors??0)||0}
-function label(r:Row):string{const preferred=['listingId','propertyType','inquiryType','eventName'];const read=(value:unknown):string=>{if(typeof value==='string')return value.trim();if(typeof value==='number')return String(value);if(Array.isArray(value)){for(const item of value){const found=read(item);if(found)return found;}return '';}if(value&&typeof value==='object'){const obj=value as Record<string,unknown>;for(const key of preferred){const found=read(obj[key]);if(found)return found;}for(const item of Object.values(obj)){const found=read(item);if(found)return found;}}return '';};for(const key of ['key','keys','name','requestPath','referrerHostname','deviceType','country','browserName','osName','eventName','propertyType','inquiryType','listingId']){const found=read(r[key]);if(found)return found;}if(typeof r.eventData==='string'){try{return read(JSON.parse(r.eventData));}catch{return '';}}return read(r.eventData)}
+function label(r:Row):string{
+ const preferred=['listingId','propertyType','inquiryType','eventName'];
+ const read=(value:unknown):string=>{
+  if(typeof value==='string')return value.trim();
+  if(typeof value==='number')return String(value);
+  if(Array.isArray(value)){for(const item of value){const found=read(item);if(found)return found;}return '';}
+  if(value&&typeof value==='object'){
+   const obj=value as Record<string,unknown>;
+   for(const key of preferred){const found=read(obj[key]);if(found)return found;}
+   for(const item of Object.values(obj)){const found=read(item);if(found)return found;}
+  }
+  return '';
+ };
+ // Vercel's aggregate API may return a grouped dimension as a flattened
+ // eventData/property key, a nested eventData object, or a keys array.
+ for(const key of [
+  'key','keys','name','requestPath','referrerHostname','deviceType','country',
+  'browserName','osName','eventName','propertyType','inquiryType','listingId',
+  'eventData/listingId','eventData/propertyType','eventData/inquiryType',
+  'eventData.listingId','eventData.propertyType','eventData.inquiryType'
+ ]){
+  const found=read(r[key]);
+  if(found)return found;
+ }
+ if(typeof r.eventData==='string'){
+  try{return read(JSON.parse(r.eventData));}catch{return '';}
+ }
+ return read(r.eventData);
+}
 function dateLabel(r:Row):string{const raw=r.timestamp??r.date??r.key;if(raw===undefined||raw===null)return '';const d=typeof raw==='number'?new Date(raw):new Date(String(raw));return Number.isNaN(d.getTime())?String(raw):d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}
 function Panel({eyebrow,title,children}:{eyebrow:string;title:string;children:any}){return <section className="admin-analytics-panel"><div className="admin-analytics-panel-head"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2></div></div>{children}</section>}
 function Ranking({items}:{items:Row[]}){const max=Math.max(1,...items.map(count));return <div className="admin-analytics-list">{items.length?items.map((r,i)=><div key={i}><div className="admin-analytics-row"><span title={label(r)}>{label(r)||'Not provided'}</span><strong className="admin-analytics-value">{count(r).toLocaleString()}</strong></div><div className="admin-analytics-meter"><i style={{width:(count(r)/max*100)+'%'}}/></div></div>):<p className="admin-muted">No data in this period.</p>}</div>}
