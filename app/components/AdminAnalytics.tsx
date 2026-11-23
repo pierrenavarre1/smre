@@ -18,7 +18,9 @@ function label(r:Row):string{
      .map(([k,v])=>`${k}: ${String(v)}`);
     if(values.length)return values.join(' · ');
    }
-  }catch{}
+  }catch{
+   if(r.eventData.trim())return r.eventData;
+  }
  }
  if(typeof r.eventName==='string'&&r.eventName.trim())return r.eventName;
  const keys=Array.isArray(r.keys)?r.keys.filter(v=>v!==null&&v!==undefined&&String(v).trim()!==''):[];
