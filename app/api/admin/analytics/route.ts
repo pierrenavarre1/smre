@@ -51,7 +51,9 @@ export async function GET(request:NextRequest){
    optionalQuery('events/aggregate',{...range,by:'eventData/propertyType',filter:"eventName eq 'Property Search'",limit:'30'}),
    optionalQuery('events/aggregate',{...range,by:'eventData/inquiryType',filter:"eventName eq 'Lead Submission'",limit:'20'})
   ]);
-  return NextResponse.json({configured:true,days,total,byDay,byPage,byReferrer,byDevice,byCountry,byBrowser,byOs,byEvents,byListingViews,byPropertySearches,byLeadEvents,customEventsAvailable:Boolean(byEvents||byListingViews||byPropertySearches||byLeadEvents),geographyNote:'Vercel Web Analytics API currently reports country, not city or state.'});
+  const hasRows=(value:any)=>Array.isArray(value?.data)?value.data.length>0:Array.isArray(value?.rows)?value.rows.length>0:Array.isArray(value)?value.length>0:Boolean(value&&typeof value==='object'&&Object.keys(value).length>0);
+  const customEventsAvailable=[byEvents,byListingViews,byPropertySearches,byLeadEvents].some(hasRows);
+  return NextResponse.json({configured:true,days,total,byDay,byPage,byReferrer,byDevice,byCountry,byBrowser,byOs,byEvents,byListingViews,byPropertySearches,byLeadEvents,customEventsAvailable,geographyNote:'Vercel Web Analytics API currently reports country, not city or state.'});
  }catch(error){
   console.error('Analytics query failed:',error);
   const detail=error instanceof Error?error.message:'Unknown analytics error';
