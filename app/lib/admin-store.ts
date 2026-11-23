@@ -45,7 +45,11 @@ const ADMIN_CACHE_MS=60_000;
 let adminMemoryCache:{data:AdminData;expiresAt:number}|null=null;
 
 async function read(){
- try{const result=await get(PATH,{access:'private',useCache:true});if(!result)return null;return JSON.parse(await new Response(result.stream).text()) as AdminData}catch{return null}
+ // Only a confirmed missing Blob may initialize the seed data. Do not turn
+ // transient storage/network/permission errors into an empty database.
+ const result=await get(PATH,{access:'private',useCache:true});
+ if(!result)return null;
+ return JSON.parse(await new Response(result.stream).text()) as AdminData;
 }
 const readCached=unstable_cache(read,['smre-admin-data'],{revalidate:60});
 export async function getAdminData(){
