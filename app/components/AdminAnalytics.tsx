@@ -23,7 +23,7 @@ export function AdminAnalytics({leads=[]}:{leads?:Lead[]}){
  useEffect(()=>{let active=true;setSearchLoading(true);setSearchError('');fetch('/api/admin/search-console?days='+days,{cache:'no-store'}).then(async r=>{const x=await r.json();if(!r.ok)throw new Error(x.detail||x.error||'Unable to load Search Console');if(active)setSearch(x)}).catch(e=>{if(active)setSearchError(e.message)}).finally(()=>{if(active)setSearchLoading(false)});return()=>{active=false}},[days,reload]);
  const daily=rows(data?.byDay).filter(r=>r.timestamp!==undefined||r.date!==undefined);
  const allPages=rows(data?.byPage).sort((x,y)=>count(y)-count(x));const pages=allPages.slice(0,10);
- const refs=rows(data?.byReferrer).sort((x,y)=>count(y)-count(x)).slice(0,8);
+ const refs=rows(data?.byReferrer).map(r=>label(r)==='Unspecified'?{...r,key:'No referrer recorded'}:r).sort((x,y)=>count(y)-count(x)).slice(0,8);
  const devices=rows(data?.byDevice).sort((x,y)=>count(y)-count(x));
  const countries=rows(data?.byCountry).sort((x,y)=>count(y)-count(x)).slice(0,10);
  const browsers=rows(data?.byBrowser).sort((x,y)=>count(y)-count(x));
@@ -40,7 +40,6 @@ export function AdminAnalytics({leads=[]}:{leads?:Lead[]}){
  const eventTypeCount=(items:Row[],pattern:RegExp)=>items.filter(r=>pattern.test(label(r))).reduce((sum,r)=>sum+count(r),0);
  const trackedLeadCount=eventCount(leadEvents);
  const trackedShowingCount=eventTypeCount(leadEvents,/showing/i);
- const periodLeads=trackedLeadCount;
  const archiveLeadCount=leads.filter(x=>{const t=new Date(x.createdAt).getTime();return Number.isFinite(t)&&t>=Date.now()-days*86400000}).length;
  if(loading&&!data)return <div className="admin-analytics"><p className="admin-muted">Loading website analytics…</p></div>;
  if(data?.configured===false)return <div className="admin-analytics"><div className="admin-analytics-setup"><p className="eyebrow">SETUP REQUIRED</p><h2>Connect Vercel Web Analytics</h2><p>The site is ready to collect analytics, but the Vercel Analytics API token is not available to this deployment.</p><a className="admin-analytics-link" href="https://vercel.com/dashboard" target="_blank" rel="noreferrer">Open Vercel Dashboard →</a></div></div>;
@@ -51,7 +50,7 @@ export function AdminAnalytics({leads=[]}:{leads?:Lead[]}){
   <div className="admin-analytics-cards">
    <article className="admin-analytics-card"><span>Page views</span><strong>{pageViews.toLocaleString()}</strong><small>Total pages viewed</small></article>
    <article className="admin-analytics-card"><span>Unique visitors</span><strong>{visitors?visitors.toLocaleString():'—'}</strong><small>{visitors?'Privacy-friendly visitor count':'Not returned by the API'}</small></article>
-   <article className="admin-analytics-card"><span>Website leads</span><strong>{periodLeads.toLocaleString()}</strong><small>Successful form submissions tracked in this period</small></article>
+   <article className="admin-analytics-card"><span>Website leads</span><strong>{trackedLeadCount.toLocaleString()}</strong><small>Successful form submissions tracked in this period</small></article>
    <article className="admin-analytics-card"><span>Showing requests</span><strong>{trackedShowingCount.toLocaleString()}</strong><small>Successful form submissions tracked by Vercel</small></article>
   </div>
   <div className="admin-analytics-section-title"><div><p className="eyebrow">VISITOR ACTIVITY</p><h2>What visitors are doing</h2></div></div>
