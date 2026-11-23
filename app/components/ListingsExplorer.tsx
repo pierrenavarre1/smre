@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
 import { ListingCard } from './ListingCard';
@@ -63,6 +63,21 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
   }));
   const [sort, setSort] = useState('priority');
   const [page, setPage] = useState(1);
+  const hasTrackedInitialSearch = useRef(false);
+
+  // Record a search whenever the visitor changes the actual filters. The old
+  // implementation only tracked the separate Search button, which missed
+  // property-type selections and other filters that apply immediately.
+  useEffect(() => {
+    if (!hasTrackedInitialSearch.current) {
+      hasTrackedInitialSearch.current = true;
+      return;
+    }
+    track('Property Search', {
+      propertyType: filters.type.length ? filters.type.join(', ') : 'Any',
+      searchCriteria: [filters.city, filters.address, filters.max ? 'max ' + filters.max : '', filters.beds ? 'beds ' + filters.beds : '', filters.baths ? 'baths ' + filters.baths : '', filters.acreage ? 'acreage ' + filters.acreage : '', filters.status].filter(Boolean).join(' | ') || 'All listings'
+    });
+  }, [filters]);
 
   // Read query filters after hydration. A lazy state initializer cannot read
   // window during server rendering, so URL filters must be applied client-side.
@@ -240,7 +255,6 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
           type="button"
           className="button button-dark listings-search-button"
           onClick={() => {
-            track('Property Search',{propertyType:filters.type.join(',')||'Any',searchCriteria:[filters.city,filters.address,filters.max?'max '+filters.max:'',filters.beds?'beds '+filters.beds:'',filters.baths?'baths '+filters.baths:'',filters.acreage?'acreage '+filters.acreage:''].filter(Boolean).join(' | ')||'All listings'});
             setAddressOpen(false);
             setPage(1);
           }}
