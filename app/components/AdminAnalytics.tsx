@@ -7,8 +7,10 @@ function rows(input:any):Row[]{if(!input)return [];const v=input.data??input.row
 function metric(input:any,key:string):number{const v=input?.data?.[key]??input?.[key]??input?.data?.[0]?.[key]??input?.[0]?.[key];return Number(v??0)||0}
 function count(r:Row):number{return Number(r.pageviews??r.value??r.count??r.total??r.visitors??0)||0}
 function label(r:Row):string{
- const dimensions=Array.isArray(r.keys)?r.keys.filter(v=>v!==null&&v!==undefined&&String(v).trim()!=='').map(String).join(' · '):'';
- return dimensions||String(r.key??r.name??r.requestPath??r.referrerHostname??r.deviceType??r.country??r.browserName??r.osName??'');
+ const raw=r.keys??r.key??r.name??r.requestPath??r.referrerHostname??r.deviceType??r.country??r.browserName??r.osName;
+ if(Array.isArray(raw)) return raw.map(v=>typeof v==='object'&&v!==null?Object.values(v as Record<string,unknown>).filter(x=>x!==null&&x!==undefined).join(' '):String(v)).filter(Boolean).join(' · ');
+ if(raw&&typeof raw==='object') return Object.values(raw as Record<string,unknown>).filter(v=>v!==null&&v!==undefined&&String(v).trim()!=='').map(String).join(' · ');
+ return raw===undefined||raw===null?'':String(raw);
 }
 function dateLabel(r:Row):string{const raw=r.timestamp??r.date??r.key;if(raw===undefined||raw===null)return '';const d=typeof raw==='number'?new Date(raw):new Date(String(raw));return Number.isNaN(d.getTime())?String(raw):d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}
 function Panel({eyebrow,title,children}:{eyebrow:string;title:string;children:any}){return <section className="admin-analytics-panel"><div className="admin-analytics-panel-head"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2></div></div>{children}</section>}
