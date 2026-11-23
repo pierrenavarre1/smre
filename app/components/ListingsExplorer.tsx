@@ -224,6 +224,12 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
                   role="option"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => {
+                    track('Property Search', {
+                      propertyType: 'Address lookup',
+                      searchCriteria: filters.address,
+                      selectedListingId: p.ListingId,
+                      city: p.City,
+                    });
                     setAddressOpen(false);
                     router.push(listingHref(p));
                   }}
