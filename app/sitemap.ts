@@ -13,6 +13,7 @@ const paths = [
   '/valuation',
   '/contact',
   '/guides',
+  '/local-resources',
   '/testimonials',
   '/communities/st-marys',
   '/communities/wamego',
