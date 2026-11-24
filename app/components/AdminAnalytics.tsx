@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
-type Row={key?:string;name?:string;value?:number;count?:number;total?:number;pageviews?:number;visitors?:number;timestamp?:string|number;date?:string;requestPath?:string;referrerHostname?:string;deviceType?:string;country?:string;browserName?:string;osName?:string;eventName?:string;eventData?:string;[key:string]:unknown};
+type Row={key?:string;name?:string;value?:number|string;count?:number;total?:number;pageviews?:number;visitors?:number;timestamp?:string|number;date?:string;requestPath?:string;referrerHostname?:string;deviceType?:string;country?:string;browserName?:string;osName?:string;eventName?:string;eventData?:unknown;keys?:unknown[];[key:string]:unknown};
 type Lead={type:string;createdAt:string;status?:string};
 type SearchRow={keys?:string[];clicks?:number;impressions?:number;ctr?:number;position?:number};
 function rows(input:any):Row[]{if(!input)return [];const v=input.data??input.rows??input.results??input;if(Array.isArray(v))return v;if(v&&typeof v==='object')return Object.entries(v).map(([key,x])=>typeof x==='number'?{key,value:x}:{key,...(x as object)});return []}
