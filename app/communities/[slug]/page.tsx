@@ -37,7 +37,7 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
    .community-hero-copy{padding:70px max(28px,calc((100vw - 1160px)/2)) 64px max(28px,calc((100vw - 1160px)/2));align-self:center}
    .community-hero-copy h1{font:400 clamp(40px,5vw,62px)/1.04 var(--serif);letter-spacing:-.04em;margin:0 0 18px;color:var(--navy)}
    .community-hero-copy>p:last-child{font-size:16px;line-height:1.8;color:#4d5663;max-width:610px;margin:0}
-   .community-hero-photo{min-height:390px;background-size:cover;background-position:center}.community-photo-credit{font-size:11px;line-height:1.5;color:#66707b;padding:7px 12px;text-align:right;margin:0}.community-photo-credit a{color:inherit;text-decoration:underline}.community-hero-photo[aria-label*='public-domain']{filter:brightness(1.22)}
+   .community-hero-photo{min-height:390px;background-size:cover;background-position:center}.community-photo-credit{max-width:1120px;margin:0 auto;padding:8px 24px 0;font-size:11px;line-height:1.5;color:#66707b;text-align:right}.community-photo-credit a{color:inherit;text-decoration:underline}.community-hero-photo[aria-label*='public-domain']{filter:brightness(1.22)}
    .community-content{max-width:1120px;margin:0 auto;padding:0 26px}
    .community-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:38px 0 52px}
    .community-fact{padding:18px 20px;border-top:2px solid #c7a66a;background:#faf9f6;font:15px/1.55 var(--serif);color:var(--navy)}
@@ -65,8 +65,9 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}} />
   <section className="community-hero">
    <div className="community-hero-copy"><h1>{community.name}, Kansas</h1><p>{community.intro}</p></div>
-   <div><div className="community-hero-photo" role="img" aria-label={community.photoAlt} style={{backgroundImage:`url("${community.photo}")`}} />{community.slug==="topeka"&&<p className="community-photo-credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Kansas_State_Capitol_in_summer_2024.jpg" target="_blank" rel="noopener noreferrer">Nils Hünerfuerst, Wikimedia Commons</a>, licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. No changes made.</p>}</div>
+   <div className="community-hero-photo" role="img" aria-label={community.photoAlt} style={{backgroundImage:`url("${community.photo}")`}} />
   </section>
+  {community.slug==="topeka"&&<p className="community-photo-credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Kansas_State_Capitol_in_summer_2024.jpg" target="_blank" rel="noopener noreferrer">Nils Hünerfuerst, Wikimedia Commons</a>, licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. No changes made.</p>}
   <div className="community-content">
    <div className="community-facts">{community.highlights.map(item=><div className="community-fact" key={item}>{item}</div>)}</div>
    <div className="community-columns">
