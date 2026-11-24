@@ -18,6 +18,8 @@ export function ExitIntentPopup() {
 
     function handleMouseOut(event: MouseEvent) {
       if (triggered.current || document.visibilityState !== 'visible') return;
+      // Do not stack the global exit-intent form over any lead form already on screen.
+      if (document.querySelector('.lead-modal-backdrop')) return;
       if (event.clientY > 8 || event.relatedTarget !== null) return;
       triggered.current = true;
       window.localStorage.setItem(SEEN_KEY, '1');
