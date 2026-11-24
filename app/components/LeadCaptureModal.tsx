@@ -70,6 +70,8 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId, so
       }
       track('Lead Submission', { inquiryType: type, leadSource: source, sourcePage, listingId: listingId || 'general' });
       if (isBuyer) track(isMarketInterest ? 'Local Market Interest Submission' : 'Buyer Interest Submission', { leadSource: source, sourcePage });
+      if (isProperty) track('Property Inquiry Submission', { sourcePage, listingId: listingId || 'unknown' });
+      if (isShowing) track('Showing Request Submission', { sourcePage, listingId: listingId || 'unknown' });
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please call us at (785) 465-2543.');
