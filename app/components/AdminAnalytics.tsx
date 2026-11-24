@@ -4,7 +4,7 @@ type Row={key?:string;name?:string;value?:number|string;count?:number;total?:num
 type Lead={type:string;createdAt:string;status?:string};
 type SearchRow={keys?:string[];clicks?:number;impressions?:number;ctr?:number;position?:number};
 function rows(input:any):Row[]{if(!input)return [];const v=input.data??input.rows??input.results??input;if(Array.isArray(v))return v;if(v&&typeof v==='object')return Object.entries(v).map(([key,x])=>typeof x==='number'?{key,value:x}:{key,...(x as object)});return []}
-function metric(input:any,key:string):number{const v=input?.data?.[key]??input?.[key]??input?.data?.[0]?.[key]??input?.[0]?.[key];return Number(v??0)||0}
+function metric(input:any,key:string):number|null{const v=input?.data?.[key]??input?.[key]??input?.data?.[0]?.[key]??input?.[0]?.[key];if(v===undefined||v===null||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null}
 function count(r:Row):number{return Number(r.pageviews??r.value??r.count??r.total??r.visitors??0)||0}
 function dimensionText(value:unknown):string{
  if(value===null||value===undefined)return '';
@@ -69,7 +69,7 @@ export function AdminAnalytics({leads=[]}:{leads?:Lead[]}){
  const listingViews=rows(data?.byListingViews).sort((x,y)=>count(y)-count(x)).slice(0,12);
  const propertySearches=rows(data?.byPropertySearches).sort((x,y)=>count(y)-count(x));
  const leadEvents=rows(data?.byLeadEvents).sort((x,y)=>count(y)-count(x));
- const pageViews=metric(data?.total,'pageviews')||allPages.reduce((sum,r)=>sum+count(r),0);
+ const pageViews=metric(data?.total,'pageviews')??allPages.reduce((sum,r)=>sum+count(r),0);
  const visitors=metric(data?.total,'visitors');
  const maxDaily=Math.max(1,...daily.map(count));
  const showing=leads.filter(x=>/showing/i.test(x.type)).length;
@@ -84,7 +84,7 @@ export function AdminAnalytics({leads=[]}:{leads?:Lead[]}){
   {data?.leadForwardingConfigured===false&&<p className="admin-analytics-footnote">Lead forms in this Preview are not connected to Follow Up Boss. Use Preview to verify traffic, search and listing-view tracking only.</p>}<div className="admin-analytics-section-title"><div><p className="eyebrow">WEBSITE TRAFFIC</p><h2>Traffic overview</h2></div><span>Last {days} days</span></div>
   <div className="admin-analytics-cards">
    <article className="admin-analytics-card"><span>Page views</span><strong>{pageViews.toLocaleString()}</strong><small>Total pages viewed</small></article>
-   <article className="admin-analytics-card"><span>Unique visitors</span><strong>{visitors?visitors.toLocaleString():'—'}</strong><small>{visitors?'Privacy-friendly visitor count':'Not returned by the API'}</small></article>
+   <article className="admin-analytics-card"><span>Unique visitors</span><strong>{visitors===null?'—':visitors.toLocaleString()}</strong><small>{visitors===null?'Not returned by the API':'Privacy-friendly visitor count'}</small></article>
    <article className="admin-analytics-card"><span>Website leads</span><strong>{periodLeads.toLocaleString()}</strong><small>Inquiries recorded in this period</small></article>
    <article className="admin-analytics-card"><span>Showing requests</span><strong>{showing.toLocaleString()}</strong><small>All recorded showing requests</small></article>
   </div>
