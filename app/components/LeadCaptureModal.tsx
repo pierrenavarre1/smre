@@ -1,6 +1,7 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { track } from '@vercel/analytics';
 
 type LeadType = 'buyer' | 'seller' | 'property' | 'showing';
@@ -10,6 +11,9 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId, so
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
   const isBuyer = type === 'buyer';
   const isProperty = type === 'property';
   const isShowing = type === 'showing';
@@ -88,10 +92,12 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId, so
     : isBuyer ? 'Tell us what you’re looking for and we’ll follow up with you.'
     : 'Tell us a little about the property and what you’re considering. We’ll get back to you.';
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
       <style>{`
-        .lead-modal-backdrop{position:fixed;inset:0;z-index:100;background:rgba(7,10,34,.62);display:grid;place-items:center;padding:22px}
+        .lead-modal-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(7,10,34,.62);display:grid;place-items:center;padding:22px}
         .lead-modal{position:relative;width:min(560px,100%);max-height:calc(100vh - 44px);overflow:auto;background:#fff;color:var(--navy);padding:42px;box-shadow:0 24px 70px rgba(0,0,0,.25)}
         .lead-modal-close{position:absolute;right:15px;top:10px;border:0;background:transparent;color:var(--navy);font-size:30px;line-height:1;cursor:pointer;padding:5px}
         .lead-modal h2{font-family:var(--serif);font-weight:400;font-size:42px;line-height:1.02;letter-spacing:-.035em;margin:0 0 14px}
@@ -164,6 +170,7 @@ export function LeadCaptureModal({ type, onClose, propertyAddress, listingId, so
           )}
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
