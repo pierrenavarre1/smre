@@ -226,6 +226,7 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
                   onClick={() => {
                     track('Property Search', {
                       propertyType: 'Address lookup',
+                      searchMethod: 'Listings page suggestion',
                       searchCriteria: filters.address,
                       selectedListingId: p.ListingId,
                       city: p.City,
@@ -246,7 +247,7 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
           type="button"
           className="button button-dark listings-search-button"
           onClick={() => {
-            track('Property Search',{propertyType:filters.type.join(',')||'Any',searchCriteria:[filters.city,filters.address,filters.max?'max '+filters.max:'',filters.beds?'beds '+filters.beds:'',filters.baths?'baths '+filters.baths:'',filters.acreage?'acreage '+filters.acreage:''].filter(Boolean).join(' | ')||'All listings'});
+            track('Property Search',{propertyType:filters.type.join(',')||'Any',searchMethod:'Listings page filters',searchCriteria:[filters.city,filters.address,filters.max?'max '+filters.max:'',filters.beds?'beds '+filters.beds:'',filters.baths?'baths '+filters.baths:'',filters.acreage?'acreage '+filters.acreage:''].filter(Boolean).join(' | ')||'All listings'});
             setAddressOpen(false);
             setPage(1);
           }}
