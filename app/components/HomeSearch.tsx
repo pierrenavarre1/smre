@@ -1,6 +1,7 @@
 'use client';
 import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { track } from '@vercel/analytics';
 import type { HomeSearchProperty } from '../lib/mock-properties';
 import { listingHref } from '../lib/listing-url';
 
@@ -39,6 +40,12 @@ export function HomeSearch() {
 
   return (
     <form action="/listings" className="search-panel home-search" onSubmit={(e) => {
+      const form = new FormData(e.currentTarget);
+      track('Property Search', {
+        propertyType: 'Any',
+        searchMethod: 'Homepage',
+        searchCriteria: [address.trim(), form.get('beds') ? `beds ${form.get('beds')}` : '', form.get('baths') ? `baths ${form.get('baths')}` : '', form.get('max') ? `max ${form.get('max')}` : ''].filter(Boolean).join(' | ') || 'All listings',
+      });
       if (address.trim()) {
         const input = e.currentTarget.querySelector<HTMLInputElement>('input[name="address"]');
         if (input) input.value = address;
@@ -56,7 +63,7 @@ export function HomeSearch() {
             {suggestions.map((p) => (
               <button type="button" role="option" key={p.ListingId}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => { setOpen(false); router.push(listingHref(p)); }}>
+                onClick={() => { track('Property Search', { propertyType: 'Address lookup', searchMethod: 'Homepage suggestion', searchCriteria: address, selectedListingId: p.ListingId, city: p.City }); setOpen(false); router.push(listingHref(p)); }}>
                 <strong>{p.StreetNumber} {p.StreetName}</strong>
                 <span>{p.City}, {p.StateOrProvince} {p.PostalCode}</span>
               </button>
