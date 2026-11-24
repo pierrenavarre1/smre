@@ -19,7 +19,7 @@ const groups = [
     title: 'St. Marys & Pottawatomie County',
     intro: 'Local government, property information and services for St. Marys and the surrounding county.',
     links: [
-      ['City of St. Marys', 'https://www.st-marys.org/', 'City information, departments and local services.'],
+      ['City of St. Marys', 'https://www.smks.info/', 'City information, departments and local services.'],
       ['Pottawatomie County', 'https://www.pottcounty.org/', 'County offices, services, public notices and resident information.'],
       ['County GIS & property maps', 'https://www.pottcounty.org/153/Geographic-Information-Systems-GIS', 'Mapping information to help research parcels and property locations.'],
       ['Planning & Zoning', 'https://www.pottcounty.org/161/Planning-Zoning-Office', 'Contact the County about zoning, land use, permits and development questions.'],
