@@ -36,22 +36,28 @@ export async function GET(request:NextRequest){
  const until=new Date().toISOString().slice(0,10);
  const since=new Date(Date.now()-days*86400000).toISOString().slice(0,10);
  const range={since,until};
+ const requestedEnvironment=request.nextUrl.searchParams.get('environment');
+ const environment=requestedEnvironment==='preview'?'preview':'production';
+ const scoped=(params:Record<string,string>)=>{
+  const existing=params.filter;
+  return {...params,filter:`environment eq '${environment}'${existing?` and (${existing})`:''}`};
+ };
  try{
   const [total,byDay,byPage,byReferrer,byDevice,byCountry,byBrowser,byOs,byEvents,byListingViews,byPropertySearches,byLeadEvents]=await Promise.all([
-   query('visits/count',range),
-   query('visits/aggregate',{...range,by:'day',limit:'100'}),
-   query('visits/aggregate',{...range,by:'requestPath',limit:'100'}),
-   query('visits/aggregate',{...range,by:'referrerHostname',limit:'100'}),
-   query('visits/aggregate',{...range,by:'deviceType',limit:'20'}),
-   query('visits/aggregate',{...range,by:'country',limit:'50'}),
-   optionalQuery('visits/aggregate',{...range,by:'browserName',limit:'20'}),
-   optionalQuery('visits/aggregate',{...range,by:'osName',limit:'20'}),
-   optionalQuery('events/aggregate',{...range,by:'eventName',limit:'30'}),
-   optionalQuery('events/aggregate',{...range,by:'eventData/listingId',filter:"eventName eq 'Listing View'",limit:'50'}),
-   optionalQuery('events/aggregate',{...range,by:'eventData/propertyType',filter:"eventName eq 'Property Search'",limit:'30'}),
-   optionalQuery('events/aggregate',{...range,by:'eventData/inquiryType',filter:"eventName eq 'Lead Submission'",limit:'20'})
+   query('visits/count',scoped(range)),
+   query('visits/aggregate',scoped({...range,by:'day',limit:'100'})),
+   query('visits/aggregate',scoped({...range,by:'requestPath',limit:'100'})),
+   query('visits/aggregate',scoped({...range,by:'referrerHostname',limit:'100'})),
+   query('visits/aggregate',scoped({...range,by:'deviceType',limit:'20'})),
+   query('visits/aggregate',scoped({...range,by:'country',limit:'50'})),
+   optionalQuery('visits/aggregate',scoped({...range,by:'browserName',limit:'20'})),
+   optionalQuery('visits/aggregate',scoped({...range,by:'osName',limit:'20'})),
+   optionalQuery('events/aggregate',scoped({...range,by:'eventName',limit:'30'})),
+   optionalQuery('events/aggregate',scoped({...range,by:'eventData/listingId',filter:"eventName eq 'Listing View'",limit:'50'})),
+   optionalQuery('events/aggregate',scoped({...range,by:'eventData/propertyType',filter:"eventName eq 'Property Search'",limit:'30'})),
+   optionalQuery('events/aggregate',scoped({...range,by:'eventData/inquiryType',filter:"eventName eq 'Lead Submission'",limit:'20'}))
   ]);
-  return NextResponse.json({configured:true,days,total,byDay,byPage,byReferrer,byDevice,byCountry,byBrowser,byOs,byEvents,byListingViews,byPropertySearches,byLeadEvents,customEventsAvailable:Boolean(byEvents||byListingViews||byPropertySearches||byLeadEvents),geographyNote:'Vercel Web Analytics API currently reports country, not city or state.'});
+  return NextResponse.json({configured:true,days,environment,total,byDay,byPage,byReferrer,byDevice,byCountry,byBrowser,byOs,byEvents,byListingViews,byPropertySearches,byLeadEvents,customEventsAvailable:Boolean(byEvents||byListingViews||byPropertySearches||byLeadEvents),geographyNote:'Vercel Web Analytics API currently reports country, not city or state.'});
  }catch(error){
   console.error('Analytics query failed:',error);
   const detail=error instanceof Error?error.message:'Unknown analytics error';
