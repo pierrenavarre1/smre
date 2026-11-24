@@ -6,28 +6,41 @@ type SearchRow={keys?:string[];clicks?:number;impressions?:number;ctr?:number;po
 function rows(input:any):Row[]{if(!input)return [];const v=input.data??input.rows??input.results??input;if(Array.isArray(v))return v;if(v&&typeof v==='object')return Object.entries(v).map(([key,x])=>typeof x==='number'?{key,value:x}:{key,...(x as object)});return []}
 function metric(input:any,key:string):number{const v=input?.data?.[key]??input?.[key]??input?.data?.[0]?.[key]??input?.[0]?.[key];return Number(v??0)||0}
 function count(r:Row):number{return Number(r.pageviews??r.value??r.count??r.total??r.visitors??0)||0}
+function dimensionText(value:unknown):string{
+ if(value===null||value===undefined)return '';
+ if(typeof value==='string'||typeof value==='number'||typeof value==='boolean')return String(value).trim();
+ if(Array.isArray(value))return value.map(dimensionText).filter(Boolean).join(' · ');
+ if(typeof value==='object')return Object.entries(value as Record<string,unknown>)
+  .filter(([,v])=>v!==null&&v!==undefined&&String(v).trim()!=='')
+  .map(([k,v])=>{const text=dimensionText(v);return text?((typeof v==='object'&&v!==null)?`${k}: ${text}`: `${k}: ${text}`):''})
+  .filter(Boolean).join(' · ');
+ return '';
+}
 function label(r:Row):string{
- // Vercel's Events Aggregate API returns eventName and eventData fields,
- // not the generic key/keys shape used by older analytics endpoints.
+ // Event dimensions may arrive as a JSON string or as an already-parsed object.
+ // Handle both formats so useful values do not collapse into "Unspecified".
  if(typeof r.eventData==='string'){
-  try{
-   const parsed=JSON.parse(r.eventData);
-   if(parsed&&typeof parsed==='object'){
-    const values=Object.entries(parsed as Record<string,unknown>)
-     .filter(([,v])=>v!==null&&v!==undefined&&String(v).trim()!=='')
-     .map(([k,v])=>`${k}: ${String(v)}`);
-    if(values.length)return values.join(' · ');
-   }
-  }catch{
-   if(r.eventData.trim())return r.eventData;
+  const raw=r.eventData.trim();
+  if(raw){
+   try{
+    const parsed=JSON.parse(raw);
+    const formatted=dimensionText(parsed);
+    if(formatted)return formatted;
+   }catch{return raw;}
   }
+ }else{
+  const formatted=dimensionText(r.eventData);
+  if(formatted)return formatted;
  }
- if(typeof r.eventName==='string'&&r.eventName.trim())return r.eventName;
- const keys=Array.isArray(r.keys)?r.keys.filter(v=>v!==null&&v!==undefined&&String(v).trim()!==''):[];
- const raw=keys.length?keys:r.key??r.name??r.requestPath??r.referrerHostname??r.deviceType??r.country??r.browserName??r.osName;
- if(Array.isArray(raw))return raw.map(v=>typeof v==='object'&&v!==null?Object.values(v as Record<string,unknown>).filter(x=>x!==null&&x!==undefined).join(' '):String(v)).filter(Boolean).join(' · ');
- if(raw&&typeof raw==='object')return Object.values(raw as Record<string,unknown>).filter(v=>v!==null&&v!==undefined&&String(v).trim()!=='').map(String).join(' · ');
- return raw===undefined||raw===null?'':String(raw);
+ for(const field of ['eventName','propertyType','inquiryType','listingId','searchMethod','method','key','name','requestPath','referrerHostname','deviceType','country','browserName','osName']){
+  const value=r[field];
+  const formatted=dimensionText(value);
+  if(formatted)return formatted;
+ }
+ const keys=Array.isArray(r.keys)?r.keys.map(dimensionText).filter(Boolean):[];
+ if(keys.length)return keys.join(' · ');
+ if(typeof r.value==='string'&&r.value.trim())return r.value.trim();
+ return '';
 }
 function dateLabel(r:Row):string{const raw=r.timestamp??r.date??r.key;if(raw===undefined||raw===null)return '';const d=typeof raw==='number'?new Date(raw):new Date(String(raw));return Number.isNaN(d.getTime())?String(raw):d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}
 function Panel({eyebrow,title,children}:{eyebrow:string;title:string;children:any}){return <section className="admin-analytics-panel"><div className="admin-analytics-panel-head"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2></div></div>{children}</section>}
