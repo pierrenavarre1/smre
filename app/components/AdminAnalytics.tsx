@@ -32,6 +32,13 @@ function label(r:Row):string{
   const formatted=dimensionText(r.eventData);
   if(formatted)return formatted;
  }
+ // Some grouped API response shapes expose the selected JSON dimension as
+ // a flattened `eventData/<property>` field instead of an eventData object.
+ const flattenedDimension=Object.entries(r).find(([field,value])=>field.startsWith('eventData/')&&value!==null&&value!==undefined);
+ if(flattenedDimension){
+  const formatted=dimensionText(flattenedDimension[1]);
+  if(formatted)return formatted;
+ }
  for(const field of ['eventName','propertyType','inquiryType','listingId','searchMethod','method','key','name','requestPath','referrerHostname','deviceType','country','browserName','osName']){
   const value=r[field];
   const formatted=dimensionText(value);
