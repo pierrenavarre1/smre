@@ -44,7 +44,9 @@ export async function GET(request:NextRequest){
  };
  try{
   const [total,byDay,byPage,byReferrer,byDevice,byCountry,byBrowser,byOs,byEvents,byListingViews,byPropertySearches,byLeadEvents]=await Promise.all([
-   query('visits/count',scoped(range)),
+   environment==='preview'
+    ? query('visits/aggregate',scoped({...range,by:'environment',limit:'2'}))
+    : query('visits/count',scoped(range)),
    query('visits/aggregate',scoped({...range,by:'day',limit:'100'})),
    query('visits/aggregate',scoped({...range,by:'requestPath',limit:'100'})),
    query('visits/aggregate',scoped({...range,by:'referrerHostname',limit:'100'})),
