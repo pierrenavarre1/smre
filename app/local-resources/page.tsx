@@ -19,7 +19,7 @@ const groups = [
     title: 'St. Marys & Pottawatomie County',
     intro: 'Local government, property information and services for St. Marys and the surrounding county.',
     links: [
-      ['City of St. Marys', 'https://www.st-marys.org/', 'City information, departments and local services.'],
+      ['City of St. Marys', 'https://www.smks.info/', 'City information, departments and local services.'],
       ['Pottawatomie County', 'https://www.pottcounty.org/', 'County offices, services, public notices and resident information.'],
       ['County GIS & property maps', 'https://www.pottcounty.org/153/Geographic-Information-Systems-GIS', 'Mapping information to help research parcels and property locations.'],
       ['Planning & Zoning', 'https://www.pottcounty.org/161/Planning-Zoning-Office', 'Contact the County about zoning, land use, permits and development questions.'],
@@ -91,7 +91,7 @@ function ResourceGroup({ group }: { group: typeof groups[number] }) {
 }
 
 export default function LocalResourcesPage() {
-  return <main className="local-resources-page">
+  return <div className="local-resources-page">
     <style>{`
       .local-resources-page{padding-bottom:86px}
       .resources-hero{position:relative;min-height:390px;display:flex;align-items:end;overflow:hidden;background:var(--navy);color:#fff}
@@ -139,5 +139,5 @@ export default function LocalResourcesPage() {
       </section>
       <p className="resources-back-link" style={{marginTop:28,fontSize:13,color:'var(--muted)'}}>Explore the areas we serve: <Link href="/communities/st-marys">St. Marys</Link>, <Link href="/communities/wamego">Wamego</Link>, <Link href="/communities/manhattan">Manhattan</Link>, <Link href="/communities/topeka">Topeka</Link>, <Link href="/communities/rossville">Rossville</Link> and <Link href="/communities/silver-lake">Silver Lake</Link>.</p>
     </div>
-  </main>;
+  </div>;
 }
