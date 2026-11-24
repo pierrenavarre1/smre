@@ -151,3 +151,21 @@
     flex: 0 0 auto !important;
   }
 }
+
+
+/* Keep the site chat control clear of the Follow Up Boss call-to-action widget. */
+.chat {
+  right: 118px;
+  bottom: 28px;
+}
+
+@media (max-width: 560px) {
+  .chat {
+    right: 16px;
+    bottom: 205px;
+  }
+  .chat-panel {
+    right: 0;
+    bottom: 58px;
+  }
+}
