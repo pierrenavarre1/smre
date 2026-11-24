@@ -91,11 +91,11 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
   const listingsHref=`/listings?city=${encodeURIComponent(community.name)}`;
   return <section className="section container community-page">
     <style>{`
-      .community-page{padding-top:76px;padding-bottom:82px}
-      .community-page .page-intro{max-width:900px;margin-bottom:44px}
+      .community-page{padding-top:0;padding-bottom:82px}
+      .community-page .page-intro{max-width:none;margin:0 - max(0px,calc((100vw - 1200px)/-2)) 44px;padding:76px max(24px,calc((100vw - 1200px)/2));background:linear-gradient(90deg,rgba(10,22,48,.91),rgba(10,22,48,.58)),url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2000&q=85') center/cover;color:#fff}.community-page .page-intro .eyebrow{color:rgba(255,255,255,.78)}.community-page .page-intro p:not(.eyebrow){color:rgba(255,255,255,.9)}
       .community-page .page-intro p:not(.eyebrow){font-size:17px;line-height:1.75;max-width:800px}
       .community-reading{display:grid;grid-template-columns:1fr 1fr;gap:54px;max-width:1060px;margin:0 auto 48px}
-      .community-reading section{min-width:0}
+      .community-reading section{min-width:0;padding:26px 24px;background:var(--wash)}
       .community-reading h2,.community-listings-cta h2{font-family:var(--serif);font-size:clamp(28px,3vw,36px);font-weight:400;line-height:1.12;letter-spacing:-.03em;margin:0 0 14px}
       .community-reading .eyebrow{margin-bottom:12px}
       .community-reading p:not(.eyebrow){font-size:15px;line-height:1.8;color:var(--muted);margin:0}
