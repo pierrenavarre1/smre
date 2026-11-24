@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         : lead.type === 'property'
           ? 'Property Inquiry'
           : lead.type === 'buyer'
-            ? 'Buyer Inquiry'
+            ? 'General Inquiry'
             : 'General Inquiry';
 
     const rawListingId = lead.listingId ? String(lead.listingId) : '';
