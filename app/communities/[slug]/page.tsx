@@ -64,26 +64,26 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
   `}</style>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}} />
   <section className="community-hero">
-   <div className="community-hero-copy"><p className="eyebrow">THE AREA</p><h1>{community.name}, Kansas</h1><p>{community.intro}</p></div>
+   <div className="community-hero-copy"><h1>{community.name}, Kansas</h1><p>{community.intro}</p></div>
    <div className="community-hero-photo" role="img" aria-label={community.photoAlt} style={{backgroundImage:`url("${community.photo}")`}} />
   </section>
   <div className="community-content">
    <div className="community-facts">{community.highlights.map(item=><div className="community-fact" key={item}>{item}</div>)}</div>
    <div className="community-columns">
-    <section><p className="eyebrow">LOCAL PROPERTY NOTES</p><h2>Buying or selling in {community.name}</h2><p>{community.localFocus}</p></section>
-    <section><p className="eyebrow">ST. MARY’S REAL ESTATE</p><h2>Local guidance, practical advice</h2><p>{community.smreFit}</p></section>
+    <section><h2>Buying or selling in {community.name}</h2><p>{community.localFocus}</p></section>
+    <section><h2>Local guidance, practical advice</h2><p>{community.smreFit}</p></section>
    </div>
    <section className="community-links-panel community-local-links">
-    <p className="eyebrow">USEFUL LOCAL LINKS</p><h2>Get to know {community.name}</h2>
+    <h2>Get to know {community.name}</h2>
     <div className="community-resource-links">{community.resources.map(item=><a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer">{item.label} ↗</a>)}</div>
     <p className="community-footer-links">Find more government offices, schools, property information and local services on the <Link href="/local-resources">Northeast Kansas Local Resources page</Link>.</p>
    </section>
-   <section className="community-listings"><div><p className="eyebrow">CURRENT PROPERTY</p><h2>Looking in {community.name}?</h2><p>Browse homes and properties currently listed in {community.name}, Kansas.</p></div><Link className="button button-dark" href={listingsHref}>See {community.name} Listings</Link></section>
+   <section className="community-listings"><div><h2>Looking in {community.name}?</h2><p>Browse homes and properties currently listed in {community.name}, Kansas.</p></div><Link className="button button-dark" href={listingsHref}>See {community.name} Listings</Link></section>
    <div className="community-next">
-    <section><p className="eyebrow">SELLING A PROPERTY</p><h2>Thinking about selling?</h2><p>Get a local perspective on your property’s value and what to expect from the selling process.</p><Link className="text-link" href="/valuation">Request a home value</Link></section>
-    <section><p className="eyebrow">BUYING OR HAVE A QUESTION?</p><h2>Talk it through</h2><p>Tell us what you are looking for and we can help you figure out a sensible next step.</p><Link className="text-link" href="/contact">Contact St. Mary’s Real Estate</Link></section>
+    <section><h2>Thinking about selling?</h2><p>Get a local perspective on your property’s value and what to expect from the selling process.</p><Link className="text-link" href="/valuation">Request a home value</Link></section>
+    <section><h2>Talk it through</h2><p>Tell us what you are looking for and we can help you figure out a sensible next step.</p><Link className="text-link" href="/contact">Contact St. Mary’s Real Estate</Link></section>
    </div>
-   <section className="community-more"><p className="eyebrow">EXPLORE THE REGION</p><h2>Nearby communities</h2><div className="tag-list">{communities.filter(item=>item.slug!==community.slug).map(item=><Link key={item.slug} href={`/communities/${item.slug}`}>{item.name}, KS</Link>)}</div><p className="community-footer-links">For practical information about buying, selling and owning property, browse our <Link href="/guides">real estate guides</Link>.</p></section>
+   <section className="community-more"><h2>Nearby communities</h2><div className="tag-list">{communities.filter(item=>item.slug!==community.slug).map(item=><Link key={item.slug} href={`/communities/${item.slug}`}>{item.name}, KS</Link>)}</div><p className="community-footer-links">For practical information about buying, selling and owning property, browse our <Link href="/guides">real estate guides</Link>.</p></section>
   </div>
  </section>;
 }
