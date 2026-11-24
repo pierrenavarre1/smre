@@ -15,6 +15,7 @@ const paths = [
   '/guides',
   '/local-resources',
   '/testimonials',
+  '/communities',
   '/communities/st-marys',
   '/communities/wamego',
   '/communities/rossville',
