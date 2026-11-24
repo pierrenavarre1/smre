@@ -81,6 +81,7 @@ window.widgetTracker("create", "WT-WOVYXUPG"); window.widgetTracker("send", "pag
           <strong>Explore</strong>
           <Link href="/agents">Our Team</Link>
           <Link href="/guides">Guides</Link>
+          <Link href="/local-resources">Local Resources</Link>
           <Link href="/about">About SMRE</Link>
           <Link href="/testimonials">Testimonials</Link>
           <Link href="/communities/st-marys">St. Marys Real Estate</Link>
