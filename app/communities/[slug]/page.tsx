@@ -67,7 +67,12 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
    <div className="community-hero-copy"><h1>{community.name}, Kansas</h1><p>{community.intro}</p></div>
    <div className="community-hero-photo" role="img" aria-label={community.photoAlt} style={{backgroundImage:`url("${community.photo}")`}} />
   </section>
+  {community.slug==="st-marys"&&<p className="community-photo-credit">Photo: Joanna Gilkeson, U.S. Fish and Wildlife Service, via <a href="https://commons.wikimedia.org/wiki/File:Konza_Prairie,_part_of_the_Flint_Hills_in_Kansas_(19130964193).jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>. Public domain.</p>}
+  {community.slug==="wamego"&&<p className="community-photo-credit">Photo: Carol M. Highsmith, <a href="https://www.loc.gov/item/2020742248/" target="_blank" rel="noopener noreferrer">Library of Congress</a>, LC-DIG-highsm-67297. Public domain.</p>}
+  {community.slug==="manhattan"&&<p className="community-photo-credit">Photo: Bryan W. Cox, <a href="https://commons.wikimedia.org/wiki/File:KSU_Anderson_Hall_2006-01-24.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>. Public domain.</p>}
   {community.slug==="topeka"&&<p className="community-photo-credit">Photo: <a href="https://commons.wikimedia.org/wiki/File:Kansas_State_Capitol_in_summer_2024.jpg" target="_blank" rel="noopener noreferrer">Nils Hünerfuerst, Wikimedia Commons</a>, licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>. No changes made.</p>}
+  {community.slug==="rossville"&&<p className="community-photo-credit">Photo: Mike Blair, Kansas Department of Wildlife and Parks, via <a href="https://commons.wikimedia.org/wiki/File:Flint_Hills_Scenic_Byway_-_The_Vast_Tallgrass_Prairie_in_the_Flint_Hills_-_NARA_-_7718391.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons / National Archives</a>. Public domain.</p>}
+  {community.slug==="silver-lake"&&<p className="community-photo-credit">Photo: Mike Blair, Kansas Department of Wildlife and Parks, via <a href="https://commons.wikimedia.org/wiki/File:Flint_Hills_Scenic_Byway_-_The_Vast_Tallgrass_Prairie_in_the_Flint_Hills_-_NARA_-_7718391.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons / National Archives</a>. Public domain.</p>}
   <div className="community-content">
    <div className="community-facts">{community.highlights.map(item=><div className="community-fact" key={item}>{item}</div>)}</div>
    <div className="community-columns">
