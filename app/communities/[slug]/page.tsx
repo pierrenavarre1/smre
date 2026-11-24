@@ -30,7 +30,7 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
  const {slug}=await params; const community=communities.find(item=>item.slug===slug); if(!community)notFound();
  const listingsHref=`/listings?city=${encodeURIComponent(community.name)}`;
  const schema={'@context':'https://schema.org','@type':'RealEstateAgent',name:'St. Mary’s Real Estate',url:'https://www.smre.info',areaServed:{'@type':'City',name:community.name,containedInPlace:{'@type':'State',name:'Kansas'}}};
- return <main className="community-detail">
+ return <section className="community-detail">
   <style>{`
    .community-detail{padding-bottom:76px}
    .community-hero{display:grid;grid-template-columns:1fr 1fr;min-height:390px;background:#f5f2eb}
@@ -85,5 +85,5 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
    </div>
    <section className="community-more"><p className="eyebrow">EXPLORE THE REGION</p><h2>Nearby communities</h2><div className="tag-list">{communities.filter(item=>item.slug!==community.slug).map(item=><Link key={item.slug} href={`/communities/${item.slug}`}>{item.name}, KS</Link>)}</div><p className="community-footer-links">For practical information about buying, selling and owning property, browse our <Link href="/guides">real estate guides</Link>.</p></section>
   </div>
- </main>;
+ </section>;
 }
