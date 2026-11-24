@@ -1,15 +1,58 @@
 import Link from 'next/link';
 import { getAdminData } from '../lib/admin-store';
 
-export const metadata={title:'Local Real Estate Guides',description:'Practical real estate guides for St. Marys, Wamego, Topeka, Manhattan and Northeast Kansas.'};
+export const metadata = {
+  title: 'Local Real Estate Guides',
+  description: 'Practical real estate guides for St. Marys, Wamego, Topeka, Manhattan and Northeast Kansas.',
+};
 
-export default async function Guides(){const {guides}=await getAdminData();return <section className="section container guides-page"><style>{`.guides-page{padding-top:62px;padding-bottom:84px}.guides-hero{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;margin-bottom:32px}.guides-hero-copy{max-width:700px}.guides-hero-copy h1{font-family:var(--serif);font-size:clamp(38px,5vw,60px);font-weight:400;line-height:1.05;letter-spacing:-.035em;margin:0 0 14px}.guides-hero-copy>p:last-child{color:var(--muted);font-size:16px;line-height:1.75}.guides-hero-photo{min-height:260px;background:url(https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=85) center/cover}.guides-resource-intro{padding:15px 18px;background:var(--wash);font-size:13px;line-height:1.6;margin:22px 0 30px}.guide-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.guide-card{padding:24px;min-height:210px;border:1px solid var(--line);display:flex;flex-direction:column;text-decoration:none;color:var(--navy);transition:background .15s,border-color .15s}.guide-card:hover{background:var(--wash);border-color:var(--navy)}.guide-card h2{font-family:var(--serif);font-size:25px;font-weight:400;line-height:1.15;margin:8px 0}.guide-card>p:not(.eyebrow){color:var(--muted);font-size:13px;line-height:1.65}.guide-link{margin-top:auto;padding-top:18px;font-size:12px;font-weight:700}@media(max-width:760px){.guides-hero{grid-template-columns:1fr}.guides-hero-photo{min-height:190px}.guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.guide-grid{grid-template-columns:1fr}.guide-card{min-height:0}}`}</style>
-  <div className="guides-hero"><div className="guides-hero-copy">
-    <p className="eyebrow">LOCAL REAL ESTATE GUIDES</p>
-    <h1>Practical Guides for Buying, Selling & Owning Property</h1><p>Clear information for the questions that come up when buying a home, selling a property, or researching land and acreage across Northeast Kansas.</p></div><div className="guides-hero-photo" role="img" aria-label="Open Kansas countryside"></div></div>
-  </div>
-  <p className="guides-resource-intro">Looking for local government, property, school and community information? <Link href="/local-resources">Browse Northeast Kansas local resources</Link>.</p>
-  <div className="guide-grid">{guides.filter(g=>!g.draft).map(g=><Link href={`/guides/${g.slug}`} className="guide-card" key={g.slug}>
-    <p className="eyebrow">{g.category}</p><h2>{g.title}</h2><p>{g.description}</p><span className="guide-link">Read Guide →</span>
-  </Link>)}</div>
-</section>}
+export default async function Guides() {
+  const { guides } = await getAdminData();
+
+  return (
+    <section className="section container guides-page">
+      <style>{`
+        .guides-page{padding-top:62px;padding-bottom:84px}
+        .guides-hero{display:grid;grid-template-columns:1.1fr .9fr;gap:36px;align-items:center;margin-bottom:32px}
+        .guides-hero-copy{max-width:700px}
+        .guides-hero-copy h1{font-family:var(--serif);font-size:clamp(38px,5vw,60px);font-weight:400;line-height:1.05;letter-spacing:-.035em;margin:0 0 14px}
+        .guides-hero-copy>p:last-child{color:var(--muted);font-size:16px;line-height:1.75}
+        .guides-hero-photo{min-height:260px;background:url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=85') center/cover}
+        .guides-resource-intro{padding:15px 18px;background:var(--wash);font-size:13px;line-height:1.6;margin:22px 0 30px}
+        .guide-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+        .guide-card{padding:24px;min-height:210px;border:1px solid var(--line);display:flex;flex-direction:column;text-decoration:none;color:var(--navy);transition:background .15s,border-color .15s}
+        .guide-card:hover{background:var(--wash);border-color:var(--navy)}
+        .guide-card h2{font-family:var(--serif);font-size:25px;font-weight:400;line-height:1.15;margin:8px 0}
+        .guide-card>p:not(.eyebrow){color:var(--muted);font-size:13px;line-height:1.65}
+        .guide-link{margin-top:auto;padding-top:18px;font-size:12px;font-weight:700}
+        @media(max-width:760px){.guides-hero{grid-template-columns:1fr}.guides-hero-photo{min-height:190px}.guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+        @media(max-width:520px){.guide-grid{grid-template-columns:1fr}.guide-card{min-height:0}}
+      `}</style>
+
+      <div className="guides-hero">
+        <div className="guides-hero-copy">
+          <p className="eyebrow">LOCAL REAL ESTATE GUIDES</p>
+          <h1>Practical Guides for Buying, Selling &amp; Owning Property</h1>
+          <p>Clear information for the questions that come up when buying a home, selling a property, or researching land and acreage across Northeast Kansas.</p>
+        </div>
+        <div className="guides-hero-photo" role="img" aria-label="Open Kansas countryside" />
+      </div>
+
+      <p className="guides-resource-intro">
+        Looking for local government, property, school and community information?{' '}
+        <Link href="/local-resources">Browse Northeast Kansas local resources</Link>.
+      </p>
+
+      <div className="guide-grid">
+        {guides.filter((guide) => !guide.draft).map((guide) => (
+          <Link href={`/guides/${guide.slug}`} className="guide-card" key={guide.slug}>
+            <p className="eyebrow">{guide.category}</p>
+            <h2>{guide.title}</h2>
+            <p>{guide.description}</p>
+            <span className="guide-link">Read Guide →</span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
