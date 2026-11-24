@@ -13,7 +13,18 @@ export async function POST(request: Request) {
     const contact = String(lead?.contact || '');
     const email = String(lead?.email || (contact.includes('@') ? contact : '')).trim();
     const phone = String(lead?.phone || (!contact.includes('@') ? contact : '')).trim();
-    const message = String(lead?.message || lead?.details || '').trim();
+    const details = String(lead?.message || lead?.details || '').trim();
+    const sourcePage = typeof lead?.sourcePage === 'string' && lead.sourcePage.startsWith('/')
+      ? lead.sourcePage.slice(0, 300)
+      : '';
+    const sourceLabel = lead?.source === 'exit_intent' ? 'EXIT-INTENT LOCAL MARKET FORM'
+      : lead?.source === 'homepage_buyer' ? 'HOMEPAGE FIND A PROPERTY FORM' : 'WEBSITE FORM';
+    const message = [
+      sourceLabel,
+      sourcePage ? `PAGE: ${sourcePage}` : '',
+      lead?.type === 'buyer' ? 'BUYER PREFERENCES' : '',
+      details,
+    ].filter(Boolean).join('\n');
 
     if (!name || (!email && !phone)) {
       return NextResponse.json({ error: 'Name and contact information are required.' }, { status: 400 });
@@ -33,30 +44,33 @@ export async function POST(request: Request) {
         ? 'Property Inquiry'
         : lead.type === 'property'
           ? 'Property Inquiry'
-          : 'General Inquiry';
+          : lead.type === 'buyer'
+            ? 'Buyer Inquiry'
+            : 'General Inquiry';
 
     const rawListingId = lead.listingId ? String(lead.listingId) : '';
     const listingId = rawListingId.includes(':') ? rawListingId.split(':').pop() || rawListingId : rawListingId;
     const preferredDate = lead.preferredDate ? String(lead.preferredDate) : '';
     const preferredTime = lead.preferredTime ? String(lead.preferredTime) : '';
-    const displayDate = preferredDate && /^\\d{4}-\\d{2}-\\d{2}$/.test(preferredDate)
+    const displayDate = preferredDate && /^\d{4}-\d{2}-\d{2}$/.test(preferredDate)
       ? (() => { const [year, month, day] = preferredDate.split('-').map(Number); return new Date(year, month - 1, day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); })()
       : preferredDate;
-    const displayTime = preferredTime && /^\\d{2}:\\d{2}$/.test(preferredTime)
+    const displayTime = preferredTime && /^\d{2}:\d{2}$/.test(preferredTime)
       ? (() => { const [hour, minute] = preferredTime.split(':').map(Number); const suffix = hour >= 12 ? 'PM' : 'AM'; return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${suffix}`; })()
       : preferredTime;
+    const eventMessage = [
+      lead.type === 'showing' ? 'SHOWING REQUEST' : '',
+      displayDate || displayTime ? `WHEN: ${[displayDate, displayTime].filter(Boolean).join(' at ')}` : '',
+      lead.address ? `PROPERTY: ${String(lead.address)}` : '',
+      listingId ? `MLS #: ${listingId}` : '',
+      message,
+    ].filter(Boolean).join('\n');
     const event = {
       source: 'smre.info',
       system: 'SMRE Website',
       type: eventType,
-      message: [
-        lead.type === 'showing' ? 'SHOWING REQUEST' : '',
-        displayDate || displayTime ? `WHEN: ${[displayDate, displayTime].filter(Boolean).join(' at ')}` : '',
-        lead.address ? `PROPERTY: ${String(lead.address)}` : '',
-        listingId ? `MLS #: ${listingId}` : '',
-        message ? `NOTES: ${message}` : '',
-      ].filter(Boolean).join('  |  '),
-      sourceUrl: 'https://smre.info',
+      message: eventMessage,
+      sourceUrl: `https://www.smre.info${sourcePage || ''}`,
       person: {
         firstName,
         lastName,
@@ -82,9 +96,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unable to submit your request. Please call (785) 465-2543.' }, { status: 502 });
     }
 
-    // Keep the website's own inquiry categories distinct from the FUB event
-    // categories. The admin dashboard uses these labels to identify buyer,
-    // seller, and showing-request leads.
     const archiveType = lead.type === 'showing'
       ? 'Showing Request'
       : lead.type === 'seller' || lead.type === 'valuation'
@@ -93,9 +104,6 @@ export async function POST(request: Request) {
           ? 'Buyer Inquiry'
           : 'Property Inquiry';
 
-    // Follow Up Boss has accepted the inquiry at this point. Keep the visitor's
-    // submission successful even if the secondary website archive is temporarily
-    // unavailable; otherwise a retry could create a duplicate CRM event.
     try {
       await addLead({
         type: archiveType,

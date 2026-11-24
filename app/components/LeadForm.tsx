@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { track } from '@vercel/analytics';
 
 export function LeadForm({ kind }: { kind: 'contact' | 'valuation' }) {
   const [done, setDone] = useState(false);
@@ -17,6 +18,7 @@ export function LeadForm({ kind }: { kind: 'contact' | 'valuation' }) {
     setSubmitting(true);
     const body: Record<string, FormDataEntryValue | string> = Object.fromEntries(formData);
     body.type = kind;
+    body.sourcePage = window.location.pathname;
     if (kind === 'valuation') {
       const detailLabels: Record<string, string> = {
         city: 'City', propertyType: 'Property type', bedrooms: 'Bedrooms',
@@ -43,6 +45,7 @@ export function LeadForm({ kind }: { kind: 'contact' | 'valuation' }) {
         const result = await response.json().catch(() => ({}));
         throw new Error(result.error || 'Unable to submit your request.');
       }
+      track(kind === 'valuation' ? 'Valuation Form Submission' : 'Contact Form Submission', { sourcePage: window.location.pathname });
       setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to submit your request. Please call (785) 465-2543.');

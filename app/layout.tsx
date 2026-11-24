@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { BrandLogo } from './components/BrandLogo';
 import { ChatBubble } from './components/ChatBubble';
 import { MobileMenu } from './components/MobileMenu';
+import { ExitIntentPopup } from './components/ExitIntentPopup';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,6 +95,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       </div>
     </footer>
     <ChatBubble />
+    <ExitIntentPopup />
     <Analytics />
   </body></html>
 }
