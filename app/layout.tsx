@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import './brand.css';
@@ -44,12 +45,23 @@ export const metadata: Metadata = {
 export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){
   const phone = '(785) 465-2543';
   const address = '512 W Bertrand Ave, St Marys, KS 66536';
-  return <html lang="en"><body>
+  return <html lang="en">
+    <head>
+      <Script id="fub-widget-tracker" strategy="beforeInteractive">
+        {`(function(w,i,d,g,e,t){w["WidgetTrackerObject"]=g;(w[g]=w[g]||function()
+{(w[g].q=w[g].q||[]).push(arguments);}),(w[g].ds=1*new Date());(e="script"),
+(t=d.createElement(e)),(e=d.getElementsByTagName(e)[0]);t.async=1;t.src=i;
+e.parentNode.insertBefore(t,e);})
+(window,"https://widgetbe.com/agent",document,"widgetTracker");
+window.widgetTracker("create", "WT-WOVYXUPG"); window.widgetTracker("send", "pageview");`}
+      </Script>
+    </head>
+    <body>
     <header className="site-header">
       <div className="container nav">
         <Link href="/" className="brand-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
         <nav className="nav-links" aria-label="Main navigation">
-          <a className="header-phone" href={`tel:${phone.replace(/\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
+          <a className="header-phone" href={`tel:${phone.replace(/\\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
           <Link href="/listings">Listings</Link>
           <Link href="/valuation">Home Value</Link>
           <Link href="/about">About</Link>
@@ -63,7 +75,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
       <div className="container footer-grid">
         <div className="footer-brand-block">
           <Link href="/" className="brand-logo footer-logo" aria-label="St. Mary’s Real Estate home"><BrandLogo className="logo-image" /></Link>
-          <p>{address.split(',')[0]}<br />{address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${phone.replace(/\D/g,'')}`} style={{color:'#fff'}}>{phone}</a></p>
+          <p>{address.split(',')[0]}<br />{address.split(',').slice(1).join(',').trim()}<br /><a href={`tel:${phone.replace(/\\D/g,'')}`} style={{color:'#fff'}}>{phone}</a></p>
         </div>
         <div className="footer-links">
           <strong>Explore</strong>
