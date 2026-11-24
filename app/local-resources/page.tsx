@@ -10,7 +10,7 @@ export const metadata = {
     title: 'Northeast Kansas Local Resources',
     description: 'A practical directory of local government, property, education, housing and community resources across Northeast Kansas.',
     url: 'https://www.smre.info/local-resources',
-    images: [{ url: '/images/Hero%20for%20SMRE%20Web.png', width: 1600, height: 900, alt: 'Kansas countryside and open fields' }]
+    images: [{ url: '/images/local-resources-kansas.jpg', width: 1600, height: 900, alt: 'Kansas countryside and open fields' }]
   }
 };
 
@@ -19,11 +19,16 @@ const groups = [
     title: 'St. Marys & Pottawatomie County',
     intro: 'Local government, property information and services for St. Marys and the surrounding county.',
     links: [
-      ['City of St. Marys', 'https://www.smks.info/', 'City information, departments and local services.'],
+      ['City of St. Marys', 'https://www.st-marys.org/', 'City information, departments and local services.'],
       ['Pottawatomie County', 'https://www.pottcounty.org/', 'County offices, services, public notices and resident information.'],
       ['County GIS & property maps', 'https://www.pottcounty.org/153/Geographic-Information-Systems-GIS', 'Mapping information to help research parcels and property locations.'],
       ['Planning & Zoning', 'https://www.pottcounty.org/161/Planning-Zoning-Office', 'Contact the County about zoning, land use, permits and development questions.'],
       ['St. Marys Area Chamber of Commerce', 'https://www.stmaryschamber.org/', 'Local businesses, community information and chamber resources.'],
+      ['MJ’s Coffee House', 'https://www.mjscoffeehouse.com/', 'Coffee, espresso and a local gathering place in downtown St. Marys.'],
+      ['785 Plumbing', 'https://785plumbing.com/', 'Plumbing services for area homes and properties.'],
+      ['Fullerton Automotive', 'https://www.google.com/maps/search/?api=1&query=Fullerton+Automotive+St+Marys+KS', 'Automotive repair in St. Marys.'],
+      ['Wichman Automotive', 'https://www.google.com/maps/search/?api=1&query=Wichman+Automotive+St+Marys+KS', 'Automotive service in St. Marys.'],
+      ['Gray’s Auto Repair', 'https://www.google.com/maps/search/?api=1&query=Grays+Auto+Repair+St+Marys+KS', 'Automotive repair in St. Marys.'],
       ['Kaw Valley USD 321', 'https://www.kawvalley.k12.ks.us/', 'District information, schools and enrollment resources.'],
       ['Pottawatomie Wabaunsee Regional Library', 'https://pwrlibrary.org/', 'Library locations, programs and public resources.']
     ]
@@ -34,6 +39,7 @@ const groups = [
     links: [
       ['City of Wamego', 'https://www.wamego.org/', 'City departments, services and community information.'],
       ['Wamego Chamber & Community Resources', 'https://www.wamego.org/chamber/community-resources', 'Local organizations and community contacts.'],
+      ['Visit Wamego', 'https://www.visitwamego.com/', 'Local attractions, restaurants, events and things to do.'],
       ['Moving to Wamego', 'https://www.wamego.org/moving-to-wamego', 'Information for people relocating to the area.'],
       ['Wamego Parks & Recreation', 'https://www.wamego.org/parks', 'Parks, recreation and community facilities.'],
       ['Wamego Public Library', 'https://wamego.lib.nckls.org/local-resources/', 'Library services and local resource links.']
@@ -95,13 +101,15 @@ export default function LocalResourcesPage() {
     <style>{`
       .local-resources-page{padding-bottom:86px}
       .resources-hero{position:relative;min-height:390px;display:flex;align-items:end;overflow:hidden;background:var(--navy);color:#fff}
-      .resources-hero img{object-fit:cover;object-position:center 58%;z-index:0}
+      .resources-hero-art{position:absolute;inset:0;background:linear-gradient(120deg,rgba(12,25,55,.94),rgba(12,25,55,.48)),url('https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?auto=format&fit=crop&w=2000&q=85') center 55%/cover;z-index:0}
       .resources-hero:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(9,14,48,.82),rgba(9,14,48,.3)),linear-gradient(0deg,rgba(9,14,48,.35),transparent 65%);z-index:1}
       .resources-hero-content{position:relative;z-index:2;padding:72px 0 62px;max-width:820px}
       .resources-hero .eyebrow{color:#fff;opacity:.8}
       .resources-hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,6vw,72px);line-height:1.02;letter-spacing:-.04em;margin:0 0 18px}
       .resources-hero p:not(.eyebrow){font-size:17px;line-height:1.7;color:rgba(255,255,255,.9);max-width:690px;margin:0}
       .resources-intro{padding:34px 0 16px;max-width:850px}
+      .resource-jump{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0 6px}.resource-jump a{font-size:12px;font-weight:650;color:var(--navy);text-decoration:none;border:1px solid var(--line);padding:9px 13px;border-radius:30px}.resource-jump a:hover{background:var(--wash)}
+      .resource-note{font-size:12px;line-height:1.6;color:var(--muted);margin-top:20px}
       .resources-intro p{font-size:15px;line-height:1.75;color:var(--muted)}
       .resource-group{padding:38px 0 42px;border-bottom:1px solid var(--line)}
       .resource-group-heading{display:grid;grid-template-columns:.8fr 1.2fr;gap:36px;align-items:end;margin-bottom:22px}
@@ -121,7 +129,7 @@ export default function LocalResourcesPage() {
       @media(max-width:560px){.resources-hero{min-height:360px}.resources-hero-content{padding:56px 0 46px}.resource-link-grid{grid-template-columns:1fr}.resource-link-card{min-height:0}.resource-group{padding:30px 0}.resources-site-guides{align-items:flex-start;flex-direction:column;padding:24px}.resources-site-guides .button{width:100%}}
     `}</style>
     <section className="resources-hero">
-      <Image src="/images/Hero for SMRE Web.png" alt="Kansas countryside and open fields in the Northeast Kansas region" fill priority sizes="100vw" />
+      <div className="resources-hero-art" aria-hidden="true" />
       <div className="container resources-hero-content">
         <p className="eyebrow">A LOCAL REFERENCE</p>
         <h1>Northeast Kansas Local Resources</h1>
@@ -132,7 +140,9 @@ export default function LocalResourcesPage() {
       <div className="resources-intro">
         <p>This page brings together local government, property information, schools, community organizations and Kansas housing resources in one place. It is a starting point for your research, not a substitute for confirming current requirements with the responsible agency. If you are considering a property, verify zoning, utilities, taxes, permits and other property-specific details directly with the appropriate office.</p>
       </div>
-      {groups.map(group => <ResourceGroup group={group} key={group.title} />)}
+      <nav className="resource-jump" aria-label="Jump to resource category">{groups.map((group,index)=><a key={group.title} href={`#resource-${index}`}>{group.title}</a>)}</nav>
+      {groups.map((group,index) => <div id={`resource-${index}`} key={group.title}><ResourceGroup group={group} /></div>)}
+      <p className="resource-note">These links are provided as a starting point for local research, not as endorsements or recommendations. Business services, hours and contact details can change, so confirm information directly with each provider.</p>
       <section className="resources-site-guides">
         <div><h2>Looking into a move or a property?</h2><p>Our local real estate guides cover buying a first home, evaluating land, rural water, county zoning and other questions that can come up across Northeast Kansas.</p></div>
         <Link className="button button-dark" href="/guides">Browse Real Estate Guides</Link>
