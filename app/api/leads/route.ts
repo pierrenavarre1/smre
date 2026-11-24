@@ -82,12 +82,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unable to submit your request. Please call (785) 465-2543.' }, { status: 502 });
     }
 
+    // Keep the website's own inquiry categories distinct from the FUB event
+    // categories. The admin dashboard uses these labels to identify buyer,
+    // seller, and showing-request leads.
+    const archiveType = lead.type === 'showing'
+      ? 'Showing Request'
+      : lead.type === 'seller' || lead.type === 'valuation'
+        ? 'Seller Inquiry'
+        : lead.type === 'buyer'
+          ? 'Buyer Inquiry'
+          : 'Property Inquiry';
+
     // Follow Up Boss has accepted the inquiry at this point. Keep the visitor's
     // submission successful even if the secondary website archive is temporarily
     // unavailable; otherwise a retry could create a duplicate CRM event.
     try {
       await addLead({
-        type: eventType,
+        type: archiveType,
         name,
         email: email || undefined,
         phone: phone || undefined,

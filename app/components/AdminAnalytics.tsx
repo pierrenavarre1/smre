@@ -1,20 +1,62 @@
 'use client';
 import {useEffect,useState} from 'react';
-type Row={key?:string;name?:string;value?:number;count?:number;total?:number;pageviews?:number;visitors?:number;timestamp?:string|number;date?:string;requestPath?:string;referrerHostname?:string;deviceType?:string;country?:string;browserName?:string;osName?:string;[key:string]:unknown};
+type Row={key?:string;name?:string;value?:number|string;count?:number;total?:number;pageviews?:number;visitors?:number;timestamp?:string|number;date?:string;requestPath?:string;referrerHostname?:string;deviceType?:string;country?:string;browserName?:string;osName?:string;eventName?:string;eventData?:unknown;keys?:unknown[];[key:string]:unknown};
 type Lead={type:string;createdAt:string;status?:string};
 type SearchRow={keys?:string[];clicks?:number;impressions?:number;ctr?:number;position?:number};
 function rows(input:any):Row[]{if(!input)return [];const v=input.data??input.rows??input.results??input;if(Array.isArray(v))return v;if(v&&typeof v==='object')return Object.entries(v).map(([key,x])=>typeof x==='number'?{key,value:x}:{key,...(x as object)});return []}
-function metric(input:any,key:string):number{const v=input?.data?.[key]??input?.[key]??input?.data?.[0]?.[key]??input?.[0]?.[key];return Number(v??0)||0}
+function metric(input:any,key:string):number|null{const v=input?.data?.[key]??input?.[key]??input?.data?.[0]?.[key]??input?.[0]?.[key];if(v===undefined||v===null||v==='')return null;const n=Number(v);return Number.isFinite(n)?n:null}
 function count(r:Row):number{return Number(r.pageviews??r.value??r.count??r.total??r.visitors??0)||0}
-function label(r:Row):string{return String(r.key??r.name??r.requestPath??r.referrerHostname??r.deviceType??r.country??r.browserName??r.osName??'')}
+function dimensionText(value:unknown):string{
+ if(value===null||value===undefined)return '';
+ if(typeof value==='string'||typeof value==='number'||typeof value==='boolean')return String(value).trim();
+ if(Array.isArray(value))return value.map(dimensionText).filter(Boolean).join(' · ');
+ if(typeof value==='object')return Object.entries(value as Record<string,unknown>)
+  .filter(([,v])=>v!==null&&v!==undefined&&String(v).trim()!=='')
+  .map(([k,v])=>{const text=dimensionText(v);return text?((typeof v==='object'&&v!==null)?`${k}: ${text}`: `${k}: ${text}`):''})
+  .filter(Boolean).join(' · ');
+ return '';
+}
+function label(r:Row):string{
+ // Event dimensions may arrive as a JSON string or as an already-parsed object.
+ // Handle both formats so useful values do not collapse into "Unspecified".
+ if(typeof r.eventData==='string'){
+  const raw=r.eventData.trim();
+  if(raw){
+   try{
+    const parsed=JSON.parse(raw);
+    const formatted=dimensionText(parsed);
+    if(formatted)return formatted;
+   }catch{return raw;}
+  }
+ }else{
+  const formatted=dimensionText(r.eventData);
+  if(formatted)return formatted;
+ }
+ // Some grouped API response shapes expose the selected JSON dimension as
+ // a flattened `eventData/<property>` field instead of an eventData object.
+ const flattenedDimension=Object.entries(r).find(([field,value])=>field.startsWith('eventData/')&&value!==null&&value!==undefined);
+ if(flattenedDimension){
+  const formatted=dimensionText(flattenedDimension[1]);
+  if(formatted)return formatted;
+ }
+ for(const field of ['eventName','propertyType','inquiryType','listingId','searchMethod','method','key','name','requestPath','referrerHostname','deviceType','country','browserName','osName']){
+  const value=r[field];
+  const formatted=dimensionText(value);
+  if(formatted)return formatted;
+ }
+ const keys=Array.isArray(r.keys)?r.keys.map(dimensionText).filter(Boolean):[];
+ if(keys.length)return keys.join(' · ');
+ if(typeof r.value==='string'&&r.value.trim())return r.value.trim();
+ return '';
+}
 function dateLabel(r:Row):string{const raw=r.timestamp??r.date??r.key;if(raw===undefined||raw===null)return '';const d=typeof raw==='number'?new Date(raw):new Date(String(raw));return Number.isNaN(d.getTime())?String(raw):d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}
 function Panel({eyebrow,title,children}:{eyebrow:string;title:string;children:any}){return <section className="admin-analytics-panel"><div className="admin-analytics-panel-head"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2></div></div>{children}</section>}
-function Ranking({items}:{items:Row[]}){const max=Math.max(1,...items.map(count));return <div className="admin-analytics-list">{items.length?items.map((r,i)=><div key={i}><div className="admin-analytics-row"><span title={label(r)}>{label(r)||'Direct'}</span><strong className="admin-analytics-value">{count(r).toLocaleString()}</strong></div><div className="admin-analytics-meter"><i style={{width:(count(r)/max*100)+'%'}}/></div></div>):<p className="admin-muted">No data in this period.</p>}</div>}
+function Ranking({items}:{items:Row[]}){const max=Math.max(1,...items.map(count));return <div className="admin-analytics-list">{items.length?items.map((r,i)=><div key={i}><div className="admin-analytics-row"><span title={label(r)}>{label(r)||'Unspecified / unavailable'}</span><strong className="admin-analytics-value">{count(r).toLocaleString()}</strong></div><div className="admin-analytics-meter"><i style={{width:(count(r)/max*100)+'%'}}/></div></div>):<p className="admin-muted">No data in this period.</p>}</div>}
 function SearchTable({items}:{items:SearchRow[]}){return items.length?<div className="admin-analytics-table-wrap"><table className="admin-analytics-table"><thead><tr><th>Search phrase / page</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Avg. position</th></tr></thead><tbody>{items.slice(0,12).map((r,i)=><tr key={i}><td title={r.keys?.[0]}>{r.keys?.[0]||'—'}</td><td>{Number(r.clicks||0).toLocaleString()}</td><td>{Number(r.impressions||0).toLocaleString()}</td><td>{(Number(r.ctr||0)*100).toFixed(1)}%</td><td>{Number(r.position||0).toFixed(1)}</td></tr>)}</tbody></table></div>:<p className="admin-muted">No Search Console data returned for this period.</p>}
 export function AdminAnalytics({leads=[]}:{leads?:Lead[]}){
- const [days,setDays]=useState(30);const [data,setData]=useState<any>(null);const [error,setError]=useState('');const [loading,setLoading]=useState(true);const [reload,setReload]=useState(0);
+ const [days,setDays]=useState(30);const [environment,setEnvironment]=useState<'production'|'preview'>('production');const [data,setData]=useState<any>(null);const [error,setError]=useState('');const [loading,setLoading]=useState(true);const [reload,setReload]=useState(0);
  const [search,setSearch]=useState<any>(null);const [searchError,setSearchError]=useState('');const [searchLoading,setSearchLoading]=useState(true);
- useEffect(()=>{let active=true;setLoading(true);setError('');fetch('/api/admin/analytics?days='+days,{cache:'no-store'}).then(async r=>{const x=await r.json();if(!r.ok)throw new Error(x.detail||x.error||'Unable to load analytics');if(active)setData(x)}).catch(e=>{if(active)setError(e.message)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[days,reload]);
+ useEffect(()=>{let active=true;setLoading(true);setError('');fetch('/api/admin/analytics?days='+days+'&environment='+environment,{cache:'no-store'}).then(async r=>{const x=await r.json();if(!r.ok)throw new Error(x.detail||x.error||'Unable to load analytics');if(active)setData(x)}).catch(e=>{if(active)setError(e.message)}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[days,environment,reload]);
  useEffect(()=>{let active=true;setSearchLoading(true);setSearchError('');fetch('/api/admin/search-console?days='+days,{cache:'no-store'}).then(async r=>{const x=await r.json();if(!r.ok)throw new Error(x.detail||x.error||'Unable to load Search Console');if(active)setSearch(x)}).catch(e=>{if(active)setSearchError(e.message)}).finally(()=>{if(active)setSearchLoading(false)});return()=>{active=false}},[days,reload]);
  const daily=rows(data?.byDay).filter(r=>r.timestamp!==undefined||r.date!==undefined);
  const allPages=rows(data?.byPage).sort((x,y)=>count(y)-count(x));const pages=allPages.slice(0,10);
@@ -27,7 +69,7 @@ export function AdminAnalytics({leads=[]}:{leads?:Lead[]}){
  const listingViews=rows(data?.byListingViews).sort((x,y)=>count(y)-count(x)).slice(0,12);
  const propertySearches=rows(data?.byPropertySearches).sort((x,y)=>count(y)-count(x));
  const leadEvents=rows(data?.byLeadEvents).sort((x,y)=>count(y)-count(x));
- const pageViews=metric(data?.total,'pageviews')||allPages.reduce((sum,r)=>sum+count(r),0);
+ const pageViews=metric(data?.total,'pageviews')??allPages.reduce((sum,r)=>sum+count(r),0);
  const visitors=metric(data?.total,'visitors');
  const maxDaily=Math.max(1,...daily.map(count));
  const showing=leads.filter(x=>/showing/i.test(x.type)).length;
@@ -37,11 +79,12 @@ export function AdminAnalytics({leads=[]}:{leads?:Lead[]}){
  if(data?.configured===false)return <div className="admin-analytics"><div className="admin-analytics-setup"><p className="eyebrow">SETUP REQUIRED</p><h2>Connect Vercel Web Analytics</h2><p>The site is ready to collect analytics, but the Vercel Analytics API token is not available to this deployment.</p><a className="admin-analytics-link" href="https://vercel.com/dashboard" target="_blank" rel="noreferrer">Open Vercel Dashboard →</a></div></div>;
  if(error)return <div className="admin-analytics"><div className="admin-analytics-setup"><p className="eyebrow">ANALYTICS ERROR</p><h2>Couldn’t load analytics</h2><p>{error}</p><button className="button button-dark" onClick={()=>setReload(x=>x+1)}>Try again</button></div></div>;
  return <div className="admin-analytics">
-  <div className="admin-analytics-toolbar"><div><p className="admin-muted">Website audience, property interest, search visibility and inquiry activity.</p><p className="admin-analytics-updated">Privacy-friendly aggregate data · Last refreshed when this page loaded</p></div><div className="admin-analytics-controls"><select aria-label="Analytics date range" value={days} onChange={e=>setDays(Number(e.target.value))}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select><button className="button button-light" onClick={()=>setReload(x=>x+1)}>Refresh</button></div></div>
-  <div className="admin-analytics-section-title"><div><p className="eyebrow">WEBSITE TRAFFIC</p><h2>Traffic overview</h2></div><span>Last {days} days</span></div>
+  <div className="admin-analytics-toolbar"><div><p className="admin-muted">Website audience, property interest, search visibility and inquiry activity.</p><p className="admin-analytics-updated">Privacy-friendly aggregate data · {environment==='production'?'Production website data':'Preview test data'} · Last refreshed when this page loaded</p></div><div className="admin-analytics-controls"><select aria-label="Analytics data source" value={environment} onChange={e=>setEnvironment(e.target.value as 'production'|'preview')}><option value="production">Production data</option><option value="preview">Preview test data</option></select><select aria-label="Analytics date range" value={days} onChange={e=>setDays(Number(e.target.value))}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select><button className="button button-light" onClick={()=>setReload(x=>x+1)}>Refresh</button></div></div>
+  <p className="admin-analytics-updated">Traffic and tracked actions use the selected environment. Lead totals below come from the shared SMRE inquiry archive.</p>
+  {environment==='preview'&&data?.leadForwardingConfigured===false&&<p className="admin-analytics-footnote">Lead forms in this Preview are not connected to Follow Up Boss. Use Preview to verify traffic, search and listing-view tracking only.</p>}<div className="admin-analytics-section-title"><div><p className="eyebrow">WEBSITE TRAFFIC</p><h2>Traffic overview</h2></div><span>Last {days} days</span></div>
   <div className="admin-analytics-cards">
    <article className="admin-analytics-card"><span>Page views</span><strong>{pageViews.toLocaleString()}</strong><small>Total pages viewed</small></article>
-   <article className="admin-analytics-card"><span>Unique visitors</span><strong>{visitors?visitors.toLocaleString():'—'}</strong><small>{visitors?'Privacy-friendly visitor count':'Not returned by the API'}</small></article>
+   <article className="admin-analytics-card"><span>Unique visitors</span><strong>{visitors===null?'—':visitors.toLocaleString()}</strong><small>{visitors===null?'Not returned by the API':'Privacy-friendly visitor count'}</small></article>
    <article className="admin-analytics-card"><span>Website leads</span><strong>{periodLeads.toLocaleString()}</strong><small>Inquiries recorded in this period</small></article>
    <article className="admin-analytics-card"><span>Showing requests</span><strong>{showing.toLocaleString()}</strong><small>All recorded showing requests</small></article>
   </div>
