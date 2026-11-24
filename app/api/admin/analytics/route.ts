@@ -57,7 +57,7 @@ export async function GET(request:NextRequest){
    optionalQuery('events/aggregate',scoped({...range,by:'eventData/propertyType',filter:"eventName eq 'Property Search'",limit:'30'})),
    optionalQuery('events/aggregate',scoped({...range,by:'eventData/inquiryType',filter:"eventName eq 'Lead Submission'",limit:'20'}))
   ]);
-  return NextResponse.json({configured:true,days,environment,total,byDay,byPage,byReferrer,byDevice,byCountry,byBrowser,byOs,byEvents,byListingViews,byPropertySearches,byLeadEvents,customEventsAvailable:Boolean(byEvents||byListingViews||byPropertySearches||byLeadEvents),geographyNote:'Vercel Web Analytics API currently reports country, not city or state.'});
+  return NextResponse.json({configured:true,days,environment,leadForwardingConfigured:Boolean(process.env.FUB_API_KEY&&process.env.FUB_SYSTEM_KEY),total,byDay,byPage,byReferrer,byDevice,byCountry,byBrowser,byOs,byEvents,byListingViews,byPropertySearches,byLeadEvents,customEventsAvailable:Boolean(byEvents||byListingViews||byPropertySearches||byLeadEvents),geographyNote:'Vercel Web Analytics API currently reports country, not city or state.'});
  }catch(error){
   console.error('Analytics query failed:',error);
   const detail=error instanceof Error?error.message:'Unknown analytics error';
