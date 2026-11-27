@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { track } from '@vercel/analytics';
+import { sendFubPropertySearch } from '../lib/fub-activity-client';
 import { ListingCard } from './ListingCard';
 import { ListingMap } from './ListingMap';
 import type { ListingIndexProperty } from '../lib/mock-properties';
@@ -231,6 +232,7 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
                       selectedListingId: p.ListingId,
                       city: p.City,
                     });
+                    sendFubPropertySearch({ city: p.City, propertyType: 'Address lookup', criteria: filters.address, url: window.location.href });
                     setAddressOpen(false);
                     router.push(listingHref(p));
                   }}
@@ -247,7 +249,9 @@ export function ListingsExplorer({ items }: { items: ListingIndexProperty[] }) {
           type="button"
           className="button button-dark listings-search-button"
           onClick={() => {
-            track('Property Search',{propertyType:filters.type.join(',')||'Any',searchMethod:'Listings page filters',searchCriteria:[filters.city,filters.address,filters.max?'max '+filters.max:'',filters.beds?'beds '+filters.beds:'',filters.baths?'baths '+filters.baths:'',filters.acreage?'acreage '+filters.acreage:''].filter(Boolean).join(' | ')||'All listings'});
+            const criteria=[filters.city,filters.address,filters.max?'max '+filters.max:'',filters.beds?'beds '+filters.beds:'',filters.baths?'baths '+filters.baths:'',filters.acreage?'acreage '+filters.acreage:''].filter(Boolean).join(' | ')||'All listings';
+            track('Property Search',{propertyType:filters.type.join(',')||'Any',searchMethod:'Listings page filters',searchCriteria:criteria});
+            sendFubPropertySearch({city:filters.city||filters.address||undefined,propertyType:filters.type.join(',')||'Any',maxPrice:Number(filters.max)||undefined,beds:Number(filters.beds)||undefined,baths:Number(filters.baths)||undefined,criteria,url:window.location.href});
             setAddressOpen(false);
             setPage(1);
           }}
