@@ -56,7 +56,7 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
    .community-resource-links a{padding:12px 0;border-bottom:1px solid #d9d4c9;text-decoration:none;color:var(--navy);font-size:14px;font-weight:650}
    .community-resource-links a:hover{text-decoration:underline}
    .community-listings{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:30px 32px;border:1px solid #d9dce1;margin-bottom:38px}
-   .community-listings h2{font:400 32px/1.1 var(--serif);margin:0 0 8px;color:var(--navy)}
+   .community-listings h2{font:400 32px/1.1 var(--serif);margin:0 0 8px;color:#fff}
    .community-listings p{font-size:16px;line-height:1.65;color:#fff;margin:0;opacity:1;max-width:620px}
    .community-listings .button{flex:0 0 auto;align-self:center;margin:0}
    .community-next{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 0 38px;border-bottom:1px solid #d9dce1}.community-next section{padding:26px 28px;background:#f5f2eb;border-top:3px solid #c7a66a}.community-next .community-action{display:inline-flex;align-items:center;justify-content:center;margin-top:14px;padding:13px 20px;min-height:48px;background:var(--navy);color:#fff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.01em}.community-next .community-action:hover{background:#242b62}
