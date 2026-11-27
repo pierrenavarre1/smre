@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { BrandLogo } from './components/BrandLogo';
 import { ChatBubble } from './components/ChatBubble';
 import { MobileMenu } from './components/MobileMenu';
+import { ExploreMenu } from './components/ExploreMenu';
 import { ExitIntentPopup } from './components/ExitIntentPopup';
 
 export const dynamic = 'force-dynamic';
@@ -64,7 +65,7 @@ window.widgetTracker("create", "WT-WOVYXUPG"); window.widgetTracker("send", "pag
           <a className="header-phone" href={`tel:${phone.replace(/\\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
           <Link href="/listings">Listings</Link>
           <Link href="/valuation">Home Value</Link>
-          <details className="nav-explore"><summary>Explore</summary><div className="nav-explore-menu"><Link href="/communities">Communities</Link><Link href="/local-resources">Local Resources</Link></div></details>
+          <ExploreMenu />
           <Link href="/about">About</Link>
           <Link href="/contact" className="nav-cta">Contact</Link>
         </nav>
