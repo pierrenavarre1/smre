@@ -37,7 +37,7 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
    .community-hero-copy{padding:70px max(28px,calc((100vw - 1160px)/2)) 64px max(28px,calc((100vw - 1160px)/2));align-self:center}
    .community-hero-copy h1{font:400 clamp(40px,5vw,62px)/1.04 var(--serif);letter-spacing:-.04em;margin:0 0 18px;color:var(--navy)}
    .community-hero-copy>p:last-child{font-size:16px;line-height:1.8;color:#4d5663;max-width:610px;margin:0}
-   .community-hero-photo{min-height:390px;background-size:cover;background-position:center}.community-photo-credit{max-width:1120px;margin:0 auto;padding:8px 24px 0;font-size:11px;line-height:1.5;color:#66707b;text-align:right}.community-photo-credit a{color:inherit;text-decoration:underline}.community-hero-photo[aria-label*='public-domain']{filter:brightness(1.22)}
+   .community-hero-photo{min-height:390px;background-size:cover;background-position:center;position:relative}.community-photo-credit{position:absolute;right:14px;bottom:8px;margin:0;padding:4px 7px;text-align:right;font-size:10px;line-height:1.4;color:#fff;background:rgba(0,0,0,.48);border-radius:2px;text-shadow:0 1px 2px rgba(0,0,0,.35)}.community-photo-credit a{color:inherit;text-decoration:underline}.community-hero-photo[aria-label*='public-domain']{filter:brightness(1.22)}
    .community-content{max-width:1120px;margin:0 auto;padding:0 26px}
    .community-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:38px 0 52px}
    .community-fact{padding:18px 20px;border-top:2px solid #c7a66a;background:#faf9f6;font:15px/1.55 var(--serif);color:var(--navy)}
@@ -59,26 +59,26 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
    .community-listings h2{font:400 32px/1.1 var(--serif);margin:0 0 8px;color:var(--navy)}
    .community-listings p{font-size:16px;line-height:1.65;color:#fff;margin:0;opacity:1;max-width:620px}
    .community-listings .button{flex:0 0 auto;align-self:center;margin:0}
-   .community-next{display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:0 0 38px;border-bottom:1px solid #d9dce1}
+   .community-next{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 0 38px;border-bottom:1px solid #d9dce1}.community-next section{padding:26px 28px;background:#f5f2eb;border-top:3px solid #c7a66a}.community-next .community-action{display:inline-flex;align-items:center;justify-content:center;margin-top:14px;padding:13px 20px;min-height:48px;background:var(--navy);color:#fff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.01em}.community-next .community-action:hover{background:#242b62}
    .community-next p{font-size:14px;line-height:1.7;color:#5c6470}
    .community-more{padding-top:38px}
    .community-more .tag-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
    .community-more .tag-list a{border:1px solid #d9dce1;border-radius:30px;padding:9px 14px;color:var(--navy);text-decoration:none;font-size:13px}
    .community-more .tag-list a:hover{background:#f5f2eb}
    .community-footer-links{font-size:14px;color:#5c6470;margin-top:28px}
-   @media(max-width:760px){.community-hero{grid-template-columns:1fr}.community-hero-copy{padding:48px 24px 34px}.community-hero-photo{min-height:240px;order:-1}.community-content{padding:0 20px}.community-facts{grid-template-columns:1fr;margin:26px 0 24px;gap:8px}.community-attractions{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px}.community-columns{grid-template-columns:1fr;gap:30px;margin-bottom:34px}.community-links-panel{padding:24px 20px}.community-resource-links{grid-template-columns:1fr}.community-listings{align-items:flex-start;flex-direction:column;padding:24px}.community-listings .button{width:100%}.community-next{grid-template-columns:1fr;gap:10px}}
+   @media(max-width:760px){.community-hero{grid-template-columns:1fr}.community-hero-copy{padding:48px 24px 34px}.community-hero-photo{min-height:240px;order:-1}.community-content{padding:0 20px}.community-facts{grid-template-columns:1fr;margin:26px 0 24px;gap:8px}.community-attractions{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px}.community-columns{grid-template-columns:1fr;gap:30px;margin-bottom:34px}.community-links-panel{padding:24px 20px}.community-resource-links{grid-template-columns:1fr}.community-listings{align-items:stretch;flex-direction:column;padding:22px;gap:16px}.community-listings>div{width:100%}.community-listings h2{font-size:28px;line-height:1.15}.community-listings p{font-size:15px;line-height:1.55}.community-listings .button{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center}.community-attractions{grid-template-columns:1fr;gap:8px}.community-attractions a,.community-resource-links a{display:flex;align-items:center;min-height:46px;padding:12px 14px;background:#fff;border:1px solid #e0ded8;font-size:14px;line-height:1.4}.community-attractions a:after,.community-resource-links a:after{content:"";display:none}.community-resource-links{gap:8px}.community-links-panel{padding:22px 18px}.community-next{grid-template-columns:1fr;gap:12px}.community-next section{padding:22px 20px}.community-next .community-action{display:flex;width:100%;margin-top:16px;min-height:48px}}
   `}</style>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}} />
   <section className={`community-hero${community.photo?'':' community-hero-no-photo'}`}>
    <div className="community-hero-copy"><h1>{community.name}, Kansas</h1><p>{community.intro}</p></div>
-   {community.photo&&<div className="community-hero-photo" role="img" aria-label={community.photoAlt} style={{backgroundImage:`url("${community.photo}")`}} />}
+   {community.photo&&<div className="community-hero-photo" role="img" aria-label={community.photoAlt} style={{backgroundImage:`url("${community.photo}")`}}>
+    {community.slug==="wamego"&&<p className="community-photo-credit">Photo: Bhall87, <a href="https://commons.wikimedia.org/wiki/File:Wamego_Windmill.JPG" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>.</p>}
+    {community.slug==="manhattan"&&<p className="community-photo-credit">Photo: Matt Aksamit, <a href="https://commons.wikimedia.org/wiki/File:Bill_Snyder_Family_Stadium.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, released into the public domain by the photographer.</p>}
+    {community.slug==="topeka"&&<p className="community-photo-credit">Photo: Elli, <a href="https://commons.wikimedia.org/wiki/File:Kansas_State_Capitol_(March_17,_2023)_02.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, released under <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a>.</p>}
+    {community.slug==="silver-lake"&&<p className="community-photo-credit">Photo: Historic American Buildings Survey, <a href="https://www.loc.gov/item/ks0038/" target="_blank" rel="noopener noreferrer">Library of Congress</a>. Government work; no known restrictions on use.</p>}
+   </div>}
   </section>
-  
-  {community.slug==="wamego"&&<p className="community-photo-credit">Photo: Bhall87, <a href="https://commons.wikimedia.org/wiki/File:Wamego_Windmill.JPG" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>.</p>}
-  {community.slug==="manhattan"&&<p className="community-photo-credit">Photo: Matt Aksamit, <a href="https://commons.wikimedia.org/wiki/File:Bill_Snyder_Family_Stadium.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, released into the public domain by the photographer.</p>}
-  {community.slug==="topeka"&&<p className="community-photo-credit">Photo: Elli, <a href="https://commons.wikimedia.org/wiki/File:Kansas_State_Capitol_(March_17,_2023)_02.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, released under <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a>.</p>}
-  
-  {community.slug==="silver-lake"&&<p className="community-photo-credit">Photo: Historic American Buildings Survey, <a href="https://www.loc.gov/item/ks0038/" target="_blank" rel="noopener noreferrer">Library of Congress</a>. Government work; no known restrictions on use.</p>}
+
   <div className="community-content">
    <div className="community-facts">{community.highlights.map(item=><div className="community-fact" key={item}>{item}</div>)}</div>
    <section className="community-listings"><div><h2>Explore properties in {community.name}</h2><p>See homes, land and other properties currently listed in {community.name}, Kansas.</p></div><Link className="button button-dark" href={listingsHref}>See {community.name} Properties</Link></section>
@@ -88,15 +88,15 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
    </div>
    <section className="community-links-panel community-local-links">
     <h2>Get to know {community.name}</h2>
-    <div className="community-attractions">{community.attractions.map(item=><a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer">{item.label} ↗</a>)}</div>
+    <div className="community-attractions">{community.attractions.map(item=><a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer">{item.label}</a>)}</div>
     <h3 className="eyebrow" style={{marginTop:30}}>Useful local links</h3>
-    <div className="community-resource-links">{community.resources.map(item=><a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer">{item.label} ↗</a>)}</div>
+    <div className="community-resource-links">{community.resources.map(item=><a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer">{item.label}</a>)}</div>
     <p className="community-footer-links">Find more government offices, schools, property information and local services on the <Link href="/local-resources">Northeast Kansas Local Resources page</Link>.</p>
    </section>
    
    <div className="community-next">
-    <section><h2>Thinking about selling?</h2><p>Get a local perspective on your property’s value and what to expect from the selling process.</p><Link className="text-link" href="/valuation">Request a home value</Link></section>
-    <section><h2>Talk it through</h2><p>Tell us what you are looking for and we can help you figure out a sensible next step.</p><Link className="text-link" href="/contact">Contact St. Mary’s Real Estate</Link></section>
+    <section><h2>Thinking about selling?</h2><p>Get a local perspective on your property’s value and what to expect from the selling process.</p><Link className="community-action" href="/valuation">What’s My Home Worth?</Link></section>
+    <section><h2>Talk it through</h2><p>Tell us what you are looking for and we can help you figure out a sensible next step.</p><Link className="community-action" href="/contact">Contact Us</Link></section>
    </div>
    <section className="community-more"><h2>Nearby communities</h2><div className="tag-list">{communities.filter(item=>item.slug!==community.slug).map(item=><Link key={item.slug} href={`/communities/${item.slug}`}>{item.name}, KS</Link>)}</div><p className="community-footer-links">For practical information about buying, selling and owning property, browse our <Link href="/guides">real estate guides</Link>.</p></section>
   </div>
