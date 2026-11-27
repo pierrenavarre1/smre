@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { addLead } from '../../lib/admin-store';
+import { encryptFubPersonId, FUB_IDENTITY_COOKIE } from '../../lib/fub-identity';
 
 function splitName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -91,9 +92,25 @@ export async function POST(request: Request) {
       body: JSON.stringify(event),
     });
 
-    if (!response.ok) {
-      console.error('FUB lead submission failed', response.status, await response.text());
-      return NextResponse.json({ error: 'Unable to submit your request. Please call (785) 465-2543.' }, { status: 502 });
+    let fubPersonId: number | null = null;
+    if (response.status !== 204) {
+      const responseText = await response.text();
+      if (!response.ok) {
+        console.error('FUB lead submission failed', response.status, responseText.slice(0, 500));
+        return NextResponse.json({ error: 'Unable to submit your request. Please call (785) 465-2543.' }, { status: 502 });
+      }
+      try {
+        const fubResult = JSON.parse(responseText);
+        const returnedId = Number(fubResult?.id ?? fubResult?.person?.id);
+        if (Number.isSafeInteger(returnedId) && returnedId > 0) fubPersonId = returnedId;
+      } catch {
+        // FUB accepted the inquiry, but without a returned contact ID we cannot
+        // safely associate future browsing activity with a specific profile.
+      }
+    } else {
+      // A 204 means this source's lead flow is archived and ignored by FUB.
+      console.error('FUB returned 204: SMRE Website lead flow is archived or ignored.');
+      return NextResponse.json({ error: 'Follow Up Boss did not accept this request. Please call (785) 465-2543.' }, { status: 502 });
     }
 
     const archiveType = lead.type === 'showing'
@@ -118,7 +135,21 @@ export async function POST(request: Request) {
       console.error('Lead was accepted by Follow Up Boss but website archive failed:', archiveError);
     }
 
-    return NextResponse.json({ ok: true, forwarded: true });
+    const result = NextResponse.json({ ok: true, forwarded: true });
+    if (fubPersonId) {
+      try {
+        result.cookies.set(FUB_IDENTITY_COOKIE, encryptFubPersonId(fubPersonId), {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60 * 60 * 24 * 180,
+        });
+      } catch (cookieError) {
+        console.error('Unable to persist identified FUB visitor session:', cookieError);
+      }
+    }
+    return result;
   } catch (error) {
     console.error('Lead submission error', error);
     return NextResponse.json({ error: 'Unable to submit your request. Please try again or call (785) 465-2543.' }, { status: 400 });

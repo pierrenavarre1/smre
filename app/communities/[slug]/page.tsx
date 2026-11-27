@@ -2,160 +2,103 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 type Community = {
-  name:string;
-  slug:string;
-  intro:string;
-  localFocus:string;
-  smreFit:string;
+  name:string; slug:string; intro:string; localFocus:string; smreFit:string;
+  photo:string; photoAlt:string; highlights:string[]; attractions:{label:string;href:string}[]; resources:{label:string;href:string}[];
 };
 
 const communities:Community[] = [
-  {
-    name:'St. Marys',slug:'st-marys',
-    intro:'St. Marys is a close-knit Pottawatomie County community with a historic downtown, local businesses, and a strong connection to the surrounding countryside. As the home of our brokerage, it is also where our family has built relationships with buyers and sellers for more than 20 years.',
-    localFocus:'Real estate in and around St. Marys can look different from one property to the next. In-town homes, rural residences, and acreage each bring their own questions about location, utilities, access, property condition, and future plans. Taking time to understand those details is an important part of making a confident decision.',
-    smreFit:'Our roots are here, and our work reaches throughout the surrounding area. As a second-generation, family-owned brokerage, we bring local perspective, straightforward communication, and hands-on guidance to buyers and sellers. We work with residential homes, land, acreage, rural properties, new construction, and investment opportunities.'
-  },
-  {
-    name:'Wamego',slug:'wamego',
-    intro:'Wamego is known for its small-town character and the Oz Museum, which celebrates the area’s connection to the Wizard of Oz. With a lively local identity and a mix of in-town homes and nearby rural properties, it offers several different settings for buyers to consider.',
-    localFocus:'When comparing Wamego properties, think about more than the list price. The home’s condition, lot, access, utility arrangements, and location in relation to your day-to-day needs all matter. Buyers looking at homes in town may have different questions than those considering rural homes or acreage nearby.',
-    smreFit:'Our St. Marys office is close to Wamego, and our agents regularly work across this part of Northeast Kansas. We can help you evaluate the details, understand the local market context, and navigate the steps involved in buying or selling. Our experience includes homes, land, acreage, rural properties, and investment real estate.'
-  },
-  {
-    name:'Manhattan',slug:'manhattan',
-    intro:'Manhattan, often called the Little Apple, is a college town shaped by Kansas State University, Fort Riley’s regional presence, and the Flint Hills landscape. Its neighborhoods and surrounding communities offer a wide range of options for people looking to buy or sell.',
-    localFocus:'Manhattan offers a range of property types and locations, so a useful search starts with your priorities. Consider commute and access, property condition, neighborhood setting, lot characteristics, and how the home or property fits your plans. Sellers also benefit from understanding comparable properties and how buyers are likely to view their home.',
-    smreFit:'Our brokerage serves the broader Topeka-to-Manhattan corridor, bringing a practical perspective to residential sales as well as land, acreage, rural properties, and new construction. You will work with a local agent who takes the time to understand your goals and communicate clearly throughout the process.'
-  },
-  {
-    name:'Topeka',slug:'topeka',
-    intro:'Topeka is Kansas’s state capital, with established neighborhoods, historic landmarks, major employers, and access to parks and cultural attractions. The area includes a broad range of homes and property settings, from city neighborhoods to acreage on the outskirts.',
-    localFocus:'Topeka has a broad mix of homes and property, and each decision calls for its own set of questions. Buyers should consider location, condition, improvements, lot size, and the costs that may come with a property. Sellers need a clear view of comparable sales, current competition, and how to position their property in the market.',
-    smreFit:'We combine the personal service of a family-owned brokerage with experience across a range of property types. Our agents help with residential real estate, land and acreage, rural properties, commercial opportunities, and investment property, with straightforward advice from the first conversation through closing.'
-  },
-  {
-    name:'Rossville',slug:'rossville',
-    intro:'Rossville is a small Pottawatomie County community with a strong local identity and an easy connection to the surrounding rural landscape. Buyers considering Rossville may be looking for a quieter small-town setting, a home with more room, or property outside town.',
-    localFocus:'In and around Rossville, property details can make a meaningful difference. Depending on the property, it may be important to look closely at lot size, outbuildings, access, utility service, and the condition of major systems. The right due diligence starts with understanding how you plan to use the property.',
-    smreFit:'We understand the practical questions that come with buying and selling in smaller communities and rural areas. Our team works with homes, acreage, land, and rural properties, and we aim to make the process clear, responsive, and grounded in the details of the property rather than a one-size-fits-all sales pitch.'
-  },
-  {
-    name:'Silver Lake',slug:'silver-lake',
-    intro:'Silver Lake is a small community northwest of Topeka, known for its residential setting and close connection to the capital-area amenities. Its location gives buyers a small-town option while keeping the greater Topeka area within reach.',
-    localFocus:'A good property decision involves more than comparing asking prices. Location, condition, improvements, lot size, access, and recent comparable sales all help shape a clearer picture of a property’s value and suitability. For rural properties, utility arrangements and other site-specific details may also deserve attention.',
-    smreFit:'Our family-owned brokerage is based in nearby St. Marys, and our agents work with buyers and sellers throughout the region. We offer practical guidance across residential homes, rural properties, land, acreage, and investment opportunities, with direct communication and attention to the details that can affect a transaction.'
-  }
+ {name:'St. Marys',slug:'st-marys',photo:'/images/communities/Immaculata-1.jpeg',photoAlt:'The Immaculata Catholic Church in St. Marys, Kansas',intro:'St. Marys sits along the Kaw River Valley in Pottawatomie County. Its history reaches back to the Potawatomi mission and the Oregon Trail, and the town still has a distinct identity shaped by its historic sites, local businesses and surrounding countryside. It is also home to our brokerage.',localFocus:'The area offers a mix of in-town homes, established neighborhoods, rural residences and acreage. For properties outside city limits, buyers may need to look more closely at road access, water service, septic suitability, zoning and the practical costs of maintaining a rural property.',smreFit:'Our roots are here. We know the local market and the questions that often come up with homes, land and rural property in the surrounding area. We work across residential real estate, acreage, land, new construction and investment properties.',highlights:['The Immaculata','St. Marys Indian Pay Station Museum','Oregon Trail Nature Park'],attractions:[{label:"The Immaculata",href:"https://anewimmaculata.org/"},{label:"St. Marys Indian Pay Station Museum",href:"https://www.nps.gov/places/st-mary-s-mission-and-oregon-trail-nature-park.htm"},{label:"Oregon Trail Nature Park",href:"https://www.travelks.com/listing/oregon-trail-nature-park-and-silo-mural/64447/"},{label:"Sir William’s Hollow",href:"https://www.flinthillsshakespearefestival.com/"},{label:"World War I Memorial Arch",href:"https://savethearch.org/"},{label:"Riverside Park",href:"https://www.smks.info/riverside.html"},{label:"Sugar Creek Country Store",href:"https://sugarcreekcountrystore.com/"},{label:"The Pilgrims Keep",href:"https://www.pilgrimskeep.com/"},{label:"Downtown St. Marys",href:"https://www.smks.info/"} ],resources:[{label:'City of St. Marys',href:'https://www.smks.info/'},{label:'Pottawatomie County GIS',href:'https://www.pottcounty.org/153/Geographic-Information-Systems-GIS'},{label:'County Planning & Zoning',href:'https://www.pottcounty.org/161/Planning-Zoning-Office'},{label:'St. Marys history and museums',href:'https://www.pottcounty.org/604/Historical-Societies-Museums'}]},
+ {name:'Wamego',slug:'wamego',photo:'/images/communities/Windmill-1.jpeg',photoAlt:'The historic Dutch windmill in Wamego City Park, Kansas',intro:'Wamego is a Pottawatomie County community along the Kansas River, known for its historic downtown, City Park and Oz-themed attractions. The Dutch Mill, Oz Museum and Columbian Theatre give the town a recognizable identity, while its location between Manhattan and Topeka makes it a regional hub for nearby communities.',localFocus:'Wamego has established residential neighborhoods, newer homes and rural properties nearby. The city park and downtown are central community features. Buyers comparing in-town and out-of-town properties should pay attention to utility arrangements, access, lot characteristics and the services available at each location.',smreFit:'Our St. Marys office is nearby, and our agents regularly work throughout this part of the Kaw Valley. We can help compare homes in town with acreage and rural properties outside city limits, and explain the property-specific details that deserve a closer look.',highlights:['Schonhoff Dutch Mill and Wamego City Park','OZ Museum and Yellow Brick Road','Columbian Theatre'],attractions:[{label:"Wamego Historical Museum and Prairie Village",href:"https://www.wamegohistoricalmuseum.org/"},{label:"Totos Around Town",href:"https://www.visitwamego.com/explore"},{label:"Mount Mitchell",href:"https://www.visitwamego.com/explore"},{label:"Kansas River access",href:"https://www.wamego.org/parks"},{label:"Splash Park and Aquatic Center",href:"https://www.wamego.org/parks"} ],resources:[{label:'City of Wamego',href:'https://www.wamego.org/'},{label:'Wamego parks and recreation',href:'https://www.wamego.org/parks'},{label:'Visit Wamego',href:'https://www.visitwamego.com/'},{label:'Moving to Wamego',href:'https://www.wamego.org/moving-to-wamego'}]},
+ {name:'Manhattan',slug:'manhattan',photo:'/images/communities/K-State%20Stadium.jpeg',photoAlt:'Bill Snyder Family Stadium at Kansas State University in Manhattan, Kansas',intro:'Manhattan, often called the Little Apple, is a university city shaped by Kansas State University, Fort Riley and the Flint Hills landscape. Downtown and Aggieville offer distinct business and entertainment districts, while parks, trails and Tuttle Creek provide access to outdoor recreation.',localFocus:'The housing market includes university-area rentals and homes, established neighborhoods, newer subdivisions and properties on the edge of town. Commute patterns, school preferences, neighborhood setting and proximity to campus or Fort Riley can all influence which locations make sense for a buyer.',smreFit:'We serve the broader Topeka-to-Manhattan corridor and work with buyers and sellers across a range of property types. Whether you are considering a home in town, land or a rural property outside Manhattan, we can help you evaluate the details and local market context.',highlights:['Kansas State University and Bill Snyder Family Stadium','Aggieville and downtown Manhattan','Flint Hills Discovery Center'],attractions:[{label:"Konza Prairie Biological Station",href:"https://keep.konza.k-state.edu/visit/"},{label:"Sunset Zoo",href:"https://www.sunsetzoo.com/"},{label:"Tuttle Creek Lake and State Park",href:"https://ksoutdoors.com/State-Parks/Locations/Tuttle-Creek"},{label:"K-State Gardens and Insect Zoo",href:"https://www.k-state.edu/gardens/"},{label:"Museum of Art + Light",href:"https://artlightmuseum.org/"} ],resources:[{label:'City of Manhattan',href:'https://www.cityofmhk.com/'},{label:'Riley County',href:'https://www.rileycountyks.gov/'},{label:'Visit Manhattan',href:'https://www.visitmanhattanks.org/'},{label:'Kansas State University',href:'https://www.k-state.edu/'}]},
+ {name:'Topeka',slug:'topeka',photo:'/images/communities/KS%20Capitol.jpeg',photoAlt:'Kansas State Capitol in Topeka, photographed by Elli and released under CC0',intro:'Topeka is Kansas’s capital city, with a wide range of established neighborhoods, historic districts, employers and public amenities. The State Capitol, NOTO Arts District, Gage Park and Lake Shawnee are among the places that give the city its character.',localFocus:'Topeka offers a broad mix of housing, from older homes in established neighborhoods to newer construction and properties on the edge of the city. Location, condition, improvements, lot size and current competition all matter when evaluating a property or planning a sale.',smreFit:'Our team works throughout the Topeka-to-Manhattan region. We bring experience with residential homes, land, acreage, rural properties and investment opportunities, with straightforward communication and attention to the details of each transaction.',highlights:['Kansas State Capitol','Brown v. Board of Education National Historic Site','NOTO Arts District'],attractions:[{label:"Gage Park and Topeka Zoo",href:"https://parks.snco.us/179/Gage-Park"},{label:"Lake Shawnee and Ted Ensley Gardens",href:"https://parks.snco.us/Ted-Ensley-Gardens-1"},{label:"Combat Air Museum",href:"https://www.combatairmuseum.org/"},{label:"Kansas Museum of History",href:"https://www.kansashistory.gov/"},{label:"Old Prairie Town at Ward-Meade",href:"https://parks.snco.us/28"} ],resources:[{label:'City of Topeka',href:'https://www.topeka.org/'},{label:'Shawnee County',href:'https://www.snco.gov/'},{label:'Visit Topeka',href:'https://www.visittopeka.com/'},{label:'Shawnee County parks and trails',href:'https://parks.snco.gov/317/Parks-Trails'}]},
+ {name:'Rossville',slug:'rossville',photo:'/images/communities/Rossville%20Park.jpeg',photoAlt:'Rossville City Park in Rossville, Kansas',intro:'Rossville is a small Shawnee County community near the junction of US-24 and I-70. Its local identity is closely tied to its parks, schools, community organizations and long-running traditions, with rural homes and open country close by.',localFocus:'Rossville buyers may be looking for an in-town home, more room for a household, or a rural property nearby. Depending on the property, it is worth checking utility service, outbuildings, access, lot size and the condition of major systems before making a decision.',smreFit:'We understand the questions that come with buying and selling in smaller communities and rural areas. Our team works with homes, acreage, land and rural properties, and can help you sort through the details that affect a property’s use and value.',highlights:['Rossville City Park','Joe Campbell Memorial Stadium','Kaw Valley schools and community life'],attractions:[{label:"Rossville City Park walking trails",href:"https://www.rossvillekansas.us/city-park"},{label:"Historic Joe Campbell Memorial Stadium",href:"https://www.rossvillekansas.us/city-park"},{label:"Local community events and organizations",href:"https://www.rossvillekansas.us/"} ],resources:[{label:'City of Rossville',href:'https://www.rossvillekansas.us/'},{label:'Rossville parks and trails',href:'https://www.rossvillekansas.us/city-park'},{label:'Rossville community information',href:'https://www.rossvillekansas.us/community-information'},{label:'Kaw Valley USD 321',href:'https://www.kawvalley.k12.ks.us/'}]},
+ {name:'Silver Lake',slug:'silver-lake',photo:'/images/communities/Silver%20Lake%20Historic%20Building.jpeg',photoAlt:'Historic Indian Agency House near Silver Lake, Kansas, documented by the Historic American Buildings Survey in 1958',intro:'Silver Lake is northwest of Topeka in Shawnee County. The community has a small-town setting, local businesses and a strong connection to the surrounding Kansas River area. Its location also puts Topeka services and amenities within reach.',localFocus:'The area includes established homes in town and rural properties in the surrounding countryside. For buyers, it helps to compare the convenience of an in-town location with the space and property-specific considerations of rural living. Utility service, access and lot characteristics are important details to confirm.',smreFit:'Our brokerage is based in nearby St. Marys and serves buyers and sellers across the region. We work with residential homes, rural properties, land and acreage, and can help you understand the details that matter for a particular property.',highlights:['Silver Lake downtown and community mural','Kansas River recreation','Small-town living near Topeka'],attractions:[{label:"Historic Indian Agency House",href:"https://www.loc.gov/item/ks0038/"},{label:"Kansas River access and nearby outdoor recreation",href:"https://www.visittopeka.com/plan/trip-ideas/free-fun/"},{label:"Silver Lake community events and local businesses",href:"https://www.silverlakeks.gov/"} ],resources:[{label:'City of Silver Lake',href:'https://www.silverlakeks.gov/'},{label:'New to Silver Lake',href:'https://www.silverlakeks.gov/'},{label:'Kansas Tourism: Silver Lake',href:'https://www.travelks.com/places-to-visit/cities/silver-lake/'},{label:'Shawnee County parks and trails',href:'https://parks.snco.gov/317/Parks-Trails'}]}
 ];
 
 export function generateStaticParams(){return communities.map(({slug})=>({slug}));}
 export const dynamicParams=false;
 
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}){
-  const {slug}=await params;
-  const community=communities.find(item=>item.slug===slug);
-  if(!community)return {};
-  const title=`${community.name}, KS Real Estate | Homes & Land`;
-  const description=`Buy or sell a home, rural property, land or acreage in ${community.name}, Kansas with St. Mary’s Real Estate. Local service from our St. Marys-based team.`;
-  const url=`https://www.smre.info/communities/${community.slug}`;
-  return {
-    title,
-    description,
-    alternates:{canonical:url},
-    openGraph:{
-      type:'website',
-      siteName:'St. Mary’s Real Estate',
-      title,
-      description,
-      url
-    },
-    twitter:{
-      card:'summary',
-      title,
-      description
-    }
-  };
+ const {slug}=await params; const community=communities.find(item=>item.slug===slug); if(!community)return {};
+ const title=`${community.name}, KS Real Estate | Homes & Land`;
+ const description=`Explore ${community.name}, Kansas, local information, property listings and real estate guidance from St. Mary’s Real Estate.`;
+ const url=`https://www.smre.info/communities/${community.slug}`;
+ return {title,description,alternates:{canonical:url},openGraph:{type:'website',siteName:'St. Mary’s Real Estate',title,description,url,images:[{url:community.photo,alt:community.photoAlt}]},twitter:{card:'summary',title,description}};
 }
 
 export default async function CommunityPage({params}:{params:Promise<{slug:string}>}){
-  const {slug}=await params;
-  const community=communities.find(item=>item.slug===slug);
-  if(!community)notFound();
-  const schema={
-    '@context':'https://schema.org',
-    '@type':'RealEstateAgent',
-    name:'St. Mary’s Real Estate',
-    url:'https://www.smre.info',
-    areaServed:{'@type':'City',name:community.name,containedInPlace:{'@type':'State',name:'Kansas'}}
-  };
-  const listingsHref=`/listings?city=${encodeURIComponent(community.name)}`;
-  return <section className="section container community-page">
-    <style>{`
-      .community-page{padding-top:76px;padding-bottom:82px}
-      .community-page .page-intro{max-width:900px;margin-bottom:44px}
-      .community-page .page-intro p:not(.eyebrow){font-size:17px;line-height:1.75;max-width:800px}
-      .community-reading{display:grid;grid-template-columns:1fr 1fr;gap:54px;max-width:1060px;margin:0 auto 48px}
-      .community-reading section{min-width:0}
-      .community-reading h2,.community-listings-cta h2{font-family:var(--serif);font-size:clamp(28px,3vw,36px);font-weight:400;line-height:1.12;letter-spacing:-.03em;margin:0 0 14px}
-      .community-reading .eyebrow{margin-bottom:12px}
-      .community-reading p:not(.eyebrow){font-size:15px;line-height:1.8;color:var(--muted);margin:0}
-      .community-listings-cta{display:flex;align-items:center;justify-content:space-between;gap:30px;padding:30px 34px;background:var(--wash);border:1px solid var(--line);margin:0 0 34px}
-      .community-listings-cta .eyebrow{margin-bottom:9px}
-      .community-listings-cta h2{margin-bottom:7px}
-      .community-listings-cta p:not(.eyebrow){margin:0;color:var(--muted);font-size:14px}
-      .community-listings-cta .button{flex:0 0 auto;min-height:50px;padding:14px 22px}
-      .community-next-steps{display:grid;grid-template-columns:1fr 1fr;gap:30px;padding:0 0 36px;border-bottom:1px solid var(--line)}
-      .community-next-steps .about-local-point{padding:14px 0}
-      .community-next-steps .about-local-point+.about-local-point{padding-left:28px}
-      .community-next-steps .about-local-point p:not(.eyebrow){color:var(--muted);font-size:14px;line-height:1.65;margin:0 0 10px}
-      .community-more{padding-top:38px}
-      .community-more .section-head{margin-bottom:16px}
-      .community-more .section-head h2{font-family:var(--serif);font-weight:400;font-size:32px;margin:0}
-      .community-more .lead{font-size:14px;margin-top:28px}
-      @media(max-width:700px){
-        .community-page{padding-top:48px;padding-bottom:56px}
-        .community-page .page-intro{margin-bottom:34px}
-        .community-reading{grid-template-columns:1fr;gap:28px;margin-bottom:34px}
-        .community-listings-cta{align-items:flex-start;flex-direction:column;gap:20px;padding:24px}
-        .community-listings-cta .button{width:100%}
-        .community-next-steps{gap:20px}
-      }
-      @media(max-width:480px){.community-next-steps{grid-template-columns:1fr;gap:12px}.community-next-steps .about-local-point{padding:10px 0}}
-    `}</style>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}} />
-    <div className="page-intro">
-      <p className="eyebrow">NORTHEAST KANSAS REAL ESTATE</p>
-      <h1>{community.name}, Kansas Real Estate</h1>
-      <p>{community.intro}</p>
-    </div>
-    <div className="community-reading">
-      <section>
-        <p className="eyebrow">GET TO KNOW THE AREA</p>
-        <h2>Buying or selling in {community.name}</h2>
-        <p>{community.localFocus}</p>
-      </section>
-      <section>
-        <p className="eyebrow">WHY WORK WITH SMRE</p>
-        <h2>Local guidance, personal service</h2>
-        <p>{community.smreFit}</p>
-      </section>
-    </div>
-    <div className="community-listings-cta">
-      <div>
-        <p className="eyebrow">EXPLORE AVAILABLE PROPERTY</p>
-        <h2>Looking in {community.name}?</h2>
-        <p>See current homes and properties listed in {community.name}, Kansas.</p>
-      </div>
-      <Link className="button button-dark" href={listingsHref}>See Listings in {community.name}</Link>
-    </div>
-    <div className="community-next-steps">
-      <div className="about-local-point"><p className="eyebrow">SELLING</p><p>Get a local perspective on your property’s value and the selling process.</p><Link className="text-link" href="/valuation">Request a home value</Link></div>
-      <div className="about-local-point"><p className="eyebrow">CONNECT</p><p>Talk with a member of the St. Mary’s Real Estate team about your plans.</p><Link className="text-link" href="/contact">Contact SMRE</Link></div>
-    </div>
-    <div className="community-more">
-      <div className="section-head compact"><div><p className="eyebrow">MORE COMMUNITIES</p><h2>Explore nearby areas</h2></div></div>
-      <div className="tag-list">{communities.filter(item=>item.slug!==community.slug).map(item=><Link key={item.slug} href={`/communities/${item.slug}`}>{item.name}, KS</Link>)}</div>
-      <p className="lead">Learn more about <Link href="/about">St. Mary’s Real Estate</Link> and the agents who serve Northeast Kansas.</p>
-    </div>
-  </section>;
+ const {slug}=await params; const community=communities.find(item=>item.slug===slug); if(!community)notFound();
+ const listingsHref=`/listings?city=${encodeURIComponent(community.name)}`;
+ const schema={'@context':'https://schema.org','@type':'RealEstateAgent',name:'St. Mary’s Real Estate',url:'https://www.smre.info',areaServed:{'@type':'City',name:community.name,containedInPlace:{'@type':'State',name:'Kansas'}}};
+ return <section className="community-detail">
+  <style>{`
+   .community-detail{padding-bottom:76px}
+   .community-hero{display:grid;grid-template-columns:1fr 1fr;min-height:390px;background:#f5f2eb}.community-hero-no-photo{grid-template-columns:1fr}
+   .community-hero-copy{padding:70px max(28px,calc((100vw - 1160px)/2)) 64px max(28px,calc((100vw - 1160px)/2));align-self:center}
+   .community-hero-copy h1{font:400 clamp(40px,5vw,62px)/1.04 var(--serif);letter-spacing:-.04em;margin:0 0 18px;color:var(--navy)}
+   .community-hero-copy>p:last-child{font-size:16px;line-height:1.8;color:#4d5663;max-width:610px;margin:0}
+   .community-hero-photo{min-height:390px;background-size:cover;background-position:center;position:relative}.community-photo-credit{position:absolute;right:14px;bottom:8px;margin:0;padding:4px 7px;text-align:right;font-size:10px;line-height:1.4;color:#fff;background:rgba(0,0,0,.48);border-radius:2px;text-shadow:0 1px 2px rgba(0,0,0,.35)}.community-photo-credit a{color:inherit;text-decoration:underline}.community-hero-photo[aria-label*='public-domain']{filter:brightness(1.22)}
+   .community-content{max-width:1120px;margin:0 auto;padding:0 26px}
+   .community-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:38px 0 52px}
+   .community-fact{padding:18px 20px;border-top:2px solid #c7a66a;background:#faf9f6;font:15px/1.55 var(--serif);color:var(--navy)}
+   .community-attractions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 24px;margin-top:18px}
+   .community-attractions a{padding:11px 0;border-bottom:1px solid #d9dce1;font-size:13px;line-height:1.5;color:#4d5663;text-decoration:none}.community-attractions a:hover{color:var(--navy);text-decoration:underline}
+   .community-listings{background:var(--navy);border:0;color:#fff}
+   .community-listings h2{color:#fff}
+   .community-listings p{color:#fff;opacity:.84}
+   .community-listings .button{background:#fff;color:var(--navy);min-width:190px}
+   .community-columns{display:grid;grid-template-columns:1fr 1fr;gap:64px;margin-bottom:48px}
+   .community-columns h2,.community-local-links h2,.community-next h2{font:400 clamp(28px,3vw,36px)/1.12 var(--serif);letter-spacing:-.025em;margin:0 0 14px;color:var(--navy)}
+   .community-columns p:not(.eyebrow){font-size:15px;line-height:1.85;color:#5c6470;margin:0}
+   .community-links-panel{padding:32px;background:#f5f2eb;margin-bottom:42px}
+   .community-links-panel .eyebrow{margin-bottom:10px}
+   .community-resource-links{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 28px;margin-top:20px}
+   .community-resource-links a{padding:12px 0;border-bottom:1px solid #d9d4c9;text-decoration:none;color:var(--navy);font-size:14px;font-weight:650}
+   .community-resource-links a:hover{text-decoration:underline}
+   .community-listings{display:flex;align-items:center;justify-content:space-between;gap:32px;padding:30px 32px;border:1px solid #d9dce1;margin-bottom:38px}
+   .community-listings h2{font:400 32px/1.1 var(--serif);margin:0 0 8px;color:#fff}
+   .community-listings p{font-size:16px;line-height:1.65;color:#fff;margin:0;opacity:1;max-width:620px}
+   .community-listings .button{flex:0 0 auto;align-self:center;margin:0}
+   .community-next{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 0 38px;border-bottom:1px solid #d9dce1}.community-next section{padding:26px 28px;background:#f5f2eb;border-top:3px solid #c7a66a}.community-next .community-action{display:inline-flex;align-items:center;justify-content:center;margin-top:14px;padding:13px 20px;min-height:48px;background:var(--navy);color:#fff;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:.01em}.community-next .community-action:hover{background:#242b62}
+   .community-next p{font-size:14px;line-height:1.7;color:#5c6470}
+   .community-more{padding-top:38px}
+   .community-more .tag-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+   .community-more .tag-list a{border:1px solid #d9dce1;border-radius:30px;padding:9px 14px;color:var(--navy);text-decoration:none;font-size:13px}
+   .community-more .tag-list a:hover{background:#f5f2eb}
+   .community-footer-links{font-size:14px;color:#5c6470;margin-top:28px}
+   @media(max-width:760px){.community-hero{grid-template-columns:1fr}.community-hero-copy{padding:48px 24px 34px}.community-hero-photo{min-height:240px;order:-1}.community-content{padding:0 20px}.community-facts{grid-template-columns:1fr;margin:26px 0 24px;gap:8px}.community-attractions{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px}.community-columns{grid-template-columns:1fr;gap:30px;margin-bottom:34px}.community-links-panel{padding:24px 20px}.community-resource-links{grid-template-columns:1fr}.community-listings{align-items:stretch;flex-direction:column;padding:22px;gap:16px}.community-listings>div{width:100%}.community-listings h2{font-size:28px;line-height:1.15}.community-listings p{font-size:15px;line-height:1.55}.community-listings .button{width:100%;min-height:48px;display:flex;align-items:center;justify-content:center}.community-attractions{grid-template-columns:1fr;gap:8px}.community-attractions a,.community-resource-links a{display:flex;align-items:center;min-height:46px;padding:12px 14px;background:#fff;border:1px solid #e0ded8;font-size:14px;line-height:1.4}.community-attractions a:after,.community-resource-links a:after{content:"";display:none}.community-resource-links{gap:8px}.community-links-panel{padding:22px 18px}.community-next{grid-template-columns:1fr;gap:12px}.community-next section{padding:22px 20px}.community-next .community-action{display:flex;width:100%;margin-top:16px;min-height:48px}}
+  `}</style>
+  <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}} />
+  <section className={`community-hero${community.photo?'':' community-hero-no-photo'}`}>
+   <div className="community-hero-copy"><h1>{community.name}, Kansas</h1><p>{community.intro}</p></div>
+   {community.photo&&<div className="community-hero-photo" role="img" aria-label={community.photoAlt} style={{backgroundImage:`url("${community.photo}")`}}>
+    {community.slug==="wamego"&&<p className="community-photo-credit">Photo: Bhall87, <a href="https://commons.wikimedia.org/wiki/File:Wamego_Windmill.JPG" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>.</p>}
+    {community.slug==="manhattan"&&<p className="community-photo-credit">Photo: Matt Aksamit, <a href="https://commons.wikimedia.org/wiki/File:Bill_Snyder_Family_Stadium.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, released into the public domain by the photographer.</p>}
+    {community.slug==="topeka"&&<p className="community-photo-credit">Photo: Elli, <a href="https://commons.wikimedia.org/wiki/File:Kansas_State_Capitol_(March_17,_2023)_02.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, released under <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a>.</p>}
+    {community.slug==="silver-lake"&&<p className="community-photo-credit">Photo: Historic American Buildings Survey, <a href="https://www.loc.gov/item/ks0038/" target="_blank" rel="noopener noreferrer">Library of Congress</a>. Government work; no known restrictions on use.</p>}
+   </div>}
+  </section>
+
+  <div className="community-content">
+   <div className="community-facts">{community.highlights.map(item=><div className="community-fact" key={item}>{item}</div>)}</div>
+   <section className="community-listings"><div><h2>Explore properties in {community.name}</h2><p>See homes, land and other properties currently listed in {community.name}, Kansas.</p></div><Link className="button button-dark" href={listingsHref}>See {community.name} Properties</Link></section>
+   <div className="community-columns">
+    <section><h2>Buying or selling in {community.name}</h2><p>{community.localFocus}</p></section>
+    <section><h2>Local guidance, practical advice</h2><p>{community.smreFit}</p></section>
+   </div>
+   <section className="community-links-panel community-local-links">
+    <h2>Get to know {community.name}</h2>
+    <div className="community-attractions">{community.attractions.map(item=><a key={item.label} href={item.href} target="_blank" rel="noopener noreferrer">{item.label}</a>)}</div>
+    <h3 className="eyebrow" style={{marginTop:30}}>Useful local links</h3>
+    <div className="community-resource-links">{community.resources.map(item=><a key={item.href} href={item.href} target="_blank" rel="noopener noreferrer">{item.label}</a>)}</div>
+    <p className="community-footer-links">Find more government offices, schools, property information and local services on the <Link href="/local-resources">Northeast Kansas Local Resources page</Link>.</p>
+   </section>
+   
+   <div className="community-next">
+    <section><h2>Thinking about selling?</h2><p>Get a local perspective on your property’s value and what to expect from the selling process.</p><Link className="community-action" href="/valuation">What’s My Home Worth?</Link></section>
+    <section><h2>Talk it through</h2><p>Tell us what you are looking for and we can help you figure out a sensible next step.</p><Link className="community-action" href="/contact">Contact Us</Link></section>
+   </div>
+   <section className="community-more"><h2>Nearby communities</h2><div className="tag-list">{communities.filter(item=>item.slug!==community.slug).map(item=><Link key={item.slug} href={`/communities/${item.slug}`}>{item.name}, KS</Link>)}</div><p className="community-footer-links">For practical information about buying, selling and owning property, browse our <Link href="/guides">real estate guides</Link>.</p></section>
+  </div>
+ </section>;
 }

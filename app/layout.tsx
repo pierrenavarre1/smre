@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { BrandLogo } from './components/BrandLogo';
 import { ChatBubble } from './components/ChatBubble';
 import { MobileMenu } from './components/MobileMenu';
+import { ExploreMenu } from './components/ExploreMenu';
 import { ExitIntentPopup } from './components/ExitIntentPopup';
 
 export const dynamic = 'force-dynamic';
@@ -64,6 +65,7 @@ window.widgetTracker("create", "WT-WOVYXUPG"); window.widgetTracker("send", "pag
           <a className="header-phone" href={`tel:${phone.replace(/\\D/g,'')}`} aria-label="Call St. Mary’s Real Estate">{phone}</a>
           <Link href="/listings">Listings</Link>
           <Link href="/valuation">Home Value</Link>
+          <ExploreMenu />
           <Link href="/about">About</Link>
           <Link href="/contact" className="nav-cta">Contact</Link>
         </nav>
@@ -81,12 +83,10 @@ window.widgetTracker("create", "WT-WOVYXUPG"); window.widgetTracker("send", "pag
           <strong>Explore</strong>
           <Link href="/agents">Our Team</Link>
           <Link href="/guides">Guides</Link>
+          <Link href="/local-resources">Local Resources</Link>
+          <Link href="/communities">Communities</Link>
           <Link href="/about">About SMRE</Link>
           <Link href="/testimonials">Testimonials</Link>
-          <Link href="/communities/st-marys">St. Marys Real Estate</Link>
-          <Link href="/communities/wamego">Wamego Real Estate</Link>
-          <Link href="/communities/manhattan">Manhattan Real Estate</Link>
-          <Link href="/communities/topeka">Topeka Real Estate</Link>
         </div>
         <div className="footer-links">
           <strong>Buying &amp; Selling</strong>

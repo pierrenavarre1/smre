@@ -71,7 +71,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
   const baths=(p.BathroomsTotalInteger || p.BathroomsFull || 0)+(p.BathroomsHalf?0.5:0);
   const acreage=p.LotSizeAcres || (p.LotSizeSqFt ? p.LotSizeSqFt/43560 : 0);
   return <section className="section container detail">
-    <ListingViewTracker listingId={p.ListingId} city={p.City || ''} propertyType={p.PropertyType || ''} />
+    <ListingViewTracker listingId={p.ListingId} city={p.City || ''} propertyType={p.PropertyType || ''} street={`${p.StreetNumber} ${p.StreetName}`} state={p.StateOrProvince || 'KS'} postalCode={p.PostalCode || ''} mlsNumber={p.MLSNumber || p.ListingId} price={p.ListPrice || 0} />
     <Link href="/listings" className="back">← All listings</Link>
     <ListingGallery photos={photos} address={`${p.StreetNumber} ${p.StreetName}, ${p.City}`} listingId={p.ListingId} />
     <div className="detail-grid">
