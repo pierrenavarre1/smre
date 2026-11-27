@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { SharePage } from '../../components/SharePage';
 
 type Community = {
   name:string; slug:string; intro:string; localFocus:string; smreFit:string;
@@ -70,7 +71,7 @@ export default async function CommunityPage({params}:{params:Promise<{slug:strin
   `}</style>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,'\\u003c')}} />
   <section className={`community-hero${community.photo?'':' community-hero-no-photo'}`}>
-   <div className="community-hero-copy"><h1>{community.name}, Kansas</h1><p>{community.intro}</p></div>
+   <div className="community-hero-copy"><h1>{community.name}, Kansas</h1><SharePage title={`${community.name}, Kansas | St. Mary’s Real Estate`} description={community.intro}/><p>{community.intro}</p></div>
    {community.photo&&<div className="community-hero-photo" role="img" aria-label={community.photoAlt} style={{backgroundImage:`url("${community.photo}")`}}>
     {community.slug==="wamego"&&<p className="community-photo-credit">Photo: Bhall87, <a href="https://commons.wikimedia.org/wiki/File:Wamego_Windmill.JPG" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>.</p>}
     {community.slug==="manhattan"&&<p className="community-photo-credit">Photo: Matt Aksamit, <a href="https://commons.wikimedia.org/wiki/File:Bill_Snyder_Family_Stadium.jpg" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>, released into the public domain by the photographer.</p>}
