@@ -6,6 +6,8 @@ import Link from 'next/link';
 const links = [
   ['Listings', '/listings'],
   ['Home Value', '/valuation'],
+  ['Communities', '/communities'],
+  ['Local Resources', '/local-resources'],
   ['About', '/about'],
   ['Contact', '/contact'],
 ] as const;
